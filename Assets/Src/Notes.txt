@@ -1,0 +1,52 @@
+﻿    
+enum OrderType {
+    Attack,
+    Defend,
+    Patrol,
+    AttackGroup
+    AttackSingle
+    AttackType
+    AttackInArea
+    Inspect
+    Dock
+    Undock
+    Enter
+    Leave
+    Disable
+    Support
+    Escort
+}    
+    
+///* Centuar Lecture (20:53) */
+///* Centuar Lecture Diagram (10:30) */
+///* Centuar Lecture Context (12:00) */
+///* Centuar Lecture Decision Parameters (20:00) */
+///* Centuar Lecture ScoreAllDecisions (26:00) */
+///* Centuar Lecture PriorityBoost/Cut Tags (48mins) */
+
+AI Target "stickiness" factor in range to target
+
+AttackShipDecision {
+    name = ""
+    description = "";
+    ContextType = contextType;
+    Action = action<ContextType>;
+    collector = GetHostilesWithinRange;
+    Evaluator = {
+        name = ""
+        weight = CombatWeightStandard
+        bonusCalculator = PreferCloserTargets
+        considerations = [
+            {
+                curve: 2Poly,
+                type = DistanceToTarget
+                maxRange : float;
+                minRange : float;
+            },
+            {
+                type = RelativeAttackPower
+                curve = 4 Poly                
+            }
+        ]
+    }
+}

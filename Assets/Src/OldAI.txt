@@ -1,0 +1,237 @@
+//using System.Collections.Generic;
+//using SpaceGame.AI;
+//using UnityEngine;
+//
+//namespace Temp {
+//
+//    public interface IConsideration<in T> where T : DecisionContext {
+//
+//        ResponseCurve curve { get; }
+//        float Evaluate(T context);
+//
+//    }
+//
+//    public class DecisionContext { }
+//
+//    public interface IBonusComputer {
+//
+//        float GetBonus<TContext>(TContext context);
+//
+//    }
+//
+//    public interface IContextCreator<TContext> where TContext : DecisionContext {
+//
+//        void CreateContexts(List<TContext> contexts);
+//
+//    }
+//    public class Evaluator<TContext> where TContext : DecisionContext {
+//
+//        public List<TContext> contexts;
+//        public string name;
+//        public float weight;
+//
+//        public IConsideration<TContext>[] considerations;
+//
+//        public IBonusComputer bonusComputer;
+//        public IContextCreator<TContext> contextCreator;
+//        
+//        public DecisionManager.ScoredDecision Score(float cutoff) {
+//                
+//            contextCreator.CreateContexts(contexts);
+//
+//            float finalScore = 1 + 0;//bonusComputer.GetBonus(null);
+//            float modFactor = 1f - (1f / considerations.Length);
+//
+//            foreach (TContext context in contexts) {
+//                for (int i = 0; i < considerations.Length; i++) {
+//                    if (finalScore < 0f || finalScore < cutoff) {
+//                        break;
+//                    }
+//
+//                    IConsideration<TContext> consideration = considerations[i];
+//
+//                    float score = consideration.curve.Evaluate(consideration.Evaluate(context));
+//                    float makeUpValue = (1 - score) * modFactor;
+//                    float total = score + (makeUpValue * score);
+//                    finalScore *= Mathf.Clamp01(total);
+//                }
+//            }
+//
+//            // return high score + context + action
+//            return new DecisionManager.ScoredDecision(finalScore, null);
+//        }
+//
+//    }
+//
+//    // top level data for a decision
+//    public class DecisionDefinition {
+//
+//        public string name;
+//        public float weight;
+//        public AIAction action;
+//        public string description;
+//        public object parameters;
+//
+//        public DecisionContextType contextType;
+//
+////        public Requirement<DecisionContext>[] requirements;
+//        public Evaluator<DecisionContext> dse;
+//
+//        public virtual float GetBonusFactor(DecisionContext lastContext) {
+//            return 0;
+//        }
+//
+//    }
+//
+//    public struct Decision {
+//
+//        public readonly DecisionContext context;
+//        public readonly Evaluator<DecisionContext> dse;
+//
+//        public Decision(DecisionContext context, Evaluator<DecisionContext> dse) {
+//            this.context = context;
+//            this.dse = dse;
+//        }
+//
+//    }
+//
+//    public class DecisionManager {
+//
+//        private List<ScoredDecision> resultList;
+//        private List<Decision> decisionList;
+//        private List<DecisionDefinition> decisionsDefinitions;
+//        private List<DecisionContext> contexts;
+//
+////        private ContextCreator<T>
+//        private void CreateDecisions(Agent agent) {
+//            decisionList.Clear();
+//            float cutoff = float.MinValue;
+//            for (int i = 0; i < decisionsDefinitions.Count; i++) {
+//                DecisionDefinition decisionsDefinition = decisionsDefinitions[i];
+//                DecisionContextType contextType = decisionsDefinition.contextType;
+//                Evaluator<DecisionContext> dse = decisionsDefinition.dse;
+//                ScoredDecision result = dse.Score(cutoff);
+//                if (result.score > cutoff) cutoff = result.score;
+//
+////                contexts.Clear();
+////                contextType.CreateContexts(contexts, decisionsDefinition, agent);
+////                for (int j = 0; j < contexts.Count; j++) {
+////                    DecisionContext decisionContext = contexts[j];
+////                    decisionList.Add(new Decision(decisionContext, dse));
+////                }
+//            }
+//        }
+//
+//        public void ScoreAllDecisions() {
+//            resultList.Clear();
+//            float cutoff = 0f;
+//            for (int i = 0; i < decisionList.Count; i++) {
+//                Decision decision = decisionList[i];
+//                DecisionContext context = decision.context;
+//
+//                float bonus = 0; //decision.context.GetBonusFactor();
+//
+////                if (bonus < cutoff) {
+////                    continue;
+////                }
+//
+//                float score = decision.dse.Score(decision.context, bonus, cutoff);
+//                resultList.Add(new ScoredDecision(score, context));
+//                if (score > cutoff) {
+//                    cutoff = score;
+//                }
+//            }
+//
+//            // todo - replace with min heap / priority queue
+//            resultList.Sort((a, b) => {
+//                return a.score > b.score ? 1 : -1;
+//            });
+//
+//            //  currentContext = resultList[0].context;
+//        }
+//
+//        public struct ScoredDecision {
+//
+//            public readonly float score;
+//            public readonly DecisionContext context;
+//
+//            public ScoredDecision(float score, DecisionContext context) {
+//                this.score = score;
+//                this.context = context;
+//            }
+//
+//        }
+//
+//    }
+//
+//}
+//
+//namespace SpaceGame.AI {
+//
+//    public class DecisionManager {
+//
+//        private List<DecisionContext> contexts;
+//        private List<Decision> decisionList;
+//        private List<ScoredDecision> resultList;
+//        private List<DecisionDefinition> decisionsDefinitions;
+//
+//        public DecisionContext currentContext;
+//
+//        private void CreateDecisions(Agent agent) {
+//            decisionList.Clear();
+//            for (int i = 0; i < decisionsDefinitions.Count; i++) {
+//                DecisionDefinition decisionsDefinition = decisionsDefinitions[i];
+//                DecisionContextType contextType = decisionsDefinition.contextType;
+//                DecisionScoreEvaluator dse = decisionsDefinition.GetDSE();
+//                contexts.Clear();
+//                contextType.CreateContexts(contexts, decisionsDefinition, agent);
+//                for (int j = 0; j < contexts.Count; j++) {
+//                    DecisionContext decisionContext = contexts[j];
+//                    decisionList.Add(new Decision(decisionContext, dse));
+//                }
+//            }
+//        }
+//
+//        public void ScoreAllDecisions() {
+//            resultList.Clear();
+//            float cutoff = 0f;
+//            for (int i = 0; i < decisionList.Count; i++) {
+//                Decision decision = decisionList[i];
+//                DecisionContext context = decision.context;
+//
+//                float bonus = 0; //decision.context.GetBonusFactor();
+//
+////                if (bonus < cutoff) {
+////                    continue;
+////                }
+//
+//                float score = decision.dse.Score(decision.context, bonus, cutoff);
+//                resultList.Add(new ScoredDecision(score, context));
+//                if (score > cutoff) {
+//                    cutoff = score;
+//                }
+//            }
+//
+//            // todo - replace with min heap / priority queue
+//            resultList.Sort((a, b) => {
+//                return a.score > b.score ? 1 : -1;
+//            });
+//
+//            currentContext = resultList[0].context;
+//        }
+//
+//        private struct ScoredDecision {
+//
+//            public readonly float score;
+//            public readonly DecisionContext context;
+//
+//            public ScoredDecision(float score, DecisionContext context) {
+//                this.score = score;
+//                this.context = context;
+//            }
+//
+//        }
+//
+//    }
+//
+//}
