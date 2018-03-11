@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using SpaceGame.AI;
+using SpaceGame.Editor.GUIComponents;
 using SpaceGame.Util.Texture2DExtensions;
 using UnityEngine;
 using UnityEditor;
 
-namespace Src.Editor {
+namespace SpaceGame.Editor.Windows {
 
 
     public class ResponseCurveViewer : EditorWindow {

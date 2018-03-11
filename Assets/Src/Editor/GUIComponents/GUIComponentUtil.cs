@@ -1,11 +1,11 @@
 ﻿using System;
 using SpaceGame.Editor.Reflection;
-using UnityEngine;
 using UnityEditor;
+using UnityEngine;
 
-namespace SpaceGame.EditorGUIX {
+namespace SpaceGame.Editor.GUIComponents {
 
-    public static class EditorGUIUtilityX {
+    public static class GUIComponentUtil {
 
         private static GUIContent tempContent = new GUIContent();
 

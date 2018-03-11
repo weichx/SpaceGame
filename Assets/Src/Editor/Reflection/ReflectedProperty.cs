@@ -21,11 +21,14 @@ namespace SpaceGame.Editor.Reflection {
         protected Type declaredType;
         protected Type originalType;
         protected string label;
+        protected string name;
         protected bool isExpanded;
         protected List<ReflectedProperty> children;
-
+        protected ReflectedPropertyDrawer drawer;
+        
         protected ReflectedProperty(ReflectedProperty parent, string name, Type declaredType, object value) {
             this.parent = parent;
+            this.name = name;
             this.originalValue = value;
             this.actualValue = value;
             this.declaredType = declaredType;
@@ -34,6 +37,7 @@ namespace SpaceGame.Editor.Reflection {
             this.label = StringUtil.SplitAndTitlize(name);
             this.children = new List<ReflectedProperty>(4);
             this.guiContent = new GUIContent(label);
+            this.drawer = EditorReflector.CreateReflectedPropertyDrawer(actualType);
         }
 
         public virtual bool IsExpanded {
@@ -51,21 +55,28 @@ namespace SpaceGame.Editor.Reflection {
         public bool IsBuiltInType => Array.IndexOf(BuiltInTypes, actualType) != -1;
         public bool IsPrimitiveLike => actualType.IsPrimitive || actualType == typeof(string) || actualType.IsEnum;
 
-        public ReflectedPropertyDrawer x;
-        
-        public void OnGUI() {
-            
-        }
-        
         public virtual ReflectedProperty ChildAt(int idx) {
             if (children == null || idx < 0 || idx >= children.Count) return null;
             return children[idx];
+        }
+
+        public ReflectedProperty FindPropertyRelative(string propertyName) {
+            return children?.Find((property => property.name == propertyName));
         }
 
         public virtual void ApplyChanges() {
             if (!DidChange) return;
 
         }
+
+        public virtual void OnGUILayout() { }
+        
+        public virtual void OnGUI(Rect rect) { }
+
+        public virtual float GetPropertyHeight() {
+            return drawer.GetPropertyHeight(this);
+        }
+
 
         public abstract object Value { get; set; }
 
@@ -86,7 +97,11 @@ namespace SpaceGame.Editor.Reflection {
             typeof(Vector3),
             typeof(Vector4),
             typeof(Quaternion),
-            typeof(AnimationCurve)
+            typeof(AnimationCurve),
+            typeof(RectInt),
+            typeof(BoundsInt),
+            typeof(Vector2Int),
+            typeof(Vector3Int)
         };
 
         private static PropertyType GetPropertyType(Type type) {

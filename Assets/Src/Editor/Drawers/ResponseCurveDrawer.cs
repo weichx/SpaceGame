@@ -1,4 +1,6 @@
 ﻿using SpaceGame.AI;
+using SpaceGame.Editor.GUIComponents;
+using SpaceGame.Editor.Windows;
 using Src.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -12,6 +14,14 @@ namespace SpaceGame.Editor {
 
         public GUIRect(Rect rect) {
             this.rect = rect;
+        }
+
+        public Rect GetRowRect(float width) {
+            Rect retn = new Rect(rect);
+            retn.width = width;
+            rect.x += width;
+            rect.width -= width;
+            return retn;
         }
 
         public Rect GetFieldRect(int lineHeight = 1) {
@@ -46,7 +56,7 @@ namespace SpaceGame.Editor {
     }
 
     [CustomPropertyDrawer(typeof(ResponseCurve))]
-    public class ResponseCurveDrawer : UnityEditor.PropertyDrawer {
+    public class ResponseCurveDrawer : PropertyDrawer {
 
         private ResponseCurve curve;
         private Texture2D graphTexture;

@@ -1,6 +1,6 @@
 ﻿using SpaceGame.Util.Texture2DExtensions;
 
-namespace Src.Editor {
+namespace SpaceGame.Editor.GUIComponents {
 
     using System;
     using System.Collections.Generic;

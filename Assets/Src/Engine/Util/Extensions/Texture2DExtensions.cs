@@ -33,15 +33,27 @@ namespace Texture2DExtensions {
             }
         }
 
-        
-        public static void SetColor(this Texture2D tex2, Color32 color) {
-            var fillColorArray = tex2.GetPixels32();
+
+        public static void SetColor32(this Texture2D tex, Color32 color) {
+            var fillColorArray = tex.GetPixels32();
 
             for (var i = 0; i < fillColorArray.Length; ++i) {
                 fillColorArray[i] = color;
             }
 
-            tex2.SetPixels32(fillColorArray);
+            tex.SetPixels32(fillColorArray);
+
+            tex.Apply();
+        }
+        
+        public static void SetColor(this Texture2D tex2, Color color) {
+            var fillColorArray = tex2.GetPixels();
+
+            for (var i = 0; i < fillColorArray.Length; ++i) {
+                fillColorArray[i] = color;
+            }
+
+            tex2.SetPixels(fillColorArray);
 
             tex2.Apply();
         }

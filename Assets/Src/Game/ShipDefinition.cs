@@ -16,6 +16,8 @@ namespace SpaceGame {
         public float hitpoints;
         public float shieldPoints;
 
+        public Vector3 test;
+
     }
 
 }

@@ -1,4 +1,4 @@
-﻿namespace Src.Editor {
+﻿namespace SpaceGame.Editor.GUIComponents {
 
     using UnityEngine;
 

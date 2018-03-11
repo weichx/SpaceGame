@@ -177,6 +177,15 @@ namespace SpaceGame.Editor.Reflection {
             return cache.GetItemFromCache<Type, Type>(TypeDrawerCache, property.Type);
         }
 
+        
+        public static ReflectedPropertyDrawer CreateReflectedPropertyDrawer(Type type) {
+            Type drawerType = cache.GetItemFromCache<Type, Type>(TypeDrawerCache, type);
+            if (drawerType != null) {
+                return Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
+            }
+            return new GenericPropertyDrawer();
+        }
+        
 //        private static List<Meta> customPropertyDrawerTypes;
 //        private static Dictionary<Type, UnityEditor.PropertyDrawer> drawerCache;
 //
@@ -290,6 +299,7 @@ namespace SpaceGame.Editor.Reflection {
             string name = assembly.FullName;
             return name.StartsWith("Assembly-CSharp") && name.IndexOf("-firstpass", StringComparison.Ordinal) == -1;
         }
+
 
     }
 
