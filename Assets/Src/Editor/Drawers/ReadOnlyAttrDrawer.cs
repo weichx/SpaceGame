@@ -5,7 +5,7 @@ using UnityEngine;
 namespace SpaceGame.Editor {
 
     [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
-    public class ReadOnlyDrawer : PropertyDrawer
+    public class ReadOnlyDrawer : UnityEditor.PropertyDrawer
     {
         public override float GetPropertyHeight(SerializedProperty property,
             GUIContent label)

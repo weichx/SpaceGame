@@ -1,14 +1,25 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using SpaceGame.Util;
 
 namespace SpaceGame.AI {
 
-    public sealed class Evaluator<TContext> where TContext : DecisionContext {
+    public abstract class Evaluator {
 
+            
         public string name;
         public float weight;
-        public BonusCalculator<TContext> bonusCalculator;
-        public Consideration<TContext>[] considerations;
+        public BonusCalculator bonusCalculator;
+        public Consideration[] considerations;
+        
+        internal abstract ScoreResult Score(Entity agent, Decision decision, float cutoff);
+
+    }
+    
+    public sealed class Evaluator<TContext> : Evaluator where TContext : DecisionContext {
+
+//        public BonusCalculator<TContext> bonusCalculator;
+//        public Consideration<TContext>[] considerations;
 
         private List<TContext> contextList;
 
@@ -16,15 +27,24 @@ namespace SpaceGame.AI {
             this.contextList = new List<TContext>(16);
         }
 
-        internal ScoreResult<TContext> Score(Decision<TContext> decision, float cutoff) {
+        internal override ScoreResult Score(Entity agent, Decision decision, float cutoff) {
             contextList.Clear();
-            decision.contextCreator.CreateContexts(contextList);
+            ContextCreator<TContext> creator = decision.contextCreator as ContextCreator<TContext>;
+            BonusCalculator<TContext> bonusCalc = bonusCalculator as BonusCalculator<TContext>;
+            
+            Debug.Assert(creator != null, nameof(creator) + " != null");
+            Debug.Assert(bonusCalc != null, nameof(bonusCalc) + " != null");
+            Debug.Assert(agent != null, nameof(agent) + " != null");
+
+            creator.CreateContexts(agent, contextList);
             int count = contextList.Count;
             float modFactor = 1f - (1f / considerations.Length);
-
+            ScoreResult scoreResult = new ScoreResult(0, null, null);
+            float maxScore = float.MinValue;
+            
             for (int i = 0; i < count; i++) {
                 TContext context = contextList[i];
-                float bonus = bonusCalculator.GetBonus(context);
+                float bonus = bonusCalc.GetBonus(context);
                 float finalScore = 1 + bonus;
 
                 for (int j = 0; j < considerations.Length; j++) {
@@ -33,15 +53,21 @@ namespace SpaceGame.AI {
                         break;
                     }
 
-                    Consideration<TContext> consideration = considerations[j];
+                    Consideration<TContext> consideration = considerations[j] as Consideration<TContext>;
+                    Debug.Assert(consideration != null, nameof(consideration) + " != null");
                     float score = consideration.ScoreCurved(context);
                     float makeUpValue = (1f - score) * modFactor;
                     float total = score + (makeUpValue * score);
                     finalScore *= MathUtil.Clamp01(total);
                 }
+
+                if (finalScore > maxScore) {
+                    maxScore = finalScore;
+                    scoreResult = new ScoreResult(maxScore, context, decision.action);
+                }
             }
 
-            return new ScoreResult<TContext>();
+            return scoreResult;
         }
 
     }

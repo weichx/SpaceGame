@@ -4,7 +4,7 @@ using UnityEngine;
 namespace SpaceGame.Editor {
 
     [CustomPropertyDrawer(typeof(FactionAttribute))]
-    public class FactionDrawer : PropertyDrawer {
+    public class FactionDrawer : UnityEditor.PropertyDrawer {
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label) {
             EditorGUI.BeginProperty(position, label, property);

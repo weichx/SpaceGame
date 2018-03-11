@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using SpaceGame;
 using SpaceGame.AI;
 using UnityEngine;
@@ -66,6 +65,13 @@ namespace Src.Engine {
             }
         }
 
+        public void RegisterWaypointPath(WaypointPath waypoint) {
+            if (!waypointPaths.Contains(waypoint)) {
+                waypoint.Initialize();
+                waypointPaths.Add(waypoint);
+            }    
+        }
+        
         public string GetEntityName(int entityId) {
             return entityMap[entityId].name;
         }

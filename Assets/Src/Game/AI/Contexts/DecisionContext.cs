@@ -3,7 +3,11 @@
   
     public class DecisionContext {
 
-        public Entity agent;
+        public readonly Entity agent;
+
+        protected DecisionContext(Entity agent) {
+            this.agent = agent;
+        }
 
     }
 

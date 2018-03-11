@@ -4,6 +4,10 @@ namespace SpaceGame.AI {
 
     public class FlyWaypointsAction : AIAction<WaypointContext> {
 
+        public override void Setup() {
+            Debug.Log("Setup");
+        }
+        
         public override bool Tick() {
             Entity agent = context.agent;
             WaypointPath path = context.path;
@@ -16,15 +20,18 @@ namespace SpaceGame.AI {
 
             float distSquared = agent.transformInfo.DistanceToSquared(waypoint);
 
-            if (distSquared < 20 * 20) {
+            if (distSquared < 20 * 20) { // todo replace with a radius per waypoint
                 tracker.Progress();
             }
 
             waypoint = tracker.CurrentWaypoint;
             ApproachType approachType = tracker.IsFinalWaypoint ? ApproachType.Arrive : ApproachType.Normal;
             agent.SetTargetPosition(waypoint, approachType);
-
             return tracker.CompletedLaps != completedLaps;
+        }
+
+        public override void Teardown() {
+            Debug.Log("Teardown");
         }
 
     }

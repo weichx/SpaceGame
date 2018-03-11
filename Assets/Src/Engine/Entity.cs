@@ -9,6 +9,19 @@ using Debug = UnityEngine.Debug;
 
 namespace SpaceGame {
 
+    public class Generic<T> {
+
+        public T value;
+
+    }
+
+    [System.Serializable]
+    public class NonGeneric : Generic<float> {
+
+        
+
+    }
+
     [SelectionBase]
     [DisallowMultipleComponent]
     [DebuggerDisplay("Id = {" + nameof(id) + "}")]
@@ -22,7 +35,8 @@ namespace SpaceGame {
         [FactionAttribute] [SerializeField] private int factionId;
         [HideInInspector] [SerializeField] private string guid;
         public float hitPoints = 100f;
-        
+        public NonGeneric nonGeneric;
+        public byte[] bytes;
         public TransformInfo transformInfo => GameData.Instance.transformInfoMap[id];
         public FlightInput flightInput => GameData.Instance.flightInputs[id];
         public AIInfo aiInfo => GameData.Instance.aiInfoMap[id];

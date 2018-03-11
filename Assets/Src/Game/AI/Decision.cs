@@ -1,5 +1,4 @@
-﻿
-namespace SpaceGame.AI {
+﻿namespace SpaceGame.AI {
 
 /* The idea here is that we have a list of possible actions the AI can take
  * Each of those actions requires a decision to be made: should we take this action?
@@ -16,14 +15,16 @@ namespace SpaceGame.AI {
  * Decisions can also have requirements, for example a mission might forbid the AI from attacking
  * certain ships, or we require that the target be low on health
  */
-    public sealed class Decision<TContext> where TContext : DecisionContext {
+    public sealed class Decision {
 
         public string name;
         public string description;
-        public AIAction<TContext> action;
-        public Evaluator<TContext> evaluator;
-        public IContextCreator<TContext> contextCreator;
+        public AIAction action;
+        public Evaluator evaluator;
+        public ContextCreator contextCreator;
 
     }
+
+  
 
 }

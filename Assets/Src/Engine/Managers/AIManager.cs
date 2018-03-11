@@ -1,33 +1,33 @@
-﻿using System;
-using Src.Engine;
+﻿using Src.Engine;
 using System.Collections.Generic;
 using SpaceGame.AI;
 using SpaceGame.Events;
 using SpaceGame.Util;
+using UnityEngine;
 
 namespace SpaceGame.Engine {
 
     public class AIManager : ManagerBase {
 
         public List<AIInfo> agents;
-        public List<AIAction<DecisionContext>> actionsToSetup;
-        public List<AIAction<DecisionContext>> actionsToTick;
-        public List<AIAction<DecisionContext>> actionsToTeardown;
+        public List<AIAction> actionsToSetup;
+        public List<AIAction> actionsToTick;
+        public List<AIAction> actionsToTeardown;
 
         public void Initialize() {
             agents = new List<AIInfo>(16);
-            actionsToTick = new List<AIAction<DecisionContext>>(16);
-            actionsToSetup = new List<AIAction<DecisionContext>>(16);
-            actionsToTeardown = new List<AIAction<DecisionContext>>(16);
+            actionsToTick = new List<AIAction>(16);
+            actionsToSetup = new List<AIAction>(16);
+            actionsToTeardown = new List<AIAction>(16);
 
-            AddListener<Evt_EntityArrived>(OnEntityArrived);
+            AddListener<Evt_EntityBehaviorChanged>(OnEntityBehaviorChanged);
             AddListener<Evt_EntityDeparting>(OnEntityDeparting);
         }
 
-        private void OnEntityArrived(Evt_EntityArrived evt) {
+        private void OnEntityBehaviorChanged(Evt_EntityBehaviorChanged evt) {
             AIInfo aiInfo = GameData.Instance.aiInfoMap[evt.entityId];
 
-            if (aiInfo.decisions != null && aiInfo.decisions.Length > 0) {
+            if (aiInfo.decisions != null && aiInfo.decisions.Count > 0) {
                 agents.Add(aiInfo);
             }
 
@@ -37,16 +37,16 @@ namespace SpaceGame.Engine {
             agents.Remove(GameData.Instance.aiInfoMap[evt.entityId]);
         }
 
-        public AIAction<DecisionContext> Decide(AIInfo aiInfo) {
+        public AIAction Decide(AIInfo aiInfo) {
             float cutoff = float.MinValue;
             aiInfo.lastDecisionTime = GameTimer.Instance.GetFrameTimestamp();
 
-            ScoreResult<DecisionContext> bestResult = new ScoreResult<DecisionContext>();
-            Decision<DecisionContext>[] decisions = aiInfo.decisions;
+            ScoreResult bestResult = new ScoreResult();
+            List<Decision> decisions = aiInfo.decisions;
 
-            for (int i = 0; i < decisions.Length; i++) {
-                Decision<DecisionContext> decision = decisions[i];
-                ScoreResult<DecisionContext> result = decision.evaluator.Score(decision, cutoff);
+            for (int i = 0; i < decisions.Count; i++) {
+                Decision decision = decisions[i];
+                ScoreResult result = decision.evaluator.Score(aiInfo.Entity, decision, cutoff);
 
                 if (result.score > cutoff) {
                     cutoff = result.score;
@@ -54,6 +54,8 @@ namespace SpaceGame.Engine {
                 }
             }
 
+            bestResult.action.SetContext(bestResult.context);
+            aiInfo.action = bestResult.action;
             return bestResult.action;
         }
 
@@ -62,9 +64,19 @@ namespace SpaceGame.Engine {
 
             for (int i = 0; i < count; i++) {
                 AIInfo agent = agents[i];
+                agent.decisionDuration = 1f;
 
                 if (GameTimer.Instance.FrameTimeElapsed(agent.decisionDuration, agent.lastDecisionTime)) {
-                    actionsToSetup.Add(Decide(agent));
+                    if (agent.action != null) {
+                        actionsToSetup.Remove(agent.action);
+                        actionsToTeardown.Remove(agent.action);
+                        actionsToTick.Remove(agent.action);
+                        agent.action.Teardown();
+                    }
+
+                    AIAction action = Decide(agent);
+                    Debug.Assert(action != null, "action != null");
+                    actionsToSetup.Add(action);
                 }
             }
 
@@ -72,14 +84,14 @@ namespace SpaceGame.Engine {
 
             for (int i = 0; i < count; i++) {
                 actionsToSetup[i].Setup();
-                actionsToTick.Add(actionsToTick[i]);
+                actionsToTick.Add(actionsToSetup[i]);
             }
 
             actionsToSetup.Clear();
             count = actionsToTick.Count;
 
             for (int i = 0; i < count; i++) {
-                AIAction<DecisionContext> action = actionsToTick[i];
+                AIAction action = actionsToTick[i];
 
                 if (action.Tick()) {
                     // todo use double buffer instead of remove

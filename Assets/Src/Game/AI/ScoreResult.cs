@@ -1,12 +1,12 @@
 ﻿namespace SpaceGame.AI {
 
-    internal struct ScoreResult<TContext> where TContext : DecisionContext {
+    internal struct ScoreResult {
 
         public float score;
-        public TContext context;
-        public AIAction<TContext> action;
+        public AIAction action;
+        public DecisionContext context;
 
-        public ScoreResult(float score, TContext context, AIAction<TContext> action) {
+        public ScoreResult(float score, DecisionContext context, AIAction action) {
             this.score = score;
             this.context = context;
             this.action = action;

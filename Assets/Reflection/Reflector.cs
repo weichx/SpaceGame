@@ -1,11 +1,12 @@
-﻿namespace SpaceGame.Reflection {
+﻿using SpaceGame.Util;
+
+namespace SpaceGame.Reflection {
 using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-
 
 public static class Reflector {
 
@@ -29,6 +30,7 @@ public static class Reflector {
             }
         }
         FindPublicStaticMethods();
+        
     }
 
     //todo probably add an attribute requirement as well to narrow search space even more
@@ -55,10 +57,6 @@ public static class Reflector {
         return pointerLookup.TryGetValue(signature, out fn) ? fn : null;
     }
 
-    public static FieldInfo GetProperty(object obj, string property) {
-        return obj.GetType().GetField(property);
-    }
-
     public static List<MethodPointer> FindMethodPointersWithAttribute(Type attrType, Type retnType, params Type[] parameterTypes) {
         var list = new List<MethodPointer>();
         for (int i = 0; i < methodSet.Count; i++) {
@@ -78,7 +76,7 @@ public static class Reflector {
         if (type.IsGenericTypeDefinition) {
             return FindGenericSubClasses(type);
         }
-        var retn = new List<Type>();
+        var retn = new List<Type>(4);
         for (int i = 0; i < filteredAssemblies.Count; i++) {
             Assembly assembly = filteredAssemblies[i];
             Type[] types = assembly.GetTypes();
@@ -99,7 +97,7 @@ public static class Reflector {
     }
 
     private static List<Type> FindGenericSubClasses(Type type, bool includeInputType = false) {
-        var retn = new List<Type>();
+        var retn = new List<Type>(4);
         for (int i = 0; i < filteredAssemblies.Count; i++) {
             Assembly assembly = filteredAssemblies[i];
             Type[] types = assembly.GetTypes();
@@ -139,7 +137,7 @@ public static class Reflector {
         for (int i = 0; i < methods.Length; i++) {
             MethodInfo method = methods[i];
             if (method.Name == methodName && MatchesSignature(method, retnType, arguements)) {
-                return null;// CreateDelegate(method);
+                return CreateDelegate(method);
             }
         }
         return null;
@@ -176,133 +174,8 @@ public static class Reflector {
         return Delegate.CreateDelegate(delegateType, null, method);
     }
 
-//#if UNITY_EDITOR
-//    private static List<Meta> customPropertyDrawerTypes;
-//    private static Dictionary<Type, UnityEditor.PropertyDrawer> drawerCache;
-//
-//    private struct Meta {
-//        public Type attributeArgumentType;
-//        public Type attributeDrawerType;
-//
-//        public Meta(Type attributeDrawerType, Type attributeArgumentType) {
-//            this.attributeDrawerType = attributeDrawerType;
-//            this.attributeArgumentType = attributeArgumentType;
-//        }
-//    }
-//
-//    //todo this isnt well cached
-//    private static List<Meta> GetPropertyDrawerTypes(Assembly assembly) {
-//        if (customPropertyDrawerTypes != null) return customPropertyDrawerTypes;
-//
-//        customPropertyDrawerTypes = new List<Meta>();
-//        BindingFlags bindFlags = BindingFlags.NonPublic | BindingFlags.Instance;
-//
-//        Type[] assemblyTypes = assembly.GetTypes();
-//
-//        for (int i = 0; i < assemblyTypes.Length; i++) {
-//            object[] attributes = assemblyTypes[i].GetCustomAttributes(typeof(UnityEditor.CustomPropertyDrawer), true);
-//            if (attributes.Length > 0) {
-//                FieldInfo m_TypeFieldInfo = attributes[0].GetType().GetField("m_Type", bindFlags);
-//                Type m_Type = m_TypeFieldInfo.GetValue(attributes[0]) as Type;
-//                customPropertyDrawerTypes.Add(new Meta(assemblyTypes[i], m_Type));
-//            }
-//        }
-//        return customPropertyDrawerTypes;
-//    }
-//
-//    private static Dictionary<Type, Type> extendedDrawerTypeMap;
-//
-//    private static void BuildExtendedDrawerTypeMap() {
-//        if (extendedDrawerTypeMap != null) return;
-//        extendedDrawerTypeMap = new Dictionary<Type, Type>();
-//        List<Type> extendedDrawerSubclasses = FindSubClasses<PropertyDrawerX>();
-//        for (int i = 0; i < extendedDrawerSubclasses.Count; i++) {
-//            Type drawerType = extendedDrawerSubclasses[i];
-//            object[] attributes = drawerType.GetCustomAttributes(typeof(PropertyDrawerFor), false);
-//            for (int j = 0; j < attributes.Length; j++) {
-//                PropertyDrawerFor attr = attributes[j] as PropertyDrawerFor;
-//                extendedDrawerTypeMap[attr.type] = drawerType;
-//            }
-//        }
-//    }
-//
-//    public static Type GetExtendedDrawerTypeFor(Type type) {
-//        BuildExtendedDrawerTypeMap();
-//        Type drawerType = extendedDrawerTypeMap.Get(type);
-//        while (drawerType == null && type.BaseType != null && type.BaseType != typeof(object)) {
-//            type = type.BaseType;
-//            drawerType = extendedDrawerTypeMap.Get(type);
-//        }
-//        return drawerType;
-//    }
-//    
-//    private static Dictionary<SerializedPropertyX, PropertyDrawerX> drawerInstanceCache = new Dictionary<SerializedPropertyX, PropertyDrawerX>();
-//    public static PropertyDrawerX GetCustomPropertyDrawerFor(SerializedPropertyX property) {
-//        if (drawerCache == null) {
-//            drawerCache = new Dictionary<Type, UnityEditor.PropertyDrawer>();
-//        }
-//
-//        PropertyDrawerX drawerX = drawerInstanceCache.Get(property);
-//        if (drawerX == null) {
-//            var drawerType = GetExtendedDrawerTypeFor(property.Type);
-//            if (drawerType == null) return null;
-//            drawerX = Activator.CreateInstance(drawerType) as PropertyDrawerX;
-//            drawerInstanceCache[property] = drawerX;
-//        }
-//        return drawerX;
-//    }
-//    
-//    public static UnityEditor.PropertyDrawer GetCustomPropertyDrawerFor(Type type, params Assembly[] assemblies) {
-//        if (drawerCache == null) {
-//            drawerCache = new Dictionary<Type, UnityEditor.PropertyDrawer>();
-//        }
-//        UnityEditor.PropertyDrawer drawer;
-//        if (drawerCache.TryGetValue(type, out drawer)) {
-//            return drawer;
-//        }
-//
-//        if (type == typeof(UnityEngine.RangeAttribute)) {
-//
-//            drawer = Activator.CreateInstance(typeof(UnityEditor.EditorGUI).Assembly.GetType("UnityEditor.RangeDrawer")) as UnityEditor.PropertyDrawer;
-//            drawerCache[type] = drawer;
-//            return drawer;
-//        }
-//
-//        for (int a = 0; a < assemblies.Length; a++) {
-//            List<Meta> metaList = GetPropertyDrawerTypes(assemblies[a]);
-//            for (int i = 0; i < metaList.Count; i++) {
-//                Meta drawerMeta = metaList[i];
-//                Type attrArgument = drawerMeta.attributeArgumentType;
-//                if (type == attrArgument || type.IsSubclassOf(attrArgument)) {
-//                    drawer = Activator.CreateInstance(drawerMeta.attributeDrawerType) as UnityEditor.PropertyDrawer;
-//                    drawerCache[type] = drawer;
-//                    return drawer;
-//                }
-//            }
-//        }
-//        return null;
-//    }
-//#endif
     private static bool FilterAssembly(Assembly assembly) {
         return assembly.FullName.StartsWith("Assembly-CSharp");
-        return assembly.ManifestModule.Name != "<In Memory Module>"
-        && !assembly.FullName.StartsWith("System")
-        && !assembly.FullName.StartsWith("Mono")
-        && !assembly.FullName.StartsWith("Syntax")
-        && !assembly.FullName.StartsWith("I18N")
-        && !assembly.FullName.StartsWith("Boo")
-        && !assembly.FullName.StartsWith("mscorlib")
-        && !assembly.FullName.StartsWith("nunit")
-        && !assembly.FullName.StartsWith("ICSharp")
-        && !assembly.FullName.StartsWith("Unity")
-        && !assembly.FullName.StartsWith("Microsoft")
-        && assembly.Location.IndexOf("App_Web") == -1
-        && assembly.Location.IndexOf("App_global") == -1
-        && assembly.FullName.IndexOf("CppCodeProvider") == -1
-        && assembly.FullName.IndexOf("WebMatrix") == -1
-        && assembly.FullName.IndexOf("SMDiagnostics") == -1
-        && assembly.FullName.IndexOf("UnityScript") == -1
-        && !string.IsNullOrEmpty(assembly.Location);
     }
 }
 

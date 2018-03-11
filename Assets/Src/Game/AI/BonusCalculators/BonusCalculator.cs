@@ -1,8 +1,13 @@
-﻿namespace SpaceGame.AI {
+﻿using UnityEngine;
 
-    public class BonusCalculator<TContext> where TContext : DecisionContext {
+namespace SpaceGame.AI {
+
+    public abstract class BonusCalculator {}
+    
+    public class BonusCalculator<TContext> : BonusCalculator where TContext : DecisionContext {
 
         public virtual float GetBonus(TContext context) {
+            Debug.Log("Generic Bonus");
             return 0;
         }
 

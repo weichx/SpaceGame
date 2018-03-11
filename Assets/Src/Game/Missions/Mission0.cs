@@ -35,24 +35,7 @@ namespace SpaceGame.Missions {
 
         public void Tick() {
             stateChart.Tick();
-        }
-
-       
-        public class WaypointContextCreator : IContextCreator<WaypointContext> {
-
-            public void CreateContexts(List<WaypointContext> outputList) {
-                List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
-
-                for (int i = 0; i < waypointPaths.Count; i++) {
-                    WaypointContext context = new WaypointContext();
-                    outputList.Add(context);
-                }
-            }
-
-        }
-
-       
-        
+        }      
 
         protected override void BuildStateChart(StateChart.StateChartBuilder builder) {
             Action<string, Action> State = builder.State;
@@ -64,33 +47,35 @@ namespace SpaceGame.Missions {
              * oence1.AddPrimaryGoal(new ExitToHyperspaceGoal(hyperpointId));
              */
 
-            Decision<WaypointContext> decision = new Decision<WaypointContext>();
+            Decision decision = new Decision();
             decision.action = new FlyWaypointsAction();
             decision.contextCreator = new WaypointContextCreator();
             decision.evaluator = new Evaluator<WaypointContext>();
             decision.evaluator.bonusCalculator = new BonusCalculator<WaypointContext>();
-            decision.evaluator.considerations = new Consideration<WaypointContext>[] {
+            decision.evaluator.considerations = new Consideration[] {
                 new WaypointConsideration()
             };
-            
+
             State("Mission Init", () => {
                 Init(() => {
                     // not to have to pre-allocate
                     // de-allocate is a-ok
                     Deactivate(freighterOence);
 
-                    SetTimeout(2f, () => Arrive(freighterOence.GetEntity("Oence 1")));
+                    SetTimeout(0f, () => Arrive(freighterOence.GetEntity("Oence 1")));
 //                    SetTimeout(3f, () => Arrive(freighterOence.GetEntity("Oence 2")));
 //                    SetTimeout(4f, () => Arrive(freighterOence.GetEntity("Oence 3")));
 //                    SetTimeout(5f, () => Arrive(freighterOence.GetEntity("Oence 4")));
 //                    SetTimeout(6f, () => Arrive(freighterOence.GetEntity("Oence 5")));
 
                     OnGameEvent<Evt_EntityArrived>((evt) => {
+                        Debug.Log("Arrived");
                         Entity entity = evt.Entity;
-                        //GameSystems.AISystem.AddBehaviors(aiInfo, new BehaviorSet());
-                        entity.aiInfo.AddBehaviors(new BehaviorSet());
-                        
-//                        Depart(EntityDatabase.GetEntityById(evt.entityId));
+                        BehaviorSet behaviors = new BehaviorSet();
+                        behaviors.decisions = new List<Decision>();
+                        behaviors.decisions.Add(decision);
+                        entity.aiInfo.AddBehaviors(behaviors);
+                        EventSystem.Instance.Trigger(new Evt_EntityBehaviorChanged(entity.id));
                     });
                 });
             });
@@ -101,12 +86,6 @@ namespace SpaceGame.Missions {
 
             State("Mission Succeeded", () => { });
 
-            /*
-             * 1. Gather all entities at start & register in database
-             * 2. Get explicit references to them in mission script
-             * 3. Read from data file & spawn on mission start
-             * 
-             */
         }
 
     }

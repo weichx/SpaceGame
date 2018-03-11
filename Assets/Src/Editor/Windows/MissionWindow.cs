@@ -3,10 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using SpaceGame;
+using SpaceGame.Editor.Reflection;
+using SpaceGame.EditorGUIX;
+using SpaceGame.FileTypes;
+using SpaceGame.Reflection;
 using SpaceGame.Util;
 using SpaceGame.Util.Texture2DExtensions;
+using Src.Engine;
 using UnityEditor;
 using UnityEngine;
+using Weichx.Persistence;
 
 namespace Src.Editor {
 
@@ -20,7 +26,7 @@ namespace Src.Editor {
             this.content = new GUIContent(labelText);
             this.data = data;
             this.onClick = callback;
-            content.image = EditorGUIUtility.FindTexture("tree_icon");
+            content.image = EditorGUIUtility.Load("xwing_icon.png") as Texture2D;
         }
 
         public void OnGUI(Rect rect, GUIStyle style) {
@@ -54,10 +60,12 @@ namespace Src.Editor {
         private List<Entity> entitites;
         private GUIStyle selectedStyle;
         private GUIStyle unselectedStyle;
+        private GameDataFile gameDataFile;
+        private ShipDefinition shipDefinition;
 
         [MenuItem("Window/Mission Editor")]
         private static void Init() {
-            GetWindow<MissionWindow>();
+            GetWindow<MissionWindow>("Mission Editor");
         }
 
         private void MakeStyles() {
@@ -77,9 +85,15 @@ namespace Src.Editor {
             minPaneWidthRight = 100
         };
 
+        public ReflectedObject shipDefReflected;
+
         private void OnEnable() {
             EditorApplication.hierarchyWindowChanged += CollectEntities;
             CollectEntities();
+            gameDataFile = Resources.Load<GameDataFile>("Game Data");
+            gameDataFile.GetShipDefinitions();
+            shipDefinition = new ShipDefinition();
+            shipDefReflected = new ReflectedObject(shipDefinition);
         }
 
         private void OnDisable() {
@@ -166,13 +180,23 @@ namespace Src.Editor {
         }
 
         private void RenderDetails() {
-            Vertical((() => {
-                ;
-                EditorGUILayout.TextField("Entity Name");
-                ShipType type = ShipType.TieFighter;
-                type = (ShipType) EditorGUILayout.EnumPopup("Ship Type", type);
-            }));
-//            EditorGUILayout.ObjectField(new GUIContent(""))
+            Vertical(() => {
+                
+                EditorGUILayoutX.DrawProperties(shipDefReflected);
+
+                if (GUILayout.Button("Save")) {
+                    gameDataFile.CreateOrReplaceShipDefinition(shipDefinition.name, shipDefinition);
+                }
+
+            });
+        }
+
+        private void MoveAssetToResources(UnityEngine.Object asset) {
+            string assetPath = AssetDatabase.GetAssetPath(asset);
+            if (assetPath.IndexOf("Resources", StringComparison.Ordinal) == -1) {
+                AssetDatabase.MoveAsset(assetPath, "Assets/Resources/" + asset.name);
+                AssetDatabase.Refresh();
+            }
         }
 
         enum MissionWindowPage {
@@ -192,37 +216,6 @@ namespace Src.Editor {
 
         private void Repeat<T>(List<T> list, Action<T> render) {
             list.ForEach(render);
-        }
-
-        class ShipDefinition {
-
-            public string name;
-            public GameObject prefab;
-
-            public float maxSpeed;
-            public float turnRate;
-            public float accelerationRate;
-
-            public float hitpoints;
-            public float shieldPoints;
-
-        }
-
-//            /*
-//             * ToSerializedObject() {
-//             *     SerializedObject obj = new SerializedObject();
-//             *     obj.AddProperty(nameof(prefab), prefab);
-//             *     name = obj.GetProperty(nameof(name), name);
-//             */
-//
-//        }
-//        
-        enum ShipType {
-
-            TieFighter,
-            BulkFrigate,
-            StationType1
-
         }
 
     }

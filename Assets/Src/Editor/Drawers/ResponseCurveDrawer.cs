@@ -1,23 +1,10 @@
 ﻿using SpaceGame.AI;
-using SpaceGame.Util.Texture2DExtensions;
 using Src.Editor;
 using UnityEditor;
 using UnityEngine;
+using SpaceGame.Util.Texture2DExtensions;
 
 namespace SpaceGame.Editor {
-
-    static class RectExtensions {
-
-        public static Rect GetPropertyRect(this Rect self) {
-            return new Rect() {
-                x = self.x,
-                y = self.y + EditorGUIUtility.singleLineHeight,
-                width = self.width,
-                height = self.height - EditorGUIUtility.singleLineHeight
-            };
-        }
-
-    }
 
     public class GUIRect {
 
@@ -59,7 +46,7 @@ namespace SpaceGame.Editor {
     }
 
     [CustomPropertyDrawer(typeof(ResponseCurve))]
-    public class ResponseCurveDrawer : PropertyDrawer {
+    public class ResponseCurveDrawer : UnityEditor.PropertyDrawer {
 
         private ResponseCurve curve;
         private Texture2D graphTexture;

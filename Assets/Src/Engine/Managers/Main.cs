@@ -1,4 +1,5 @@
-﻿using SpaceGame.Events;
+﻿using System.Linq;
+using SpaceGame.Events;
 using SpaceGame.Systems;
 using SpaceGame.Util;
 using Src.Engine;
@@ -10,6 +11,7 @@ namespace SpaceGame.Engine {
     [RequireComponent(typeof(DamageManager))]
     [RequireComponent(typeof(DestructionManager))]
     [RequireComponent(typeof(PropulsionManager))]
+    [RequireComponent(typeof(AIManager))]
     public class Main : MonoBehaviour {
 
         private WeaponManager weaponManager;
@@ -17,36 +19,42 @@ namespace SpaceGame.Engine {
         private DestructionManager destroManager;
         private PropulsionManager propulsionManager;
         private AIManager aiManager;
-        
+
         private void Awake() {
+            WaypointPath[] waypoints = Resources.FindObjectsOfTypeAll<WaypointPath>();
+            waypoints.ToList().ForEach((waypoint) => {
+                if (!waypoint.gameObject.IsPrefab()) {
+                    GameData.Instance.RegisterWaypointPath(waypoint);
+                }
+            });
             weaponManager = GetComponent<WeaponManager>();
             damageManager = GetComponent<DamageManager>();
             destroManager = GetComponent<DestructionManager>();
             propulsionManager = GetComponent<PropulsionManager>();
             aiManager = GetComponent<AIManager>();
-            
+
             weaponManager.Initialize();
             damageManager.Initialize();
             destroManager.Initialize();
             propulsionManager.Initialize();
             aiManager.Initialize();
-            
+
             EventSystem.Instance.AddListener<Evt_EntityArriving>(OnEntityArriving);
             EventSystem.Instance.AddListener<Evt_EntityDeparted>(OnEntityDeparted);
         }
 
         private void OnEntityArriving(Evt_EntityArriving evt) {
-            EntityDatabase.GetEntityById(evt.entityId).gameObject.SetActive(true);    
+            EntityDatabase.GetEntityById(evt.entityId).gameObject.SetActive(true);
         }
 
         private void OnEntityDeparted(Evt_EntityDeparted evt) {
-            EntityDatabase.GetEntityById(evt.entityId).gameObject.SetActive(false);    
+            EntityDatabase.GetEntityById(evt.entityId).gameObject.SetActive(false);
         }
-        
+
         private void Update() {
             GameTimer.Instance.Tick();
             propulsionManager.Tick();
-            
+
             EventSystem.Instance.Tick();
             weaponManager.Tick();
             EventSystem.Instance.Tick();

@@ -1,10 +1,12 @@
-﻿namespace SpaceGame.AI {
+﻿using System.Collections.Generic;
+
+namespace SpaceGame.AI {
 
     public class BehaviorSet {
 
         public int id;
         public string name;
-        public Decision<DecisionContext>[] decisions;
+        public List<Decision> decisions;
 
     }
 

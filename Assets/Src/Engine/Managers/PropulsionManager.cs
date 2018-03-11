@@ -61,21 +61,22 @@ namespace Src.Engine {
             List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
             int count = actives.Count;
             float deltaTime = GameTimer.Instance.deltaTime;
-//            for (int i = 0; i < count; i++) {
-//                int entityId = actives[i];
-//                TransformInfo entityTransform = transformInfos[entityId];
-//                Quaternion rotation = PropulsionUtil.RotateTowardsDirection(
-//                    entityTransform.rotation,
-//                    entityTransform.DirectionTo(target.transform.position), //new Vector3(),
-//                    turnRate,
-//                    deltaTime
-//                );
-//
-//                float speed = 20 * deltaTime;
-//                Vector3 position = entityTransform.position + (rotation.GetForward() * speed);
-//
-//                transformInfos[entityId] = new TransformInfo(entityId, position, rotation);
-//            }
+            for (int i = 0; i < count; i++) {
+                int entityId = actives[i];
+                TransformInfo entityTransform = transformInfos[entityId];
+                AIInfo agent = GameData.Instance.aiInfoMap[entityId];
+                Quaternion rotation = PropulsionUtil.RotateTowardsDirection(
+                    entityTransform.rotation,
+                    entityTransform.DirectionTo(agent.Entity.targetPosition),
+                    90f,//turnRate,
+                    deltaTime
+                );
+
+                float speed = 100 * deltaTime;
+                Vector3 position = entityTransform.position + (rotation.GetForward() * speed);
+
+                transformInfos[entityId] = new TransformInfo(entityId, position, rotation);
+            }
         }
 
         private void TickArrivals() {

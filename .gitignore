@@ -21,6 +21,7 @@ ProjectSettings/*
 /Assets/Freespace Prefabs
 /Assets/Editor Default Resources
 /Assets/Standard Assets
+
 Plugins/
 Resources/
 *.exe

@@ -4,6 +4,10 @@
 
         public readonly WaypointPath path;
 
+        public WaypointContext(Entity agent, WaypointPath path) : base(agent) {
+            this.path = path;
+        }
+
     }
 
 
