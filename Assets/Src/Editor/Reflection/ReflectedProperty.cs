@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using SpaceGame.Reflection;
 using SpaceGame.Util;
 using UnityEngine;
 
@@ -13,19 +12,19 @@ namespace SpaceGame.Editor.Reflection {
                                               BindingFlags.NonPublic |
                                               BindingFlags.Instance;
 
-        public GUIContent guiContent;
-        public readonly ReflectedProperty parent;
+        protected GUIContent guiContent;
+        protected ReflectedProperty parent;
         protected object actualValue;
         protected object originalValue;
         protected Type actualType;
         protected Type declaredType;
         protected Type originalType;
         protected string label;
-        protected string name;
+        public readonly string name;
         protected bool isExpanded;
         protected List<ReflectedProperty> children;
-        protected ReflectedPropertyDrawer drawer;
-        
+        protected FieldInfo fieldInfo;
+
         protected ReflectedProperty(ReflectedProperty parent, string name, Type declaredType, object value) {
             this.parent = parent;
             this.name = name;
@@ -37,7 +36,11 @@ namespace SpaceGame.Editor.Reflection {
             this.label = StringUtil.SplitAndTitlize(name);
             this.children = new List<ReflectedProperty>(4);
             this.guiContent = new GUIContent(label);
-            this.drawer = EditorReflector.CreateReflectedPropertyDrawer(actualType);
+            this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(actualType);
+            if (parent != null) {
+                fieldInfo = parent.Type.GetField(name, BindFlags);
+            }
+
         }
 
         public virtual bool IsExpanded {
@@ -45,7 +48,9 @@ namespace SpaceGame.Editor.Reflection {
             set { isExpanded = value; }
         }
 
-        public virtual string Label => label;
+        public ReflectedPropertyDrawer Drawer { get; set; }
+
+        public virtual string Label => DidChange ? label + "*" : label;
         public virtual Type Type => actualType;
         public virtual int ChildCount => children.Count;
         public virtual bool DidChange => actualValue != originalValue;
@@ -60,23 +65,47 @@ namespace SpaceGame.Editor.Reflection {
             return children[idx];
         }
 
+        public virtual FieldInfo FieldInfo => fieldInfo;
+
         public ReflectedProperty FindPropertyRelative(string propertyName) {
             return children?.Find((property => property.name == propertyName));
         }
 
+        // todo this isn't cached at all right now
         public virtual void ApplyChanges() {
-            if (!DidChange) return;
-
+            if (parent != null) {
+                fieldInfo.SetValue(parent.Value, Value);
+            }
+            if (children != null) {
+                for (int i = 0; i < children.Count; i++) {
+                    children[i].ApplyChanges();
+                }
+            }
+            originalValue = actualValue;
         }
 
         public virtual void OnGUILayout() { }
-        
+
         public virtual void OnGUI(Rect rect) { }
 
         public virtual float GetPropertyHeight() {
-            return drawer.GetPropertyHeight(this);
+            return Drawer.GetPropertyHeight(this);
         }
 
+        protected void Destroy() {
+            DestroyChildren();
+            parent?.children.Remove(this);
+            this.Drawer = null;
+            this.actualValue = null;
+            this.children = null;
+            this.parent = null;
+        }
+
+        protected void DestroyChildren() {
+            for (int i = 0; i < children.Count; i++) {
+                children[i].Destroy();
+            }
+        }
 
         public abstract object Value { get; set; }
 
@@ -85,6 +114,13 @@ namespace SpaceGame.Editor.Reflection {
             set { }
         }
 
+        public GUIContent GUIContent {
+            get { 
+                guiContent.text = Label;
+                return guiContent;
+            }
+        }
+        
         public override string ToString() {
             return Label;
         }

@@ -164,6 +164,14 @@ namespace Weichx.Persistence {
             return new StringSerializer(referenceMap).ToString();
         }
 
+        public static T Deserialize(string serializedSnapshot) {
+            return FromString(serializedSnapshot).Deserialize();
+        }
+
+        public static string Serialize(T target) {
+            return new Snapshot<T>(target).Serialize();
+        }
+
         public T Deserialize() {
             if (deserializer == null) {
                 deserializer = new Deserializer(referenceMap);
@@ -172,7 +180,46 @@ namespace Weichx.Persistence {
         }
 
         public static Snapshot<T> FromString(string serializedSnapshot) {
+            if (string.IsNullOrEmpty(serializedSnapshot)) {
+                return DefaultSnapshot();
+            }
             return new Snapshot<T>(new StringDeserializer().ObjectFromString<T>(serializedSnapshot));
+        }
+
+        public static Snapshot<T> DefaultSnapshot() {
+            Type type = typeof(T);
+            object target;
+            if (type.IsArray) {
+                target = Array.CreateInstance(type.GetElementType(), 0);
+            }
+            else {
+                target = Activator.CreateInstance(type);
+            }
+            return new Snapshot<T>((T)target);
+        }
+        
+        public static string SerializeDefault() {
+            Type type = typeof(T);
+            object target;
+            if (type.IsArray) {
+                target = Array.CreateInstance(type.GetElementType(), 0);
+            }
+            else {
+                target = Activator.CreateInstance(type);
+            }
+            return new Snapshot<T>((T) target).Serialize();
+        }
+
+        public static T DeserializeDefault() {
+            Type type = typeof(T);
+            object target;
+            if (type.IsArray) {
+                target = Array.CreateInstance(type.GetElementType(), 0);
+            }
+            else {
+                target = Activator.CreateInstance(type);
+            }
+            return new Snapshot<T>((T) target).Deserialize();
         }
 
     }

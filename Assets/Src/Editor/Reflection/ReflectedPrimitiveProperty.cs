@@ -10,12 +10,12 @@ namespace SpaceGame.Editor.Reflection {
         public override object Value {
             get { return actualValue; }
             set {
-                if (value == null) {
+                if (value == null && actualValue != null) {
                     actualType = declaredType;
                     actualValue = EditorReflector.GetDefaultForType(declaredType);
                 }
                 //todo for primitives types must be convertable
-                else if (declaredType.IsInstanceOfType(value)) {
+                else if (value != null && declaredType.IsInstanceOfType(value)) {
                     actualType = value.GetType();
                     actualValue = value;
                 }

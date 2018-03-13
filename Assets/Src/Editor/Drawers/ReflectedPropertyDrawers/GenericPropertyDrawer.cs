@@ -16,7 +16,7 @@ namespace SpaceGame.Editor.Reflection {
                 property.Value = EditorGUILayout.ObjectField(label, (UnityEngine.Object) property.Value, type, true);
             }
             else if (type.IsArray) {
-                property.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, property.guiContent);
+                property.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, property.GUIContent);
                 if (property.IsExpanded) {
                     EditorGUI.indentLevel++;
                     property.ArraySize = EditorGUILayout.IntField(GUIComponentUtil.TempLabel("Size"), property.ArraySize);

@@ -13,6 +13,42 @@ namespace SpaceGame.Util {
             }
         }
 
+        public static T Find<T, U>(this List<T> list, U target, Func<T, U, bool> predicate) {
+            for (int i = 0; i < list.Count; i++) {
+                if (predicate(list[i], target)) {
+                    return list[i];
+                }
+            }
+            return default(T);
+        }
+
+        public static int FindByIndex<T, U>(this List<T> list, U target, Func<T, U, bool> predicate) {
+            for (int i = 0; i < list.Count; i++) {
+                if (predicate(list[i], target)) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+        
+        public static List<T> FindAll<T, U>(this List<T> list, U target, Func<T, U, bool> predicate) {
+            List<T> retn = new List<T>(4);
+            for (int i = 0; i < list.Count; i++) {
+                if (predicate(list[i], target)) {
+                    retn.Add(list[i]);
+                }
+            }
+            return retn;
+        }
+
+        public static List<V> Map<T, U, V>(this List<T> list, U target, Func<T, U, V> mapFn) {
+            List<V> retn = new List<V>(list.Count);
+            for (int i = 0; i < list.Count; i++) {
+                retn.Add(mapFn(list[i], target));
+            }
+            return retn;
+        }
+
         public static void Resize<T>(this List<T> list, int sz, T c = default(T)) {
             int cur = list.Count;
             if (sz < cur)
@@ -49,7 +85,7 @@ namespace SpaceGame.Util {
         /// <param name="value">Value to insert</param>
         /// <param name="comparison">Comparison to determine sort order with</param>
         /// <typeparam name="T">Type of element to insert and type of elements in the list</typeparam>
-        public static void InsertIntoSortedList<T>(this IList<T> list,T value,Comparison<T> comparison) {
+        public static void InsertIntoSortedList<T>(this IList<T> list, T value, Comparison<T> comparison) {
             int startIndex = 0;
             int endIndex = list.Count;
             while (endIndex > startIndex) {

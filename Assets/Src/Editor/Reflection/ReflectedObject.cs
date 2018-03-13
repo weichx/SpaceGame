@@ -9,6 +9,10 @@
             root = new ReflectedInstanceProperty(null, "--Root--", target.GetType(), target);
         }
 
+        public void ApplyModifiedProperties() {
+            root.ApplyChanges();    
+        }
+        
         public ReflectedProperty GetChildAt(int idx) {
             return root.ChildAt(idx);
         }

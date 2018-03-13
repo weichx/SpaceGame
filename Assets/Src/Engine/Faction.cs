@@ -25,6 +25,8 @@ namespace SpaceGame {
 
         public string Name { get; private set; }
 
+        public Faction() { }
+
         public Faction(string name) {
             this.index = idGenerator++;
             this.Name = name;

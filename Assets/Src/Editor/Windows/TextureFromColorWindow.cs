@@ -6,11 +6,6 @@ namespace SpaceGame.Editor.Windows {
 
     public class TextureFromColorWindow : EditorWindow {
 
-        [MenuItem("Window/Texture From Color")]
-        private static void Init() {
-            GetWindow<TextureFromColorWindow>("Texture From Color");
-        }
-
         private Color color;
         private Texture2D textureAsset;
         

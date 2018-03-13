@@ -30,7 +30,6 @@ namespace SpaceGame.Editor.Reflection {
             allTypes = new List<Type>(128);
             cache = new GenericCache();
             var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            int count = 0;
             for (int i = 0; i < assemblies.Length; i++) {
                 Assembly assembly = assemblies[i];
                 if (FilterAssembly(assembly)) {
@@ -174,18 +173,24 @@ namespace SpaceGame.Editor.Reflection {
         }
 
         public static Type GetPropertyDrawerForType(ReflectedProperty property) {
+            if (property.FieldInfo != null) {
+                object[] attrs = property.FieldInfo.GetCustomAttributes(typeof(UsePropertyDrawer), false);
+                if (attrs.Length > 0) {
+                    return ((UsePropertyDrawer) attrs[0]).type;
+                }
+            }
             return cache.GetItemFromCache<Type, Type>(TypeDrawerCache, property.Type);
         }
 
-        
         public static ReflectedPropertyDrawer CreateReflectedPropertyDrawer(Type type) {
+            //todo -- this creates a new uncached drawer every time
             Type drawerType = cache.GetItemFromCache<Type, Type>(TypeDrawerCache, type);
             if (drawerType != null) {
                 return Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
             }
             return new GenericPropertyDrawer();
         }
-        
+
 //        private static List<Meta> customPropertyDrawerTypes;
 //        private static Dictionary<Type, UnityEditor.PropertyDrawer> drawerCache;
 //
@@ -299,7 +304,6 @@ namespace SpaceGame.Editor.Reflection {
             string name = assembly.FullName;
             return name.StartsWith("Assembly-CSharp") && name.IndexOf("-firstpass", StringComparison.Ordinal) == -1;
         }
-
 
     }
 

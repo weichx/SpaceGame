@@ -14,7 +14,10 @@ namespace Src.Editor {
 //                SceneView.lastActiveSceneView.LookAt(Vector3.zero);
                 SceneView.lastActiveSceneView.rotation = Quaternion.LookRotation(Vector3.down);
 //                SceneView.lastActiveSceneView.s
-            } catch(Exception e) {}
+            }
+            catch (Exception e) {
+                // ignored
+            }
         }
 
     }

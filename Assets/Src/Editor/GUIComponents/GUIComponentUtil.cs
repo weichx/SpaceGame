@@ -49,7 +49,7 @@ namespace SpaceGame.Editor.GUIComponents {
                     float height = EditorGUIUtility.singleLineHeight * 2f;
                     for (int i = 0; i < property.ChildCount; i++) {
                         ReflectedProperty child = property.ChildAt(i);
-                        height += GetHeight(child, child.guiContent, child.IsExpanded);
+                        height += GetHeight(child, child.GUIContent, child.IsExpanded);
                     }
                     return height;
                 }
@@ -59,7 +59,7 @@ namespace SpaceGame.Editor.GUIComponents {
                 float height = EditorGUIUtility.singleLineHeight;
                 for (int i = 0; i < property.ChildCount; i++) {
                     ReflectedProperty child = property.ChildAt(i);
-                    height += GetHeight(child, child.guiContent, child.IsExpanded);
+                    height += GetHeight(child, child.GUIContent, child.IsExpanded);
                 }
                 return height;
             }

@@ -13,11 +13,6 @@ namespace SpaceGame.Editor.Windows {
         
         private Texture2D graphTexture;
         private ResponseCurve curve;
-
-        [MenuItem("Window/Curve Viewer")]
-        static void Init() {
-            GetWindow<ResponseCurveViewer>();
-        }
         
         private void OnGUI() {
             RenderCurve();
