@@ -88,7 +88,7 @@ namespace Weichx.Persistence {
                     switch (field.fieldType) {
                         case FieldType.Array:
                         case FieldType.Reference:
-                            target.SetValue(referenceMap[field.refId], i);
+                            target.SetValue(field.refId == -1 ? null : referenceMap[field.refId], i);
                             break;
                         case FieldType.Struct:
                             target.SetValue(CreateStruct(field), i);

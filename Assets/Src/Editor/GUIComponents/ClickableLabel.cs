@@ -25,18 +25,32 @@ namespace SpaceGame.Editor.GUIComponents {
             rect.width -= 16;
             EditorGUI.Toggle(toggleRect, GUIContent.none, true);
             EditorGUI.LabelField(rect, content, style);
+            EventType evt = Event.current.GetTypeForControl(controlID);
+            switch (evt) {
+                case EventType.MouseDown:
+                    if (rect.Contains(Event.current.mousePosition)) {
+                        onClick(data);
+                        Event.current.Use();
+                    }
+                    break;
+                case EventType.MouseDrag:
+                    DragAndDrop.PrepareStartDrag();
 
-            if (Event.current.GetTypeForControl(controlID) == EventType.MouseDown) {
-                if (rect.Contains(Event.current.mousePosition)) {
-                    onClick(data);
+                    DragAndDrop.SetGenericData("data", "more data");
+
+                    DragAndDrop.StartDrag("Dragging title");
+
                     Event.current.Use();
-                }
+                    break;
+                case EventType.DragUpdated:
+                    
+                    break;
             }
-            
+
         }
 
         public void OnGUILayout(bool selected) {
-            string styleName = selected ? "ClickableLabel" : "label"; 
+            string styleName = selected ? "ClickableLabel" : "label";
             GUIStyle style = GUI.skin.FindStyle(styleName);
             if (style == null) {
                 Debug.Log("nope");

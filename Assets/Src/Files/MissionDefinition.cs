@@ -2,33 +2,29 @@
 using System.Collections.Generic;
 using Src.Attrs;
 using UnityEngine;
-using Weichx.Persistence;
-using EntityDefinitionList = System.Collections.Generic.List<SpaceGame.EntityDefinition>;
 
-namespace SpaceGame.FileTypes {
+namespace SpaceGame {
 
-    public class MissionDefinition : ScriptableObject {
-        
+    public class MissionDefinition {
+
         [ReadOnly]
         public string createdAt;
+        public string name;
+        
+        [SerializeField] 
+        private string serializedEntityDefinitions;        
+        [HideInInspector]
+        public string guid;
 
-        public string serializedEntityDefinitions;
-
-        public void SetEntityDefinitions(EntityDefinitionList entityDefinitions) {
-            serializedEntityDefinitions = Snapshot<EntityDefinitionList>.Serialize(entityDefinitions);
+        public List<EntityDefinition> entityDefinitions;
+        
+        public MissionDefinition() {
+            this.name = "Unnamed Mission";
+            this.guid = Guid.NewGuid().ToString();
+            this.entityDefinitions = new List<EntityDefinition>(8);
+            this.createdAt = DateTime.Now.ToShortTimeString() + " on " + DateTime.Now.ToShortDateString();
         }
         
-        public List<EntityDefinition> GetEntityDefinitions() {
-            return Snapshot<EntityDefinitionList>.Deserialize(serializedEntityDefinitions);
-        }
-        
-        public static MissionDefinition Create(string name) {
-            MissionDefinition asset = CreateInstance<MissionDefinition>();
-            asset.name = name;
-            asset.serializedEntityDefinitions = Snapshot<EntityDefinitionList>.SerializeDefault();
-            asset.createdAt = DateTime.Now.ToShortTimeString() + " on " + DateTime.Now.ToShortDateString();
-            return asset;
-        }
 
     }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using SpaceGame.Editor.GUIComponents;
+using SpaceGame.Editor.Reflection;
 using SpaceGame.FileTypes;
 using Src.Editor;
 using UnityEditor;
@@ -9,7 +10,6 @@ namespace SpaceGame.Editor.MissionWindow {
 
     public class OverviewPage : MissionWindowPage {
 
-        private MissionDefinition[] missions;
         private HorizontalPaneState splitterState;
 
         public OverviewPage(MissionWindowState state) : base(state) {
@@ -17,27 +17,30 @@ namespace SpaceGame.Editor.MissionWindow {
             splitterState.initialLeftPaneWidth = 100;
             splitterState.minPaneWidthLeft = 25;
             splitterState.minPaneWidthRight = 100;
-            Reload();
         }
 
-        private bool HasValidMission => state.CurrentMission != null;
+        private bool HasValidMission => state.currentMission != null;
 
+        public override void OnEnable() {
+               
+        }
+        
         public override void OnGUI() {
             InfamyGUI.HorizontalSplitPane(splitterState, RenderMissionList, RenderMissionDetails);
-        }
-
-        private void Reload() {
-            missions = Resources.LoadAll<MissionDefinition>("Missions");
         }
 
         private void RenderMissionList() {
             EditorGUILayout.BeginVertical();
             {
-                for (int i = 0; i < missions.Length; i++) {
-                    MissionDefinition mission = missions[i];
-                    bool isSelected = mission == state.CurrentMission;
-                    InfamyGUI.SelectableLabel(mission.name, isSelected, i, OnMissionSelected);
-                }
+//                for (int i = 0; i < state.missions.Count; i++) {
+//                    MissionDefinition mission = state.missions[i];
+//                    bool isSelected = mission == state.currentMission;
+//                    ReflectedObject reflected = state.reflectedMissions[i];
+//                    ReflectedProperty nameProp = reflected.FindChild(nameof(mission.name));
+//                    string name = (string)nameProp.Value;
+//                    if (reflected.HasModifiedProperties) name += "*";
+//                    InfamyGUI.SelectableLabel(name, isSelected, mission, OnMissionSelected);
+//                }
             }
             EditorGUILayout.EndVertical();
         }
@@ -47,15 +50,18 @@ namespace SpaceGame.Editor.MissionWindow {
             {
 
                 if (HasValidMission) {
-                    MissionDefinition mission = state.CurrentMission;
-                    string missionName = mission.name;
-                    mission.name = EditorGUILayout.DelayedTextField(InfamyGUI.GetLabel("Mission Name"), missionName);
-                    if (mission.name != missionName) {
-                        string assetPath = AssetDatabase.GetAssetPath(mission.GetInstanceID());
-                        AssetDatabase.RenameAsset(assetPath, mission.name);
-                    }
-                    
-                    EditorGUILayout.LabelField("Created At", mission.createdAt);
+//                    ReflectedObject reflected = state.currentMissionReflected;
+//                    if (reflected == null) {
+//                        Debug.Log("Ref null");
+//                        return;
+//                    }
+//                    ReflectedProperty nameProp = reflected.FindChild("name");
+//                    if (nameProp == null) {
+//                        Debug.Log("Null");
+//                        return;
+//                    }
+//                    nameProp.Value = EditorGUILayout.TextField(InfamyGUI.GetLabel("Mission Name"), (string)nameProp.Value);
+//                    EditorGUILayout.LabelField("Created At", mission.createdAt);
                 }
                 
                 GUILayout.FlexibleSpace();
@@ -63,8 +69,11 @@ namespace SpaceGame.Editor.MissionWindow {
                 {
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("New Mission")) {
-                        MissionDefinition.Create("New Mission");
-                        Reload();
+                        state.AddMission();
+                    }
+                    if (GUILayout.Button("Save")) {
+                        state.SaveMission();
+                        state.Save();
                     }
                     EditorGUILayout.EndHorizontal();
                 }
@@ -73,8 +82,8 @@ namespace SpaceGame.Editor.MissionWindow {
             EditorGUILayout.EndVertical();
         }
 
-        private void OnMissionSelected(int index) {
-            state.CurrentMission = missions[index];
+        private void OnMissionSelected(MissionDefinition selectedMission) {
+//            state.currentMission = selectedMission;
         }
 
     }

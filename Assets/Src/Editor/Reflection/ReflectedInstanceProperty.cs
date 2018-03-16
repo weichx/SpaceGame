@@ -18,7 +18,7 @@ namespace SpaceGame.Editor.Reflection {
             }
             CreateChildren();
         }
-
+//
         public override bool IsCircular => circularReference != null;
         public override int ChildCount => circularReference != null ? circularReference.ChildCount : children.Count;
 
@@ -64,7 +64,7 @@ namespace SpaceGame.Editor.Reflection {
         }
 
         private static bool ShouldReflectProperty(FieldInfo fi) {
-            if (fi.IsNotSerialized || EditorReflector.HasAttribute(fi, typeof(HideInInspector))) {
+            if (fi.IsNotSerialized) {
                 return false;
             }
             return fi.IsPublic || EditorReflector.HasAttribute(fi, typeof(SerializeField));

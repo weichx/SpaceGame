@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using SpaceGame.Util;
 using UnityEngine;
@@ -23,7 +25,10 @@ namespace SpaceGame.Editor.Reflection {
         public readonly string name;
         protected bool isExpanded;
         protected List<ReflectedProperty> children;
+        protected HashSet<string> changedChildren;
         protected FieldInfo fieldInfo;
+        protected bool didChange;
+        protected bool isHidden;
 
         protected ReflectedProperty(ReflectedProperty parent, string name, Type declaredType, object value) {
             this.parent = parent;
@@ -37,11 +42,16 @@ namespace SpaceGame.Editor.Reflection {
             this.children = new List<ReflectedProperty>(4);
             this.guiContent = new GUIContent(label);
             this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(actualType);
+            this.changedChildren = new HashSet<string>();
+            this.isHidden = false;
             if (parent != null) {
                 fieldInfo = parent.Type.GetField(name, BindFlags);
+                isHidden = fieldInfo?.GetCustomAttributes(typeof(HideInInspector), false).Length != 0;
             }
 
         }
+
+        public bool IsHidden => isHidden;
 
         public virtual bool IsExpanded {
             get { return isExpanded; }
@@ -57,6 +67,8 @@ namespace SpaceGame.Editor.Reflection {
         public virtual bool IsCircular => false;
 
         public bool IsArray => actualType.IsArray;
+        public virtual FieldInfo FieldInfo => fieldInfo;
+        public bool HasModifiedProperties => changedChildren.Count > 0;
         public bool IsBuiltInType => Array.IndexOf(BuiltInTypes, actualType) != -1;
         public bool IsPrimitiveLike => actualType.IsPrimitive || actualType == typeof(string) || actualType.IsEnum;
 
@@ -65,24 +77,53 @@ namespace SpaceGame.Editor.Reflection {
             return children[idx];
         }
 
-        public virtual FieldInfo FieldInfo => fieldInfo;
+        public ReflectedProperty this[int indexer] {
+            get { return children?[indexer]; }
+        }
 
-        public ReflectedProperty FindPropertyRelative(string propertyName) {
-            return children?.Find((property => property.name == propertyName));
+        public ReflectedProperty this[string indexer] {
+            get { return FindProperty(indexer); }
+        }
+
+        public ReflectedProperty FindProperty(params string[] path) {
+            ReflectedProperty ptr = this;
+            if (path == null || path.Length == 0) return null;
+            for (int i = 0; i < path.Length; i++) {
+                ptr = ptr.FindProperty(path[i]);
+                if (ptr == null) return null;
+            }
+            return ptr;
+        }
+
+        public ReflectedProperty FindProperty(string propertyName) {
+            return children?.Find(propertyName, (property, name) => property.name == name);
         }
 
         // todo this isn't cached at all right now
         public virtual void ApplyChanges() {
-            if (parent != null) {
-                fieldInfo.SetValue(parent.Value, Value);
-            }
             if (children != null) {
                 for (int i = 0; i < children.Count; i++) {
                     children[i].ApplyChanges();
                 }
             }
+            if (parent != null && fieldInfo != null) {
+                fieldInfo.SetValue(parent.Value, Value);
+            }
             originalValue = actualValue;
+            SetChanged(false);
         }
+
+//        public void SetSiblingIndex(int index) {
+//            if (parent == null || index < 0 || index >= parent.children.Count) {
+//                return;
+//            }
+//            int oldIndex = GetSiblingIndex();
+//            Debug.Log("Was: " + oldIndex);
+//            parent.children.RemoveAt(oldIndex);
+//            if (index > oldIndex) index--;
+//            parent.children.Insert(index, this);
+//            Debug.Log("Now is: " + GetSiblingIndex());
+//        }
 
         public virtual void OnGUILayout() { }
 
@@ -90,6 +131,48 @@ namespace SpaceGame.Editor.Reflection {
 
         public virtual float GetPropertyHeight() {
             return Drawer.GetPropertyHeight(this);
+        }
+
+        protected void SetChanged(bool didChange) {
+            ReflectedProperty ptr = parent;
+            string childName = name;
+            while (ptr != null && parent != null) {
+                if (didChange) {
+                    parent.changedChildren.Add(childName);
+                }
+                else {
+                    parent.changedChildren.Remove(childName);
+                }
+                childName = parent.name;
+                ptr = ptr.parent;
+            }
+
+        }
+
+        public int GetSiblingIndex() {
+            return parent == null ? -1 : parent.children.IndexOf(this);
+        }
+
+        public List<ReflectedProperty> GetChildren(List<ReflectedProperty> input = null) {
+            input = input ?? new List<ReflectedProperty>(children);
+            input.Resize(children.Count);
+            for (int i = 0; i < children.Count; i++) {
+                input[i] = children[i];
+            }
+            return input;
+        }
+
+        public T GetValue<T>() {
+            return (T) actualValue;
+        }
+
+        public string stringValue => GetValue<string>();
+        public float floatValue => GetValue<float>();
+        public int intValue => GetValue<int>();
+        public bool boolValue => GetValue<bool>();
+
+        public List<T> GetListValue<T>() {
+            return actualValue as List<T>;
         }
 
         protected void Destroy() {
@@ -115,12 +198,12 @@ namespace SpaceGame.Editor.Reflection {
         }
 
         public GUIContent GUIContent {
-            get { 
+            get {
                 guiContent.text = Label;
                 return guiContent;
             }
         }
-        
+
         public override string ToString() {
             return Label;
         }
@@ -144,7 +227,7 @@ namespace SpaceGame.Editor.Reflection {
             if (type.IsPrimitive || type == typeof(string) || type.IsEnum) {
                 return PropertyType.Primitive;
             }
-            if (type.IsArray) {
+            if (type.IsArray || typeof(IList).IsAssignableFrom(type)) {
                 return PropertyType.Array;
             }
             if (type.IsValueType) {

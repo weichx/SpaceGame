@@ -38,12 +38,12 @@ namespace SpaceGame {
         [HideInInspector] public string guid;
 
         public EntityDefinition() {
-            this.name = string.Empty;
+            this.name = "Entity";
             this.callsign = string.Empty;
             this.shipType = string.Empty;
             this.flightGroup = string.Empty;
             this.faction = new FactionReference(0);
-            this.guid = string.Empty;
+            this.guid = Guid.NewGuid().ToString();
         }
         
         public EntityDefinition(Entity entity) {

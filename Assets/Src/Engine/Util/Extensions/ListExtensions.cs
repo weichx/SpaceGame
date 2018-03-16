@@ -5,6 +5,14 @@ using System.Linq;
 
 namespace SpaceGame.Util {
 
+    public class ReadonlySearchableList<T> : List<T> {
+
+        public ReadonlySearchableList(List<T> list) {
+            
+        }
+
+    }
+    
     public static class ListExtensions {
 
         public static void EnsureCapacity<T>(this List<T> list, int minCapacity, T c = default(T)) {
@@ -22,6 +30,12 @@ namespace SpaceGame.Util {
             return default(T);
         }
 
+        public static T FindOrDefault<T>(this List<T> list, T defaultValue, Predicate<T> predicate) {
+            int resultIndex = list.FindIndex(predicate);
+            if (resultIndex == -1) return defaultValue;
+            return list[resultIndex];
+        }
+
         public static int FindByIndex<T, U>(this List<T> list, U target, Func<T, U, bool> predicate) {
             for (int i = 0; i < list.Count; i++) {
                 if (predicate(list[i], target)) {
@@ -30,7 +44,7 @@ namespace SpaceGame.Util {
             }
             return -1;
         }
-        
+
         public static List<T> FindAll<T, U>(this List<T> list, U target, Func<T, U, bool> predicate) {
             List<T> retn = new List<T>(4);
             for (int i = 0; i < list.Count; i++) {
@@ -41,12 +55,40 @@ namespace SpaceGame.Util {
             return retn;
         }
 
+        public static List<U> Map<T, U>(this List<T> list, Func<T, U> mapFn) {
+            List<U> retn = new List<U>(list.Count);
+            for (int i = 0; i < list.Count; i++) {
+                retn.Add(mapFn(list[i]));
+            }
+            return retn;
+        }
+
         public static List<V> Map<T, U, V>(this List<T> list, U target, Func<T, U, V> mapFn) {
             List<V> retn = new List<V>(list.Count);
             for (int i = 0; i < list.Count; i++) {
                 retn.Add(mapFn(list[i], target));
             }
             return retn;
+        }
+
+        public static U[] MapArray<T, U>(this List<T> list, Func<T, U> mapFn) {
+            U[] retn = new U[list.Count];
+            for (int i = 0; i < list.Count; i++) {
+                retn[i] = mapFn(list[i]);
+            }
+            return retn;
+        }
+
+        public static V[] MapArray<T, U, V>(this List<T> list, U target, Func<T, U, V> mapFn) {
+            V[] retn = new V[list.Count];
+            for (int i = 0; i < list.Count; i++) {
+                retn[i] = mapFn(list[i], target);
+            }
+            return retn;
+        }
+
+        public static bool Contains<T, U>(this List<T> list, U value, Func<T, U, bool> predicate) {
+            return list.FindByIndex(value, predicate) != -1;
         }
 
         public static void Resize<T>(this List<T> list, int sz, T c = default(T)) {

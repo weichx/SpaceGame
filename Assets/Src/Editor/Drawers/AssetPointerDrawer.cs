@@ -27,7 +27,6 @@ namespace Src.Editor.Drawers {
                     property.Value = default(AssetPointer<GameObject>);
                 }
             }
-            EditorGUILayout.LabelField(property.name, ((AssetPointer<GameObject>) property.Value).assetGuid);
         }
 
     }

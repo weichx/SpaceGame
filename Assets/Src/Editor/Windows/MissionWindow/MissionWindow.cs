@@ -7,31 +7,28 @@ namespace SpaceGame.Editor.MissionWindow {
 
         private GUISkin skin;
         private MissionWindowState state;
-        private int currentPage;
 
         private MissionWindowPage[] pages;
+
         private readonly string[] tabs = {
-            "Overview", 
-            "Entities", 
+            "Missions",
+            "Entities",
             "Ships"
         };
-        
+
         private void OnEnable() {
-            currentPage = EditorPrefs.GetInt("MissionWindow.CurrentPage");
-            state = MissionWindowState.Restore();
+            state = MissionWindowState.Restore("MissionWindow");
             pages = new MissionWindowPage[] {
-                new OverviewPage(state), 
-                new EntityPage(state), 
-                new OverviewPage(state)
+                new MissionPage(state) 
+//                new EntityPage(state)
             };
             skin = EditorGUIUtility.Load("MissionWindowSkin.asset") as GUISkin;
-            pages[currentPage].OnEnable();
+            pages[state.currentPageIndex].OnEnable();
         }
 
         private void OnDisable() {
             state.Save();
-            Debug.Log("Saved");
-            pages[currentPage].OnDisable();
+            pages[state.currentPageIndex].OnDisable();
         }
 
         private void OnInspectorUpdate() {
@@ -40,23 +37,23 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public void OnGUI() {
             GUI.skin = skin;
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUIStyle style = skin.GetStyle("mission_window_heading");
-            EditorGUILayout.LabelField(state.GetMissionName(), style);
-            GUILayout.FlexibleSpace();
-            EditorGUILayout.EndHorizontal();
+            if (state == null) return;
+
             if (pages == null) return;
-            
-            int lastPage = currentPage;
-            currentPage = GUILayout.Toolbar(lastPage, tabs);
-            if (state.CurrentMission == null) currentPage = 0;
-            if (lastPage != currentPage) {
-                EditorPrefs.SetInt("MissionWindow.CurrentPage", currentPage);
-                pages[lastPage].OnDisable();
-                pages[currentPage].OnEnable();
+
+            int lastPage = state.currentPageIndex;
+            state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs);
+
+            if (state.currentMission == null) {
+                state.currentPageIndex = 0;
             }
-            pages[currentPage].OnGUI();
+
+            if (lastPage != state.currentPageIndex) {
+                pages[lastPage].OnDisable();
+                pages[state.currentPageIndex].OnEnable();
+            }
+
+            pages[state.currentPageIndex].OnGUI();
         }
 
     }

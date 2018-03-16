@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SpaceGame.Editor.Reflection;
 using SpaceGame.FileTypes;
 using SpaceGame.Util;
 using UnityEditor;
@@ -9,59 +10,105 @@ namespace SpaceGame.Editor.MissionWindow {
 
     public class MissionWindowState {
 
-        public string currentMissionName;
+        private const string ResourcePath = "Missions/Mission";
+        private const string AssetPath = "Assets/Resources/Missions/Mission.asset";
+        private const string ENTITY_DEFINITIONS = nameof(MissionDefinition.entityDefinitions);
+        
+        [SerializeField] private string currentMissionGuid;
+        public int currentPageIndex;
 
-        private List<MissionDefinition> missions;
-        private List<EntityDefinition> entityDefinitions;
+        private MissionDataFile m_missionDataFile;
+        private ReflectedObject m_currentMissionReflected;
+        private List<ReflectedObject> m_reflectedMissions;
 
-        public MissionWindowState() {
-            MissionDefinition[] loadedMissions = Resources.LoadAll<MissionDefinition>("Missions");
-            this.missions = new List<MissionDefinition>(loadedMissions);
+        public IReadOnlyList<ReflectedObject> missions => m_reflectedMissions;
+
+        public ReflectedObject currentMission {
+            get { return m_currentMissionReflected; }
+            set {
+                if (value == null) return;
+                if (m_reflectedMissions.Contains(value)) {
+                    m_currentMissionReflected = value;
+                    currentMissionGuid = (string) (m_currentMissionReflected[nameof(MissionDefinition.guid)].Value);
+                }
+            }
         }
 
-        public MissionDefinition CurrentMission {
-            get {
-                if (currentMissionName == null) return null;
-                return missions.Find(currentMissionName, (m, n) => {
-                    return m.name == n;
+        public string[] GetMissionNames() {
+            return m_reflectedMissions.MapArray((mission) => {
+                return mission[nameof(ReflectedProperty.name)].Value as string;
+            });
+        }
+
+        private void Load() {
+
+            m_missionDataFile = Resources.Load<MissionDataFile>(ResourcePath);
+
+            if (m_missionDataFile == null) {
+                m_missionDataFile = MissionDataFile.Create("Mission");
+                AssetDatabase.CreateAsset(m_missionDataFile, AssetPath);
+                AssetDatabase.SaveAssets();
+            }
+
+            List<MissionDefinition> missionList = m_missionDataFile.GetMissions();
+            MissionDefinition selectedMission = null;
+
+            if (!string.IsNullOrEmpty(currentMissionGuid)) {
+                selectedMission = missionList.Find(currentMissionGuid, (mission, guid) => {
+                    return mission.guid == guid;
                 });
             }
-            set { currentMissionName = value != null ? value.name : null; }
+
+            if (selectedMission == null) selectedMission = missionList[0];
+
+            m_reflectedMissions = missionList.Map((mission) => {
+                return new ReflectedObject(mission);
+            });
+
+            m_currentMissionReflected = m_reflectedMissions.Find((mission) => mission.Value == selectedMission);
+            Debug.Assert(m_currentMissionReflected != null, "m_currentMissionReflected != null");
+            currentMissionGuid = (string) (m_currentMissionReflected[nameof(MissionDefinition.guid)].Value);
+
         }
 
-        public List<EntityDefinition> GetEntityDefinitions() {
-            MissionDefinition currentMission = CurrentMission;
-            if (currentMission == null) return null;
-            return entityDefinitions ?? (entityDefinitions = currentMission.GetEntityDefinitions());
+        public void AddMission() {
+            m_reflectedMissions.Add(new ReflectedObject(new MissionDefinition()));
         }
 
-        public void CreateEntityDefinition() {
-            GameObject entityObject = new GameObject("Entity");
-            entityObject.transform.Reset();
-            Entity entity = entityObject.AddComponent<Entity>();
-            entityDefinitions.Add(new EntityDefinition(entity));
-        }
+        public void RemoveMission(ReflectedProperty mission) { }
 
-        public void SetEntityDefinitions(List<EntityDefinition> entityDefinitions) {
-            this.entityDefinitions = entityDefinitions;
-        }
-
-        public string GetMissionName() {
-            MissionDefinition currentMission = CurrentMission;
-            return (currentMission != null) ? currentMission.name : "No Mission Selected";
-        }
-
-        public void SaveEntityDefinitions() {
-            if (currentMissionName == null || entityDefinitions == null) return;
-            if (CurrentMission != null) {
-                CurrentMission.SetEntityDefinitions(entityDefinitions);
+        public void SaveMission() {
+            if (m_currentMissionReflected != null) {
+                m_currentMissionReflected.ApplyModifiedProperties();
+                m_missionDataFile.SaveMission((MissionDefinition) m_currentMissionReflected.Value);
             }
+        }
+
+        public void AddEntityDefinition(EntityDefinition entityDefinition) {
+            ((ReflectedListProperty) currentMission[ENTITY_DEFINITIONS]).AddArrayElement(entityDefinition);    
+        }
+        
+        public void Save(string key) {
+            EditorPrefs.SetString(key, Snapshot<MissionWindowState>.Serialize(this));
+        }
+
+        public static MissionWindowState Restore(string key) {
+            string serializedState = EditorPrefs.GetString(key);
+            MissionWindowState state;
+            if (string.IsNullOrEmpty(serializedState)) {
+                state = new MissionWindowState();
+            }
+            else {
+                state = Snapshot<MissionWindowState>.Deserialize(serializedState);
+            }
+            state.Load();
+            return state;
         }
 
         public void Save() {
             EditorPrefs.SetString("MissionWindowState", Snapshot<MissionWindowState>.Serialize(this));
         }
-        
+
         public static MissionWindowState Restore() {
             string stateString = EditorPrefs.GetString("MissionWindowState");
             if (!string.IsNullOrEmpty(stateString)) {

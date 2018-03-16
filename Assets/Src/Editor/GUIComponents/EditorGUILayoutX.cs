@@ -10,26 +10,36 @@ namespace SpaceGame.Editor.GUIComponents {
         public static void DrawProperties(ReflectedObject root, string[] skipList = null) {
             for (int i = 0; i < root.ChildCount; i++) {
                 ReflectedProperty property = root.GetChildAt(i);
-                if (skipList == null || Array.IndexOf(skipList, property.name) == -1) {
-                    PropertyField(property);
+                if ((skipList == null || Array.IndexOf(skipList, property.name) == -1)) {
+                    Internal_PropertyField(property, property.GUIContent, property.IsHidden);
+                }
+            }
+        }
+        
+        public static void DrawProperties(ReflectedProperty root, string[] skipList = null) {
+            for (int i = 0; i < root.ChildCount; i++) {
+                ReflectedProperty property = root[i];
+                if ((skipList == null || Array.IndexOf(skipList, property.name) == -1)) {
+                    Internal_PropertyField(property, property.GUIContent, property.IsHidden);
                 }
             }
         }
 
         public static void PropertyField(ReflectedProperty property, params GUILayoutOption[] options) {
-            PropertyField(property, property.GUIContent,  options);
+            Internal_PropertyField(property, property.GUIContent, false, options);
         }
 
-        public static void PropertyField(ReflectedProperty property, GUIContent label, params GUILayoutOption[] options) {
+        private static void Internal_PropertyField(ReflectedProperty property, GUIContent label, bool isHidden, params GUILayoutOption[] options) {
+            if (isHidden) return;
             Type type = property.Type;
-            
+
             if (label == null) label = property.GUIContent;
-            
+
             if (property.Drawer != null) {
                 property.Drawer.OnGUI(property, label);
                 return;
             }
-            
+
             Type drawerType = EditorReflector.GetPropertyDrawerForType(property);
 
             if (drawerType != null) {
@@ -41,7 +51,7 @@ namespace SpaceGame.Editor.GUIComponents {
             if (type.IsSubclassOf(typeof(UnityEngine.Object))) {
                 property.Value = EditorGUILayout.ObjectField(label, (UnityEngine.Object) property.Value, type, true, options);
             }
-            
+
             //todo untested
             else if (type.IsArray) {
                 property.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, label.text);
@@ -50,19 +60,19 @@ namespace SpaceGame.Editor.GUIComponents {
                     property.ArraySize = EditorGUILayout.IntField(GUIComponentUtil.TempLabel("Size"), property.ArraySize);
                     for (int i = 0; i < property.ArraySize; i++) {
                         ReflectedProperty child = property.ChildAt(i);
-                        PropertyField(child, child.GUIContent, options);
+                        Internal_PropertyField(child, child.GUIContent, child.IsHidden, options);
                     }
                     EditorGUI.indentLevel--;
                 }
             }
-            
+
             //todo untested
             else {
                 property.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, label);
                 if (property.IsExpanded) {
                     EditorGUI.indentLevel++;
                     for (int i = 0; i < property.ChildCount; i++) {
-                        PropertyField(property.ChildAt(i), options);
+                        Internal_PropertyField(property.ChildAt(i), property.GUIContent, property.IsHidden, options);
                     }
                     EditorGUI.indentLevel--;
                 }
