@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
-using SpaceGame.Util;
+using Weichx.Util;
 
 namespace SpaceGame.AI {
 

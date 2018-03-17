@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using SpaceGame.Util;
-using Src.Attrs;
+using Weichx.Util;
 using UnityEngine;
 using Weichx.Persistence;
+using Weichx.ReflectionAttributes;
 
 namespace SpaceGame.FileTypes {
 

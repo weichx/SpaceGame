@@ -1,0 +1,9 @@
+{
+    "name": "_GUIAsm",
+    "references": [
+        "_UtilAsm",
+        "_ReflectionAsmDef"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

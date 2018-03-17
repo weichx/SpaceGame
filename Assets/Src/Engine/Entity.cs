@@ -1,54 +1,77 @@
 ﻿using System;
-using System.ComponentModel;
 using System.Diagnostics;
 using SpaceGame.AI;
-using SpaceGame.Engine;
-using SpaceGame.Util;
 using Src.Engine;
 using UnityEngine;
+using Weichx.ReflectionAttributes;
+using Weichx.Util;
 using Debug = UnityEngine.Debug;
 
 namespace SpaceGame {
 
+    public interface INameGenerator {
+
+        string GenerateName(Entity entity);
+
+    }
+
+    public class FlightGroup { }
+    
+
+    public class EntityTemplate {
+
+        public Faction faction;
+        public FlightGroup flightGroup;
+        public INameGenerator nameGenerator;
+        public AssetPointer<GameObject> chassis;
+        
+        //public AIGoalSet goals;
+        //public WeaponLoadout loadout;
+        //public AIPreferences preferences;
+        //public AIRestrictions restrictions;
+        
+        public int maxHitpoints;
+        public int startingHitpoints;
+
+        public float maxSpeed;
+        public float minSpeed;
+        public float breakingRate;
+        public float turnRateDegrees;
+        public float accelerationRate;
+        
+    }
+    
     [SelectionBase]
     [DisallowMultipleComponent]
     [DebuggerDisplay("Id = {" + nameof(id) + "}")]
-    public class Entity : MonoBehaviour, ISerializationCallbackReceiver {
+    [ExecuteInEditMode]
+    public class Entity : MonoBehaviour {
 
         // todo maybe replace this with a single monobehavior that just has an id
         // todo make entity a runtime class not extending monobehavior
-        
         [NonSerialized] public Faction faction;
         [NonSerialized] public int id;
-        [FactionAttribute] [SerializeField] public int factionId;
-        [Src.Attrs.ReadOnly, SerializeField]  public string guid;
+        [UsePropertyDrawer(typeof(Faction))] [SerializeField] public int factionId;
+        public FactionReference factionReference;
         
         public float hitPoints = 100f;
-
         public TransformInfo transformInfo => GameData.Instance.transformInfoMap[id];
         public FlightInput flightInput => GameData.Instance.flightInputs[id];
         public AIInfo aiInfo => GameData.Instance.aiInfoMap[id];
+        public int instanceID = 0; //this value is duplicated with the gameobject
+
+        public Vector3 targetPosition;
+        public ApproachType arrivalType;
         
-        public void Awake() {
+        private void Awake() {
+            if (instanceID != 0) {
+               // Debug.Log("Duplication Detected of " + gameObject.name + " oldID:" + instanceID + " newID: " + gameObject.GetInstanceID());
+            }
+            instanceID = gameObject.GetInstanceID();
             faction = Faction.GetFaction(factionId);
             gameObject.layer = LayerMask.NameToLayer("Entity");
             GameData.Instance.RegisterEntity(this);
         }
-
-        public void OnBeforeSerialize() {
-            if (guid == null) {
-                guid = Guid.NewGuid().ToString();
-            }
-        }
-
-        public void OnAfterDeserialize() {
-            if (guid == null) {
-                guid = Guid.NewGuid().ToString();
-            }
-        }
-
-        public Vector3 targetPosition;
-        public ApproachType arrivalType;
 
         public void SetTargetDirection(Vector3 direction, ApproachType arrivalType = ApproachType.Normal) {
             AssertOnlyOneCallPerFrame();
@@ -62,10 +85,10 @@ namespace SpaceGame {
             this.arrivalType = arrivalType;
         }
 
-
+        // editor only
         private uint lastFrameSet;
 
-        [Conditional("DEBUG")]
+        [Conditional("UNITY_ASSERTIONS")]
         private void AssertOnlyOneCallPerFrame() {
             Debug.Assert(lastFrameSet != GameTimer.Instance.frameId,
                 "Agent " +

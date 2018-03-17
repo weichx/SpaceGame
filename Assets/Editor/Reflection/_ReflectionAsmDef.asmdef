@@ -1,0 +1,9 @@
+{
+    "name": "_ReflectionAsmDef",
+    "references": [
+        "_UtilAsm",
+        "_AttributeAsm"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

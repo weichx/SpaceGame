@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using SpaceGame.AI;
 using SpaceGame.Events;
-using SpaceGame.Util;
+using Weichx.Util;
 using UnityEngine;
 
 namespace SpaceGame.Engine {

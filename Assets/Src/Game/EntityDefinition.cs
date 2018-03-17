@@ -35,15 +35,12 @@ namespace SpaceGame {
 
         public AssetPointer<GameObject> chassis;
         
-        [HideInInspector] public string guid;
-
         public EntityDefinition() {
             this.name = "Entity";
             this.callsign = string.Empty;
             this.shipType = string.Empty;
             this.flightGroup = string.Empty;
             this.faction = new FactionReference(0);
-            this.guid = Guid.NewGuid().ToString();
         }
         
         public EntityDefinition(Entity entity) {
@@ -52,7 +49,6 @@ namespace SpaceGame {
             this.shipType = "";
             this.flightGroup = "";
             this.faction = new FactionReference(entity.factionId);
-            this.guid = entity.guid;
         }
 
     }

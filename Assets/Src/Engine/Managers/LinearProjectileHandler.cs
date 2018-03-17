@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using SpaceGame.Events;
-using SpaceGame.Util;
+using Weichx.Util;
 using SpaceGame.Weapons;
 using UnityEngine;
 using Random = UnityEngine.Random;

@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Src.Attrs {
+namespace Weichx.ReflectionAttributes {
 
     public class ReadOnlyAttribute : PropertyAttribute { }
 

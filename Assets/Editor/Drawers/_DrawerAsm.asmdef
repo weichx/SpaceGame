@@ -1,0 +1,12 @@
+{
+    "name": "_DrawerAsm",
+    "references": [
+        "_ReflectionAsmDef",
+        "_SourceAsm",
+        "_UtilAsm",
+        "_AttributeAsm",
+        "_GUIAsm"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

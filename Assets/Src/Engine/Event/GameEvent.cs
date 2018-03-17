@@ -1,4 +1,4 @@
-﻿using SpaceGame.Util;
+﻿using Weichx.Util;
 
 namespace SpaceGame {
 

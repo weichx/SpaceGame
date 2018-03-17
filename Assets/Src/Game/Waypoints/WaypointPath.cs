@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using SpaceGame.Util;
+using Weichx.Util;
 using UnityEngine;
 
 namespace SpaceGame {

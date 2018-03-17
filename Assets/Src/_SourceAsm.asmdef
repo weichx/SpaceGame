@@ -1,0 +1,11 @@
+{
+    "name": "_SourceAsm",
+    "references": [
+        "_UtilAsm",
+        "_StateChartAsm",
+        "_AttributeAsm",
+        "_PersistenceAsm"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}

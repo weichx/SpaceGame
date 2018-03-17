@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using SpaceGame.Events;
 using SpaceGame.AI;
-using SpaceGame.Util;
-using Src.Engine;
 using UnityEngine;
 using Util;
 

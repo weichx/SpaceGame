@@ -1,4 +1,6 @@
-﻿namespace SpaceGame.AI {
+﻿using Weichx.ReflectionAttributes;
+
+namespace SpaceGame.AI {
 
 /* The idea here is that we have a list of possible actions the AI can take
  * Each of those actions requires a decision to be made: should we take this action?
@@ -21,6 +23,7 @@
         public string description;
         public AIAction action;
         public Evaluator evaluator;
+        [UsePropertyDrawer(typeof(ContextCreator))]
         public ContextCreator contextCreator;
 
     }
