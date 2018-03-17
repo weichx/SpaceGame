@@ -85,8 +85,15 @@ namespace Weichx.EditorReflection {
             }
             list = list ?? Activator.CreateInstance(declaredType) as IList;
             Debug.Assert(list != null, nameof(list) + " != null");
-            while (list.Count < children.Count) {
-                list.Add(EditorReflector.GetDefaultForType(declaredType.GetGenericArguments()[0]));
+            if (list.Count > children.Count) {
+                while (list.Count > children.Count) {
+                    list.RemoveAt(list.Count - 1);
+                }
+            }
+            else if (list.Count < children.Count) {
+                while (list.Count < children.Count) {
+                    list.Add(EditorReflector.GetDefaultForType(declaredType.GetGenericArguments()[0]));
+                }
             }
             actualValue = list;
         }
@@ -166,7 +173,13 @@ namespace Weichx.EditorReflection {
             get { return children?[indexer]; }
         }
 
-      
+        public void RemoveElement(ReflectedProperty selectedDecision) {
+            ReflectedProperty child = children?.Find(selectedDecision);
+            if (child != null) {
+                children.Remove(child);
+                DestroyChild(child);
+            }
+        }
 
     }
 

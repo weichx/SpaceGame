@@ -27,17 +27,18 @@ namespace SpaceGame.Engine {
                     GameData.Instance.RegisterWaypointPath(waypoint);
                 }
             });
+            
             weaponManager = GetComponent<WeaponManager>();
             damageManager = GetComponent<DamageManager>();
             destroManager = GetComponent<DestructionManager>();
             propulsionManager = GetComponent<PropulsionManager>();
             aiManager = GetComponent<AIManager>();
 
+            aiManager.Initialize();
             weaponManager.Initialize();
             damageManager.Initialize();
             destroManager.Initialize();
             propulsionManager.Initialize();
-            aiManager.Initialize();
 
             EventSystem.Instance.AddListener<Evt_EntityArriving>(OnEntityArriving);
             EventSystem.Instance.AddListener<Evt_EntityDeparted>(OnEntityDeparted);

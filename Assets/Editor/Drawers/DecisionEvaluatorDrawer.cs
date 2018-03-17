@@ -48,7 +48,6 @@ namespace SpaceGameEditor.Drawers {
                 Debug.Assert(source[ConsiderationsField] != null, "source[ConsiderationsField] != null");
                 adapter = new ReflectedPropertyAdapter((ReflectedListProperty) source[ConsiderationsField]);
             }
-
         }
 
         public override float GetPropertyHeight(ReflectedProperty property) {

@@ -14,7 +14,7 @@ namespace SpaceGameEditor.Drawers {
         private ResponseCurve curve;
         private static Texture2D graphTexture;
         private static GUIRect guiRect = new GUIRect();
-        private static GUIStyle style = new GUIStyle(GUI.skin.box);
+        private static GUIStyle style;
 
         private static readonly string[] presetCurveNames = {
             "Preset",
@@ -47,14 +47,16 @@ namespace SpaceGameEditor.Drawers {
 
         public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
             guiRect.SetRect(position);
+            if (style == null) style = new GUIStyle(GUI.skin.box);
+
             if (graphTexture == null) {
                 graphTexture = new Texture2D(1, 1, TextureFormat.RGBA32, true);
             }
 
             curve = (ResponseCurve) property.Value ?? new ResponseCurve();
 
-            if(property.IsExpanded) EditorGUIX.Foldout(guiRect, property);
-            
+            if (property.IsExpanded) EditorGUIX.Foldout(guiRect, property);
+
             if (!property.IsExpanded) {
                 DrawGraph(64, 32);
                 GUIContent content = EditorGUIX.TempLabel(curve.ShortDisplayString);
@@ -104,7 +106,7 @@ namespace SpaceGameEditor.Drawers {
 
             int idx = EditorGUI.Popup(selectRect, 0, presetCurveNames);
             property.Value = GetPreset(presetCurveNames[idx], curve);
-            
+
             EditorGUIUtility.labelWidth = oldWidth;
             property.ApplyChanges();
 

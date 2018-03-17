@@ -47,7 +47,7 @@ namespace Weichx.EditorReflection {
             actualType = actualValue.GetType();
             SetChanged(false);
         }
-     
+        
         protected override void ResizeActualValue() {
             Array actual = (Array) actualValue;
             if (children.Count == 0 || actual != null && actual.Length == children.Count) {

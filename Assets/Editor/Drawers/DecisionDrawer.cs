@@ -39,20 +39,20 @@ namespace SpaceGameEditor.Drawers {
             EditorGUIX.PropertyField(guiRect, property[EvaluatorField]);
 
             if (property[ContextTypeField].DidChange) {
-//                property.ApplyChanges();
-//                Type newContextType = (Type) property[ContextTypeField].Value;
-//                if (!AssertCompatible(property[ActionField], newContextType)) {
-//                    property[ActionField].Value = null;
-//                }
-//                if (!AssertCompatible(property[ContextCreatorField], newContextType)) {
-//                    property[ContextCreatorField].Value = null;
-//                }
-//                if (!AssertCompatible(property[EvaluatorField], newContextType)) {
-//                    property[EvaluatorField].SetValueAndCopyCompatibleProperties(
-//                        EditorReflector.CreateGenericInstance(typeof(Evaluator<>), newContextType)
-//                    );
-//                    // todo -- for each consideration, make sure its compatible with new context type
-//                }
+                property.ApplyChanges();
+                Type newContextType = (Type) property[ContextTypeField].Value;
+                if (!AssertCompatible(property[ActionField], newContextType)) {
+                    property[ActionField].Value = null;
+                }
+                if (!AssertCompatible(property[ContextCreatorField], newContextType)) {
+                    property[ContextCreatorField].Value = null;
+                }
+                if (!AssertCompatible(property[EvaluatorField], newContextType)) {
+                    property[EvaluatorField].SetValueAndCopyCompatibleProperties(
+                        EditorReflector.CreateGenericInstance(typeof(Evaluator<>), newContextType)
+                    );
+                    // todo -- for each consideration, make sure its compatible with new context type
+                }
             }
 
         }

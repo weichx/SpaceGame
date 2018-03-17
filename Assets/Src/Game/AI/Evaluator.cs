@@ -13,7 +13,11 @@ namespace SpaceGame.AI {
         public float weight;
         [UsePropertyDrawer(typeof(ConstructableSubclass))]
         public BonusCalculator bonusCalculator;
-        public Consideration[] considerations = new Consideration[0];
+        public Consideration[] considerations;
+
+        protected Evaluator() {
+            considerations = new Consideration[1];
+        }
         
         internal abstract ScoreResult Score(Entity agent, Decision decision, float cutoff);
 

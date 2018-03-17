@@ -12,22 +12,23 @@ namespace SpaceGame.Editor.MissionWindow {
         private MissionWindowPage[] pages;
 
         private readonly string[] tabs = {
-            "Missions",
             "AI",
-            "Ships"
+            "Ships",
+            "Missions",
         };
 
         private void OnEnable() {
             state = MissionWindowState.Restore("MissionWindow");
             pages = new MissionWindowPage[] {
                 new AIPage(state),
+                new ShipPage(state),
                 new MissionPage(state)
             };
             skin = EditorGUIUtility.Load("MissionWindowSkin.asset") as GUISkin;
             pages[state.currentPageIndex].OnEnable();
         }
+
         /*
-            
             hydrate scene from mission file
             add entities to scene by normal unity methods ie drop / duplicate / new GameObject()
             entity definition -> template or instance?
@@ -56,9 +57,8 @@ namespace SpaceGame.Editor.MissionWindow {
             if (pages == null) return;
 
             int lastPage = state.currentPageIndex;
-//            Rect r = new Rect(position) {x = 0, y = 0};
-//            r.height = 16f;
-            state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs);
+
+            state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs, (GUILayoutOption[]) null);
 
             if (state.currentMission == null) {
                 state.currentPageIndex = 0;

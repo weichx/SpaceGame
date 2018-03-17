@@ -31,6 +31,15 @@ namespace Weichx.Util {
             return default(T);
         }
 
+        public static T Find<T>(this List<T> list, T target) where T : class {
+            for (int i = 0; i < list.Count; i++) {
+                if ((target == list[i])){
+                    return list[i];
+                }
+            }
+            return null;
+        }
+
         [DebuggerStepThrough]
         public static T FindOrDefault<T>(this List<T> list, T defaultValue, Predicate<T> predicate) {
             int resultIndex = list.FindIndex(predicate);

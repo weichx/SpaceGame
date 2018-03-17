@@ -10,20 +10,25 @@ namespace SpaceGame.FileTypes {
 
         public string serializedEvaluators;
 
-        [NonSerialized] public List<Evaluator> evaluators;
+        [NonSerialized] public List<Decision> decisions;
 
         public void Save() {
-            serializedEvaluators = Snapshot<List<Evaluator>>.Serialize(evaluators);
+            serializedEvaluators = Snapshot<List<Decision>>.Serialize(decisions);
+        }
+        
+        public void Save(List<Decision> evaluators) {
+            this.decisions = evaluators;
+            Save();
         }
         
         private void OnEnable() {
-            if (evaluators == null) {
-                evaluators = Snapshot<List<Evaluator>>.Deserialize(serializedEvaluators);
+            if (decisions == null) {
+                decisions = Snapshot<List<Decision>>.Deserialize(serializedEvaluators);
             }
         }
-
-        private void OnDisable() {
-            
+        
+        public IList<Decision> GetDecisions() {
+            return decisions ?? (decisions = Snapshot<List<Decision>>.Deserialize(serializedEvaluators));
         }
 
     }
