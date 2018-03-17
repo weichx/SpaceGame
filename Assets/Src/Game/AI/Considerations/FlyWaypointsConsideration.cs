@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace SpaceGame.AI {
 
-    //[Serialize(nameof(Me))] 
     public class WaypointConsideration : Consideration<WaypointContext> {
 
         public float minDist = 0;
@@ -19,6 +18,5 @@ namespace SpaceGame.AI {
         }
 
     }
-    // Serializers.AddRename("oldName", GetName(type));
-    // Serializers.Add(typeof(WaypointConsideration), () => new WaypointConsideration(); reader.readFloat() reader.readfloat(dist));
+    
 }

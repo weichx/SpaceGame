@@ -1,25 +1,29 @@
-﻿namespace SpaceGame.AI {
+﻿using System;
 
-    public class Consideration {
+namespace SpaceGame.AI {
+
+    public abstract class Consideration : IContextAware {
 
         public ResponseCurve curve = new ResponseCurve();
         
-        public bool requiresMainThread;
-
         public virtual float Score(DecisionContext context) {
             return 1f;
         }
 
+        public abstract Type GetContextType();
+
     }
 
-    public class Consideration<TContext> : Consideration where TContext : DecisionContext {
+    public abstract class Consideration<TContext> : Consideration where TContext : DecisionContext {
 
-        public virtual float Score(TContext context) {
-            return 1f;
-        }
+        public abstract float Score(TContext context);
 
         public float ScoreCurved(TContext context) {
             return curve.Evaluate(Score(context));
+        }
+        
+        public override Type GetContextType() {
+            return typeof(TContext);
         }
 
     }

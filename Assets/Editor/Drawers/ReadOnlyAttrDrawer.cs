@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace SpaceGame.Editor {
+namespace SpaceGameEditor.Drawers {
 
     [CustomPropertyDrawer(typeof(ReadOnlyAttribute))]
     public class ReadOnlyDrawer : UnityEditor.PropertyDrawer

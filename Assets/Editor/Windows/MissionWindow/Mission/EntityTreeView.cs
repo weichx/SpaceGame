@@ -9,10 +9,7 @@ namespace SpaceGame.Editor.MissionWindow {
     // todo -- enable hierarchy when we have the concept of entity groups
     // probably Faction -> Flight Group -> Entity, possibly more levels for spawn groups or ship types
     public class EntityTreeView : TreeView {
-
-        private const string GUID = nameof(MissionDefinition.guid);
-        private const string NAME = nameof(MissionDefinition.name);
-
+     
         private ReflectedListProperty entityList;
         private Action<ReflectedProperty> onSelectionChanged;
         

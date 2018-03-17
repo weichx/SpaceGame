@@ -1,10 +1,8 @@
-﻿namespace Weichx.Util {
+﻿using UnityEngine;
 
-using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
+namespace Weichx.Util {
 
-namespace Texture2DExtensions {
+    namespace Texture2DExtensions {
     public static class Texture2D_Extended {
         public struct Point {
             public short x;

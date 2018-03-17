@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Weichx.EditorReflection {
 
@@ -9,69 +10,101 @@ namespace Weichx.EditorReflection {
 
         private static GUIContent tempContent = new GUIContent();
 
-        public override void OnGUI(ReflectedProperty property, GUIContent label = null) {
+        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
             Type type = property.Type;
 
-            // todo -- type / struct
-            
-            if (type.IsSubclassOf(typeof(UnityEngine.Object))) {
-                property.Value = EditorGUILayout.ObjectField(label, (UnityEngine.Object) property.Value, type, true);
+            if (type.IsEnum) {
+                property.Value = EditorGUI.EnumPopup(position, (Enum) property.Value);
+            }
+            else if (type.IsSubclassOf(typeof(Object))) {
+                property.Value = EditorGUI.ObjectField(position, label, (Object) property.Value, type, true);
             }
             else if (property is ReflectedListProperty) {
-                ReflectedListProperty listProperty = (ReflectedListProperty) property;
-                listProperty.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, property.GUIContent);
-                if (listProperty.IsExpanded) {
-                    EditorGUI.indentLevel++;
-                    tempContent.text = "Size";
-                    listProperty.ElementCount = EditorGUILayout.IntField(tempContent, listProperty.ElementCount);
-                    DrawProperties(property);
-                    EditorGUI.indentLevel--;
-                }
+                RenderList(position, (ReflectedListProperty) property);
             }
-//            else if (type.IsStruct)
-            else if (type.IsClass) {
-                property.IsExpanded = EditorGUILayout.Foldout(property.IsExpanded, label);
-                if (property.IsExpanded) {
-                    EditorGUI.indentLevel++;
-                    DrawProperties(property);
-                    EditorGUI.indentLevel--;
-                }
+            else if (property is ReflectedInstanceProperty) {
+                RenderWithFields(position, (ReflectedInstanceProperty) property);
             }
 
         }
 
-        public static void DrawProperties(ReflectedObject root, string[] skipList = null) {
-            for (int i = 0; i < root.ChildCount; i++) {
-                ReflectedProperty property = root.GetChildAt(i);
-                if ((skipList == null || Array.IndexOf(skipList, property.name) == -1)) {
-                    Internal_PropertyField(property, property.GUIContent, property.IsHidden);
-                }
+        private static void RenderWithFields(Rect position, ReflectedInstanceProperty instanceProperty) {
+            Rect headRect = new Rect(position) {
+                height = EditorGUIUtility.singleLineHeight
+            };
+
+            Rect bodyRect = new Rect(position) {
+                y = headRect.y + headRect.height,
+                height = position.height - headRect.height
+            };
+            instanceProperty.IsExpanded = EditorGUI.Foldout(headRect, instanceProperty.IsExpanded, instanceProperty.GUIContent);
+            DrawProperties(bodyRect, instanceProperty);
+        }
+
+        private static void RenderList(Rect position, ReflectedListProperty listProperty) {
+            Rect headRect = new Rect(position) {
+                height = EditorGUIUtility.singleLineHeight
+            };
+            Rect sizeRect = new Rect(headRect) {
+                y = headRect.y + headRect.height,
+                height = EditorGUIUtility.singleLineHeight
+            };
+            Rect bodyRect = new Rect(position) {
+                y = sizeRect.y + sizeRect.height,
+                height = position.height - sizeRect.height - headRect.height
+            };
+            listProperty.IsExpanded = EditorGUI.Foldout(headRect, listProperty.IsExpanded, listProperty.GUIContent);
+            if (listProperty.IsExpanded) {
+                EditorGUI.indentLevel++;
+                tempContent.text = "Size";
+                listProperty.ElementCount = EditorGUI.IntField(sizeRect, tempContent, listProperty.ElementCount);
+                DrawProperties(bodyRect, listProperty);
+                EditorGUI.indentLevel--;
             }
         }
 
-        public static void DrawProperties(ReflectedProperty root, string[] skipList = null) {
+        private static void DrawProperties(Rect position, ReflectedProperty root) {
             List<ReflectedProperty> properties = root.GetChildren();
+            float remainingHeight = position.height;
             for (int i = 0; i < properties.Count; i++) {
-                ReflectedProperty property = properties[i];
-                if ((skipList == null || Array.IndexOf(skipList, property.name) == -1)) {
-                    Internal_PropertyField(property, property.GUIContent, property.IsHidden);
-                }
+                ReflectedProperty child = properties[i];
+                float height = child.Drawer.GetPropertyHeight(child);
+                remainingHeight -= height;
+                position.height = height;
+                Internal_PropertyField(position, child, child.GUIContent, child.IsHidden);
+                position.y += height;
+                position.height = remainingHeight;
             }
         }
 
-        public static void PropertyField(ReflectedProperty property, params GUILayoutOption[] options) {
-            Internal_PropertyField(property, property.GUIContent, false, options);
-        }
-
-        private static void Internal_PropertyField(ReflectedProperty property, GUIContent label, bool isHidden, params GUILayoutOption[] options) {
+        private static void Internal_PropertyField(Rect position, ReflectedProperty property, GUIContent label, bool isHidden) {
             if (isHidden) return;
 
             if (label == null) label = property.GUIContent;
 
             Debug.Assert(property.Drawer != null, "property.Drawer != null");
 
-            property.Drawer.OnGUI(property, label);
+            property.Drawer.OnGUI(position, property, label);
 
+        }
+
+        public override float GetPropertyHeight(ReflectedProperty property) {
+            if (property is ReflectedListProperty) {
+                float height = EditorGUIUtility.singleLineHeight;
+                if (property.IsExpanded) {
+                    height += EditorGUIUtility.singleLineHeight;
+                    height += GetChildHeights(property);
+                }
+                return height;
+            }
+            else if (property is ReflectedInstanceProperty) {
+                float height = EditorGUIUtility.singleLineHeight;
+                if (property.IsExpanded) {
+                    height += GetChildHeights(property);
+                }
+                return height;
+            }
+            return 0;
         }
 
     }

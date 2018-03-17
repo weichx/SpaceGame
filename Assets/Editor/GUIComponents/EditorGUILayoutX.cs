@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
-using UnityEditor;
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using Weichx.EditorReflection;
 
 namespace SpaceGame.Editor.GUIComponents {
@@ -27,18 +27,23 @@ namespace SpaceGame.Editor.GUIComponents {
             }
         }
 
-        public static void PropertyField(ReflectedProperty property, params GUILayoutOption[] options) {
-            Internal_PropertyField(property, property.GUIContent, false, options);
+        public static void PropertyField(ReflectedProperty property) {
+            Internal_PropertyField(property, property.GUIContent, false);
+        }
+        
+        public static void PropertyField(ReflectedObject obj) {
+            Rect rect = EditorGUILayout.GetControlRect(true, obj.Root.Drawer.GetPropertyHeight(obj.Root));
+            EditorGUIX.PropertyField(rect, obj.Root);
         }
 
-        private static void Internal_PropertyField(ReflectedProperty property, GUIContent label, bool isHidden, params GUILayoutOption[] options) {
+        private static void Internal_PropertyField(ReflectedProperty property, GUIContent label, bool isHidden) {
             if (isHidden) return;
             
             if (label == null) label = property.GUIContent;
 
             Debug.Assert(property.Drawer != null, "property.Drawer != null");
             
-            property.Drawer.OnGUI(property, label);
+            property.Drawer.OnGUILayout(property, label);
 
         }
 

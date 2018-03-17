@@ -1,4 +1,5 @@
-﻿using SpaceGame.AI;
+﻿using Editor.GUIComponents;
+using SpaceGame.AI;
 using SpaceGame.Editor.GUIComponents;
 using Src.Editor;
 using Src.Editor.GUIComponents;
@@ -6,54 +7,9 @@ using UnityEditor;
 using UnityEngine;
 using Weichx.Util.Texture2DExtensions;
 
-namespace SpaceGame.Editor {
-
-    public class GUIRect {
-
-        private Rect rect;
-
-        public GUIRect(Rect rect) {
-            this.rect = rect;
-        }
-
-        public Rect GetRowRect(float width) {
-            Rect retn = new Rect(rect);
-            retn.width = width;
-            rect.x += width;
-            rect.width -= width;
-            return retn;
-        }
-
-        public Rect GetFieldRect(int lineHeight = 1) {
-            Rect retn = new Rect(rect);
-            retn.height = lineHeight * EditorGUIUtility.singleLineHeight;
-            rect.y += (lineHeight * EditorGUIUtility.singleLineHeight);
-            rect.height -= (lineHeight * EditorGUIUtility.singleLineHeight);
-            return retn;
-        }
-
-        public Rect GetRawRect() {
-            return rect;
-        }
-
-        public GUIRect[] SplitHorizontal(float percentage) {
-            GUIRect[] retn = new GUIRect[2];
-            retn[0] = new GUIRect(new Rect() {
-                x = rect.x,
-                y = rect.y,
-                width = rect.width * percentage,
-                height = rect.height
-            });
-            retn[1] = new GUIRect(new Rect() {
-                x = rect.x + (rect.width * percentage),
-                y = rect.y,
-                height = rect.height,
-                width = rect.width * percentage
-            });
-            return retn;
-        }
-
-    }
+namespace SpaceGameEditor.Drawers {
+    
+   
 
     [CustomPropertyDrawer(typeof(ResponseCurve))]
     public class ResponseCurveDrawer : PropertyDrawer {
@@ -95,15 +51,15 @@ namespace SpaceGame.Editor {
             GUIRect left = splits[0];
             GUIRect right = splits[1];
 
-            DrawGraph(right.GetRawRect().width, right.GetRawRect().height);
+            DrawGraph(right.GetRect().width, right.GetRect().height);
 
             GUIContent graphContent = new GUIContent();
             graphContent.image = graphTexture;
-            GUI.Box(right.GetRawRect(), graphContent, style);
+            GUI.Box(right.GetRect(), graphContent, style);
             float oldWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = 100;
             
-            Src.Editor.GUIComponents.DrawerUtil.PushIndentLevel(1);
+            DrawerUtil.PushIndentLevel(1);
             EditorGUI.BeginChangeCheck();
             {
                 EditorGUI.PropertyField(left.GetFieldRect(), property.FindPropertyRelative("curveType"));
@@ -114,10 +70,10 @@ namespace SpaceGame.Editor {
                 EditorGUI.PropertyField(left.GetFieldRect(), property.FindPropertyRelative("threshold"));
                 GUIRect lineRect = new GUIRect(left.GetFieldRect());
                 GUIRect[] lineRectParts = lineRect.SplitHorizontal(0.5f);
-                EditorGUI.PropertyField(lineRectParts[0].GetRawRect(), property.FindPropertyRelative("invert"));
+                EditorGUI.PropertyField(lineRectParts[0].GetRect(), property.FindPropertyRelative("invert"));
 
 
-                if (GUI.Button(lineRectParts[1].GetRawRect(), "Reset Curve")) {
+                if (GUI.Button(lineRectParts[1].GetRect(), "Reset Curve")) {
                     property.FindPropertyRelative("curveType").intValue = (int) ResponseCurveType.Polynomial;
                     property.FindPropertyRelative("slope").floatValue = 1f;
                     property.FindPropertyRelative("exp").floatValue = 1f;

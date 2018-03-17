@@ -1,4 +1,6 @@
-﻿using Weichx.ReflectionAttributes;
+﻿using System;
+using UnityEngine;
+using Weichx.ReflectionAttributes;
 
 namespace SpaceGame.AI {
 
@@ -7,7 +9,7 @@ namespace SpaceGame.AI {
  * Decisions need to be made in contexts, for example if the action is "DoBombingRun"
  * we probably want to be sure we have bombs, can do so without getting blown to bits,
  * we have support, we aren't low health, the target isn't focused on us, etc, etc, etc
- * These are call considerations. A consideration is a funciton that accepts a context
+ * These are called considerations. A consideration is a funciton that accepts a context
  * and returns a score between 0 and 1 signifiying how much we want to take this action.
  *
  * After we get our score, each consideration filters that score by evaluating against
@@ -18,13 +20,29 @@ namespace SpaceGame.AI {
  * certain ships, or we require that the target be low on health
  */
     public sealed class Decision {
+        
+        private static int idGenerator;
 
-        public string name;
+        public string name = "Unnamed Decision";
         public string description;
+
+        [HideInInspector][NonSerialized]
+        public readonly int id;
+        
+        public Type contextType = typeof(EntityContext);
+        
+        [UsePropertyDrawer(typeof(ConstructableSubclass))]
         public AIAction action;
+        
         public Evaluator evaluator;
-        [UsePropertyDrawer(typeof(ContextCreator))]
+        
+        [UsePropertyDrawer(typeof(ConstructableSubclass))]
         public ContextCreator contextCreator;
+
+
+        public Decision() {
+            this.id = idGenerator++;
+        }
 
     }
 

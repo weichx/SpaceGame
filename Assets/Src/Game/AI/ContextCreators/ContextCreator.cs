@@ -1,15 +1,21 @@
-﻿using System.Collections;
+﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace SpaceGame.AI {
 
-    public class ContextCreator {}
+    public abstract class ContextCreator : IContextAware {
+
+        public abstract Type GetContextType();
+
+    }
 
     public abstract class ContextCreator<TContext> : ContextCreator where TContext : DecisionContext {
 
-        public virtual void CreateContexts(Entity agent, List<TContext> outputList) { }
+        public abstract void CreateContexts(Entity agent, List<TContext> outputList);
 
+        public override Type GetContextType() {
+            return typeof(TContext);
+        }
 
     }
 

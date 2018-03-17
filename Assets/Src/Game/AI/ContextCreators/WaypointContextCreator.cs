@@ -9,7 +9,6 @@ namespace SpaceGame.AI {
         public float floatVal;
         
         public override void CreateContexts(Entity agent, List<WaypointContext> outputList) {
-            Debug.Log("GENERIC CREATE CONTEXTS");
             List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
 
             for (int i = 0; i < waypointPaths.Count; i++) {
@@ -20,10 +19,11 @@ namespace SpaceGame.AI {
 
     }
     
-    public class WaypointContextCreator2 : ContextCreator<WaypointContext> {
+    public class WaypointContextCreator2 : WaypointContextCreator {
 
+        public string strVal;
+        
         public override void CreateContexts(Entity agent, List<WaypointContext> outputList) {
-            Debug.Log("GENERIC CREATE CONTEXTS");
             List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
 
             for (int i = 0; i < waypointPaths.Count; i++) {

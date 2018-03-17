@@ -30,9 +30,9 @@ namespace Weichx.EditorReflection {
         protected bool isExpanded;
         protected bool isHidden;
         protected bool isDirty;
-        protected List<Attribute>attributes;
-        protected ReflectedPropertyDrawer drawer;
-        
+        protected List<Attribute> attributes;
+        private ReflectedPropertyDrawer drawer;
+
         protected ReflectedProperty(ReflectedProperty parent, string name, Type declaredType, object value) {
             this.parent = parent;
             this.name = name;
@@ -61,13 +61,20 @@ namespace Weichx.EditorReflection {
             this.drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
         }
 
+        public ReflectedPropertyDrawer Drawer {
+            get { return drawer; }
+            protected set {
+                drawer?.OnDestroy();
+                drawer = value;
+            }
+        }
+
         public bool IsHidden => isHidden;
 
         public virtual bool IsExpanded {
             get { return isExpanded; }
             set { isExpanded = value; }
         }
-
 
         public T GetValue<T>() {
             return (T) actualValue;
@@ -88,7 +95,6 @@ namespace Weichx.EditorReflection {
         public virtual bool IsCircular => false;
         public Type Type => actualType;
         public Type DeclaredType => declaredType;
-        public ReflectedPropertyDrawer Drawer => drawer;
         public virtual int ChildCount => children.Count;
         public virtual bool DidChange => actualValue != originalValue;
         public virtual string Label => DidChange ? label + "*" : label;
@@ -98,7 +104,6 @@ namespace Weichx.EditorReflection {
         public bool IsBuiltInType => Array.IndexOf(BuiltInTypes, actualType) != -1;
         public bool IsPrimitiveLike => actualType.IsPrimitive || actualType == typeof(string) || actualType.IsEnum;
 
-    
         public T GetAttribute<T>() where T : Attribute {
             if (attributes == null) return null;
             for (int i = 0; i < attributes.Count; i++) {
@@ -253,8 +258,11 @@ namespace Weichx.EditorReflection {
             if (type.IsPrimitive || type == typeof(string) || type.IsEnum) {
                 return PropertyType.Primitive;
             }
-            if (type.IsArray || typeof(IList).IsAssignableFrom(type)) {
+            if (type.IsArray) {
                 return PropertyType.Array;
+            }
+            if (typeof(IList).IsAssignableFrom(type)) {
+                return PropertyType.List;
             }
             if (type.IsValueType) {
                 return PropertyType.Struct;
@@ -275,6 +283,8 @@ namespace Weichx.EditorReflection {
                 case PropertyType.Primitive:
                     return new ReflectedPrimitiveProperty(parent, name, type, value);
                 case PropertyType.Array:
+                    return new ReflectedArrayProperty(parent, name, type, value);
+                case PropertyType.List:
                     return new ReflectedListProperty(parent, name, type, value);
                 case PropertyType.Instance:
                     return new ReflectedInstanceProperty(parent, name, type, value);
@@ -283,6 +293,7 @@ namespace Weichx.EditorReflection {
                 case PropertyType.Unity:
                     return new ReflectedInstanceProperty(parent, name, type, value);
                 case PropertyType.Type:
+                    return new ReflectedTypeProperty(parent, name, type, value);
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -313,6 +324,30 @@ namespace Weichx.EditorReflection {
             public UnassignableValueException(Type valueType, Type expectedType) : base
                 ($"Unable to assign value of type type {valueType.Name} to field of type {expectedType.Name}") { }
 
+        }
+
+        public void SetValueAndCopyCompatibleProperties(object newValue) {
+            if (newValue == null) {
+                Value = null;
+                return;
+            }
+
+            if (children.Count == 0) {
+                Value = newValue;
+                return;
+            }
+
+            List<ReflectedProperty> oldChildren = new List<ReflectedProperty>(this.children);
+
+            Value = newValue;
+
+            for (int i = 0; i < oldChildren.Count; i++) {
+                ReflectedProperty child = FindProperty(oldChildren[i].name);
+                if (child != null && child.declaredType.IsAssignableFrom(oldChildren[i].declaredType)) {
+                    child.Value = oldChildren[i].actualValue;
+                    child.SetChanged(false);
+                }
+            }
         }
 
     }

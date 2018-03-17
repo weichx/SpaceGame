@@ -26,18 +26,24 @@ namespace Weichx.EditorReflection {
 
         }
 
+        private const BindingFlags BindFlags = BindingFlags.Public |
+                                               BindingFlags.NonPublic |
+                                               BindingFlags.Instance;
+
         private const string SubclassCache = nameof(SubclassCache);
         private const string GenericSubclassCache = nameof(GenericSubclassCache);
         private const string NonGenericSubclassCache = nameof(NonGenericSubclassCache);
         private const string PointableMethodCache = nameof(PointableMethodCache);
         private const string TypeDrawerCache = nameof(TypeDrawerCache);
         private const string DelegateCache = nameof(DelegateCache);
+        private const string FieldInfoCache = nameof(FieldInfoCache);
 
         private static GenericCache cache;
         private static List<MethodInfo> methodSet;
         private static readonly List<Type> allTypes;
         private static readonly List<Type> genericTypes;
         private static readonly List<Type> nonGenericTypes;
+        private static readonly Type[] typeArgs = new Type[1];
 
         static EditorReflector() {
             allTypes = new List<Type>(128);
@@ -96,37 +102,160 @@ namespace Weichx.EditorReflection {
         }
 
         public static FieldInfo[] GetFields(Type type) {
-            
-        }
-        
-        public static IReadOnlyList<Type> FindConstructableSubClasses(Type type) {
-            return cache.GetOrAddToCache("CreatableSubClasses", type, () => {
-                List<Type> retVal = new List<Type>(4);
-                for (int i = 0; i < allTypes.Count; i++) {
-                    Type t = allTypes[i];
-                    if (t.IsSubclassOf(type) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null) {
-                        retVal.Add(t);
-                    }
-                }
-                return retVal;
+            return cache.GetOrAddToCache(FieldInfoCache, type, () => {
+                return GetFieldsIncludingBaseClasses(type);
             });
         }
 
-        public static IReadOnlyList<Type> FindSubClasses(Type type) {
-            return cache.GetOrAddToCache(SubclassCache, type, () => {
+        /// <summary>
+        ///   Returns all the fields of a type, working around the fact that reflection
+        ///   does not return private fields in any other part of the hierarchy than
+        ///   the exact class GetFields() is called on.
+        /// </summary>
+        /// <param name="type">Type whose fields will be returned</param>
+        /// <param name="bindingFlags">Binding flags to use when querying the fields</param>
+        /// <returns>All of the type's fields, including its base types</returns>
+        public static FieldInfo[] GetFieldsIncludingBaseClasses(Type type, BindingFlags bindingFlags = BindFlags) {
+            FieldInfo[] fieldInfos = type.GetFields(bindingFlags);
+
+            // If this class doesn't have a base, don't waste any time
+            if (type.BaseType == typeof(object)) {
+                return fieldInfos;
+            }
+            else { // Otherwise, collect all types up to the furthest base class
+                var fieldInfoList = new List<FieldInfo>(fieldInfos);
+                while (type.BaseType != null && type.BaseType != typeof(object)) {
+                    type = type.BaseType;
+                    fieldInfos = type.GetFields(bindingFlags);
+
+                    // Look for fields we do not have listed yet and merge them into the main list
+                    for (int index = 0; index < fieldInfos.Length; ++index) {
+                        bool found = false;
+
+                        for (int searchIndex = 0; searchIndex < fieldInfoList.Count; ++searchIndex) {
+                            bool match =
+                                (fieldInfoList[searchIndex].DeclaringType == fieldInfos[index].DeclaringType) &&
+                                (fieldInfoList[searchIndex].Name == fieldInfos[index].Name);
+
+                            if (match) {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        if (!found) {
+                            fieldInfoList.Add(fieldInfos[index]);
+                        }
+                    }
+                }
+
+                return fieldInfoList.ToArray();
+            }
+        }
+
+        public static Type[] FindSubClassesWithNull(Type type) {
+            return cache.GetOrAddToCache(nameof(FindSubClassesWithNull), type, (t0) => {
                 List<Type> retVal = new List<Type>(4);
+                retVal.Add(null);
                 for (int i = 0; i < allTypes.Count; i++) {
                     Type t = allTypes[i];
-                    if (t.IsSubclassOf(type)) {
+                    if (t.IsSubclassOf(t0)) {
                         retVal.Add(t);
                     }
                 }
-                return retVal;
+                return retVal.ToArray();
             });
         }
 
-        public static IReadOnlyList<Type> FindSubClasses<T>() {
+        public static string[] FindSubClassNamesWithNull(Type type) {
+            return cache.GetOrAddToCache(nameof(FindSubClassNamesWithNull), type, (t) => {
+                Type[] types = FindSubClassesWithNull(t);
+                string[] names = new string[types.Length];
+                names[0] = "-- Null --";
+                for (int i = 1; i < names.Length; i++) {
+                    names[i] = types[i].Name;
+                }
+                return names;
+            });
+        }
+
+        public static Type[] FindConstructableSubClasses(Type type) {
+            return cache.GetOrAddToCache(nameof(FindConstructableSubClasses), type, (t0) => {
+                List<Type> retVal = new List<Type>(4);
+                for (int i = 0; i < allTypes.Count; i++) {
+                    Type t = allTypes[i];
+                    if (t.IsSubclassOf(t0) && !t.IsGenericTypeDefinition && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null) {
+                        retVal.Add(t);
+                    }
+                }
+                return retVal.ToArray();
+            });
+        }
+
+        public static Type[] FindConstructableSubClassesWithNull(Type type) {
+            return cache.GetOrAddToCache(nameof(FindConstructableSubClassesWithNull), type, (t0) => {
+                List<Type> retVal = new List<Type>(4);
+                retVal.Add(null);
+                for (int i = 0; i < allTypes.Count; i++) {
+                    Type t = allTypes[i];
+                    if (t.IsSubclassOf(t0) && !t.IsGenericTypeDefinition && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null) {
+                        retVal.Add(t);
+                    }
+                }
+                return retVal.ToArray();
+            });
+        }
+
+        public static string[] FindConstructableSubClassNamesWithNull(Type type) {
+            return cache.GetOrAddToCache(nameof(FindConstructableSubClassNamesWithNull), type, (t) => {
+                Type[] types = FindConstructableSubClasses(t);
+                string[] names = new string[types.Length + 1];
+                names[0] = "-- Null --";
+                for (int i = 1; i < names.Length; i++) {
+                    names[i] = types[i - 1].Name;
+                }
+                return names;
+            });
+        }
+
+        public static string[] FindConstructableSubClassNames(Type type) {
+            return cache.GetOrAddToCache(nameof(FindConstructableSubClassNames), type, (t) => {
+                Type[] types = FindConstructableSubClasses(t);
+                string[] names = new string[types.Length];
+                for (int i = 0; i < types.Length; i++) {
+                    names[i] = types[i].Name;
+                }
+                return names;
+            });
+        }
+
+        public static Type[] FindSubClasses(Type type) {
+            return cache.GetOrAddToCache(SubclassCache, type, (t0) => {
+                List<Type> retVal = new List<Type>(4);
+                for (int i = 0; i < allTypes.Count; i++) {
+                    Type t = allTypes[i];
+                    if (t.IsSubclassOf(t0)) {
+                        retVal.Add(t);
+                    }
+                }
+                return retVal.ToArray();
+            });
+        }
+
+        public static Type[] FindSubClasses<T>() {
             return FindSubClasses(typeof(T));
+        }
+
+        public static bool IsDerivedOfTypeWithGenericArgument(Type inputType, Type targetGeneric) {
+            while (inputType != null && inputType != typeof(object)) {
+                if (inputType.IsGenericType) {
+                    if (inputType.GetGenericArguments()[0] == targetGeneric) {
+                        return true;
+                    }
+                }
+                inputType = inputType.BaseType;
+            }
+            return false;
         }
 
         private static bool IsDerivedOfGenericType(Type type, Type genericType, bool includeInputType) {
@@ -240,27 +369,37 @@ namespace Weichx.EditorReflection {
         public static ReflectedPropertyDrawer CreateReflectedPropertyDrawer(ReflectedProperty property) {
             Type drawerType = GetPropertyDrawerForReflectedProperty(property);
             Debug.Assert(drawerType != null, "drawerType != null");
-            return Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
+            ReflectedPropertyDrawer drawer = Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
+            Debug.Assert(drawer != null, "drawer != null");
+            drawer.OnInitialize();
+            return drawer;
         }
 
         private static bool FilterAssembly(Assembly assembly) {
             string name = assembly.FullName;
-            
+
             if (!name.StartsWith("_") && !name.StartsWith("Assembly-CSharp")) {
                 return false;
             }
 
-            if (name.StartsWith("_StateChart") 
-                || name.StartsWith("_Persistence") 
-                || name.StartsWith("_Freespace") 
-                || name.StartsWith("_Attribute") 
-                || name.StartsWith("_GUI") 
-                || name.StartsWith("_Util") 
+            if (name.StartsWith("_StateChart")
+                || name.StartsWith("_Persistence")
+                || name.StartsWith("_Freespace")
+                || name.StartsWith("_Attribute")
+                || name.StartsWith("_GUI")
+                || name.StartsWith("_Util")
                 || name.StartsWith("_Plugin")) {
                 return false;
-            }//
-//
+            } 
             return name.IndexOf("-firstpass", StringComparison.Ordinal) == -1;
+        }
+
+        public static object CreateGenericInstance(Type type, Type genericArgument) {
+            Debug.Assert(type != null && genericArgument != null && type.IsGenericTypeDefinition);
+            typeArgs[0] = genericArgument;
+            Type makeme = type.MakeGenericType(typeArgs);
+            Debug.Assert(makeme.GetConstructor(Type.EmptyTypes) != null, "makeme.GetConstructor(Type.EmptyTypes) != null");
+            return Activator.CreateInstance(makeme);
         }
 
     }

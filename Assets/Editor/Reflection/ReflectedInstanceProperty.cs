@@ -34,13 +34,13 @@ namespace Weichx.EditorReflection {
             if (value == null) {
                 actualType = declaredType;
                 actualValue = null;
-                this.drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
+                this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
                 DestroyChildren();
             }
             else {
                 Type newType = value.GetType();
                 if (newType != actualType) {
-                    this.drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
+                    this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
                 }
                 actualType = newType;
                 actualValue = value;
@@ -67,7 +67,6 @@ namespace Weichx.EditorReflection {
         private void UpdateChildren() {
 
             FieldInfo[] fieldInfos = EditorReflector.GetFields(actualType);
-//            actualType.GetFields(BindFlags);                
             HashSet<ReflectedProperty> childSet = new HashSet<ReflectedProperty>(children);
 
             for (int i = 0; i < fieldInfos.Length; i++) {
@@ -88,15 +87,14 @@ namespace Weichx.EditorReflection {
                 children.Remove(toRemove);
             }
            
-            
         }
         
         private void CreateChildren() {
-            if (actualValue == null) return;//todo -- bad
+            if (actualValue == null) return;
             children.Clear(); // destroy?
             circularReference = CheckCircularReference(this);
             if (circularReference != null) return;
-            FieldInfo[] fieldInfos = actualType.GetFields(BindFlags);
+            FieldInfo[] fieldInfos = EditorReflector.GetFields(actualType);
             for (int i = 0; i < fieldInfos.Length; i++) {
                 FieldInfo fi = fieldInfos[i];
                 if (ShouldReflectProperty(fi)) {

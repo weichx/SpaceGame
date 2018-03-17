@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEditor;
 
 [CustomEditor(typeof(Transform))]
-public class TransformInspector : Editor {
+public class TransformInspector : UnityEditor.Editor {
 
     /// <inheritdoc />
     /// <summary>

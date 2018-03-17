@@ -1,7 +1,5 @@
-﻿using SpaceGame;
-using SpaceGame.FileTypes;
-
-namespace Src.Editor {
+﻿
+namespace SpaceGame.FileTypes {
 
     using UnityEngine;
     using UnityEditor;
@@ -52,6 +50,18 @@ namespace Src.Editor {
         [MenuItem("Assets/Create Game Data File")]
         public static void CreateShipDefinitionAsset() {
             CreateAsset<GameDataFile>();
+        }
+        
+        [MenuItem("Assets/Create AI Data File")]
+        public static void CreateDecisionEvaluatorDataFileAsset() {
+            CreateAsset<DecisionEvaluatorDataFile>();
+        }
+
+        [MenuItem("Assets/Clone Editor Skin")]
+        public static void CloneEditorSkin() {
+            GUISkin skin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
+            GUISkin skin2 = Object.Instantiate(skin);
+            AssetDatabase.CreateAsset(skin2, "Assets/EditorSkin.asset");
         }
 
     }

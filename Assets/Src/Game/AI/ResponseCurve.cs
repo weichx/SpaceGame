@@ -119,6 +119,15 @@
             get { return " slope: " + slope + " exp: " + exp + " vShift: " + vShift + " hShift: " + hShift + " \n threshold: " + threshold + " inverted: " + invert; }
         }
 
+        public string ShortDisplayString {
+            get {
+                string retn = $" {Enum.GetName(typeof(ResponseCurveType), curveType)} ({slope}, {exp}, {vShift}, {hShift})";
+                if (threshold != 0) retn += $" [{threshold}]";
+                if (invert) retn += " inverted";
+                return retn;
+            }
+        }
+
         public override string ToString() {
             return "{type: " + curveType + ", slope: " + slope +
                    ", exp: " + exp + ", vShift: " + vShift + ", hShift: " + hShift + "}";
@@ -131,38 +140,38 @@
         public static ResponseCurve Create2PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 2, 0, 0);
         }
-        
+
         public static ResponseCurve Create4PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 4, 0, 0);
         }
-        
+
         public static ResponseCurve Create6PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 6, 0, 0);
         }
-        
+
         public static ResponseCurve Create8PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 8, 0, 0);
         }
-        
+
         public static ResponseCurve CreateInvertedLinearCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 1, 0, 0, 0, true);
         }
-        
+
         public static ResponseCurve CreateInverted2PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 2, 0, 0, 0, true);
         }
-        
+
         public static ResponseCurve CreateInverted4PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 4, 0, 0, 0, true);
         }
-        
+
         public static ResponseCurve CreateInverted6PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 6, 0, 0, 0, true);
         }
-        
+
         public static ResponseCurve CreateInverted8PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 8, 0, 0, 0, true);
-        }      
+        }
 
         public object Clone() {
             ResponseCurve curve = new ResponseCurve();

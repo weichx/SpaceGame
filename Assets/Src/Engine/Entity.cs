@@ -55,6 +55,8 @@ namespace SpaceGame {
         public FactionReference factionReference;
         
         public float hitPoints = 100f;
+        public float maxHitPoints = 120f;
+        
         public TransformInfo transformInfo => GameData.Instance.transformInfoMap[id];
         public FlightInput flightInput => GameData.Instance.flightInputs[id];
         public AIInfo aiInfo => GameData.Instance.aiInfoMap[id];

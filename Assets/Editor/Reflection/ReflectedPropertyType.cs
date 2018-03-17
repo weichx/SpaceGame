@@ -4,6 +4,7 @@
 
         Primitive,
         Array,
+        List,
         Instance,
         Struct,
         Unity,

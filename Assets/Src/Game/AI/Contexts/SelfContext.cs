@@ -1,4 +1,4 @@
-﻿namespace SpaceGame.AI.Contexts {
+﻿namespace SpaceGame.AI {
 
     public class SelfContext : DecisionContext {
 

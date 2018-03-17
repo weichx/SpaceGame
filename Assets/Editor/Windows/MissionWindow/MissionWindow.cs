@@ -1,5 +1,6 @@
 ﻿using UnityEditor;
 using UnityEngine;
+using Weichx.Util;
 
 namespace SpaceGame.Editor.MissionWindow {
 
@@ -38,7 +39,7 @@ namespace SpaceGame.Editor.MissionWindow {
                           If no instance is explicitly set on an entity, then it can create a blank one from its template
                           All entities require an instance, instances need to be built off of a template. Use generic template if none is specified          
         */
- 
+
         private void OnDisable() {
             state.Save();
             pages[state.currentPageIndex].OnDisable();
@@ -55,6 +56,8 @@ namespace SpaceGame.Editor.MissionWindow {
             if (pages == null) return;
 
             int lastPage = state.currentPageIndex;
+//            Rect r = new Rect(position) {x = 0, y = 0};
+//            r.height = 16f;
             state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs);
 
             if (state.currentMission == null) {

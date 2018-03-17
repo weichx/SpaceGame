@@ -1,24 +1,24 @@
-﻿using UnityEditor;
+﻿using SpaceGame;
+using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;
 
-namespace SpaceGame.Editor {
+namespace SpaceGameEditor.Drawers {
 
     [PropertyDrawerFor(typeof(FactionReference))]
     public class FactionDrawer : ReflectedPropertyDrawer {
 
-        public override void OnGUI(ReflectedProperty property, GUIContent label = null) {
-            EditorGUILayout.BeginHorizontal();
+        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
+
             string[] factions = Faction.GetFactionNames();
-            int index = ((FactionReference)property.Value).factionId;
-            EditorGUILayout.PrefixLabel("Faction");
-            int newIndex = EditorGUILayout.Popup(index, factions);
+            int index = ((FactionReference) property.Value).factionId;
+            int newIndex = EditorGUI.Popup(position, property.Label, index, factions);
             if (index != newIndex) {
                 property.Value = new FactionReference(newIndex);
             }
-            EditorGUILayout.EndHorizontal();
-            
+
         }
 
     }
+
 }

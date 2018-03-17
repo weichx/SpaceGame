@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using Weichx.ReflectionAttributes;
 using Weichx.Util;
 
 namespace SpaceGame.AI {
@@ -8,9 +9,11 @@ namespace SpaceGame.AI {
 
             
         public string name;
+        [UnityEngine.Range(0.1f, 10f)]
         public float weight;
+        [UsePropertyDrawer(typeof(ConstructableSubclass))]
         public BonusCalculator bonusCalculator;
-        public Consideration[] considerations;
+        public Consideration[] considerations = new Consideration[0];
         
         internal abstract ScoreResult Score(Entity agent, Decision decision, float cutoff);
 
@@ -53,6 +56,7 @@ namespace SpaceGame.AI {
                         break;
                     }
 
+                    //todo -- hold a second array of pre-cast considerations?
                     Consideration<TContext> consideration = considerations[j] as Consideration<TContext>;
                     Debug.Assert(consideration != null, nameof(consideration) + " != null");
                     float score = consideration.ScoreCurved(context);

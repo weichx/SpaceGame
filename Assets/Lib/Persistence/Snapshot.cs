@@ -165,6 +165,9 @@ namespace Weichx.Persistence {
         }
 
         public static T Deserialize(string serializedSnapshot) {
+            if (string.IsNullOrEmpty(serializedSnapshot)) {
+                return DeserializeDefault();
+            }
             return FromString(serializedSnapshot).Deserialize();
         }
 

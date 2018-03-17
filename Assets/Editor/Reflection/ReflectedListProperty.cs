@@ -42,7 +42,7 @@ namespace Weichx.EditorReflection {
                 //it is safe to pass the same element to every new index
                 object element = EditorReflector.GetDefaultForType(elementType);
                 for (int i = children.Count; i < size; i++) {
-                    children.Add(CreateChild(this, i.ToString(), elementType, element));
+                    children.Add(CreateChild(this, string.Empty, elementType, element));
                 }
                 SetChanged(true);
             }
@@ -100,24 +100,56 @@ namespace Weichx.EditorReflection {
         }
 
         public void AddElements(IList elements) {
-            int childCount = children.Count;
             Type elementType = declaredType.GetElementType() ?? declaredType.GetGenericArguments()[0];
             for (int i = 0; i < elements.Count; i++) {
-                children.Add(CreateChild(this, (childCount + i).ToString(), elementType, elements[i]));
+                children.Add(CreateChild(this, string.Empty, elementType, elements[i]));
             }
-            elements[1] = 0;
         }
 
         public void AddElement(object element) {
             Type elementType = declaredType.GetElementType() ?? declaredType.GetGenericArguments()[0];
-            children.Add(CreateChild(this, children.Count.ToString(), elementType, element));
+            children.Add(CreateChild(this, string.Empty, elementType, element));
         }
 
+        public void InsertElement(int index) {
+            if (index >= 0 && index <= ChildCount) {
+                Type elementType = declaredType.GetGenericArguments()[0];
+                object defaultValue = EditorReflector.GetDefaultForType(declaredType);
+                ReflectedProperty child = CreateChild(this, string.Empty, elementType, defaultValue);
+                if (index == ChildCount) {
+                    AddElement(child);
+                }
+                children.Insert(index, child);
+            }
+        }
+
+        public void Duplicate(int index) {
+            UnityEngine.Debug.Log("Duplicate not yet implemented");
+//            ReflectedProperty child = children[index];
+//            if (child.Value == null) {
+//            }
+//            else {
+//                object value = child.Value;
+//                object clonedValue;
+//                if (child.Type.IsArray) {
+//                    clonedValue = Array.CreateInstance(child.Type, ((Array)child.Value).Length);
+//                }
+//                else {
+//                    clonedValue = Activator.CreateInstance(child.Type);
+//                }
+//                ReflectedProperty clone = CreateChild(this, )
+//            }
+        }
+        
         public virtual void RemoveElementAt(int index) {
             ReflectedProperty child = children.RemoveAndReturnAtIndex(index);
             if (child != null) {
                 DestroyChild(child);
             }
+        }
+        
+        public virtual void Clear() {
+            DestroyChildren();
         }
         
         public bool MoveElement(int oldIndex, int insertIndex) {
@@ -133,6 +165,8 @@ namespace Weichx.EditorReflection {
         public ReflectedProperty this[int indexer] {
             get { return children?[indexer]; }
         }
+
+      
 
     }
 

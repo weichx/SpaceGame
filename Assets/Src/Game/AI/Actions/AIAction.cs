@@ -1,12 +1,16 @@
-﻿namespace SpaceGame.AI {
+﻿using System;
 
-    public abstract class AIAction {
+namespace SpaceGame.AI {
+
+    public abstract class AIAction : IContextAware {
 
         public virtual void Setup() { }
         public abstract bool Tick();
         public virtual void Teardown() { }
 
         public abstract void SetContext(DecisionContext bestResultContext);
+
+        public abstract Type GetContextType();
 
     }
 
@@ -17,6 +21,10 @@
         public override void SetContext(DecisionContext context) {
             this.context = (TContext)context;
            
+        }
+
+        public override Type GetContextType() {
+            return typeof(TContext);
         }
 
     }

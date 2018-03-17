@@ -57,6 +57,7 @@ namespace Weichx.EditorReflection {
         }
         
         protected override void CreateChildren() {
+            if (actualValue == null) return;
             Array array = (Array) actualValue;
             Type elementType = actualType.GetElementType();
             for(int i = 0; i < array.Length; i++) {

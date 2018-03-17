@@ -5,7 +5,7 @@ using UnityEngine;
 using Weichx.Util.Texture2DExtensions;
 using Object = UnityEngine.Object;
 
-public class MultiWindowEditor : Editor {
+public class MultiWindowEditor : UnityEditor.Editor {
 
     private Rect _headerRect;
     private Rect _screenRect;

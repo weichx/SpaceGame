@@ -26,6 +26,8 @@ namespace Weichx.EditorReflection {
             }
         }
 
+        public ReflectedProperty Root => root;
+        
         public void ApplyModifiedProperties() {
             root.ApplyChanges();
         }
