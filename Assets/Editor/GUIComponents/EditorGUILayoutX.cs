@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using Weichx.EditorReflection;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     public static class EditorGUILayoutX {
 

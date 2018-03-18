@@ -1,30 +1,27 @@
 ﻿using UnityEditor;
 using UnityEngine;
-using Weichx.Util;
 
 namespace SpaceGame.Editor.MissionWindow {
 
     public class MissionWindow : EditorWindow {
 
-        private GUISkin skin;
         private MissionWindowState state;
 
         private MissionWindowPage[] pages;
 
         private readonly string[] tabs = {
-            "AI",
-            "Ships",
             "Missions",
+            "AI",
+            "Ships"
         };
 
         private void OnEnable() {
-            state = MissionWindowState.Restore("MissionWindow");
+            state = MissionWindowState.Restore();
             pages = new MissionWindowPage[] {
+                new MissionPage(state),
                 new AIPage(state),
                 new ShipPage(state),
-                new MissionPage(state)
             };
-            skin = EditorGUIUtility.Load("MissionWindowSkin.asset") as GUISkin;
             pages[state.currentPageIndex].OnEnable();
         }
 
@@ -51,7 +48,6 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         public void OnGUI() {
-            GUI.skin = skin;
             if (state == null) return;
 
             if (pages == null) return;
@@ -59,10 +55,6 @@ namespace SpaceGame.Editor.MissionWindow {
             int lastPage = state.currentPageIndex;
 
             state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs, (GUILayoutOption[]) null);
-
-            if (state.currentMission == null) {
-                state.currentPageIndex = 0;
-            }
 
             if (lastPage != state.currentPageIndex) {
                 pages[lastPage].OnDisable();

@@ -19,15 +19,15 @@ namespace SpaceGame.AI {
  * Decisions can also have requirements, for example a mission might forbid the AI from attacking
  * certain ships, or we require that the target be low on health
  */
-    public sealed class Decision {
+    public sealed class Decision : IIdentitifiable {
         
         private static int idGenerator;
 
         public string name = "Unnamed Decision";
         public string description;
 
-        [HideInInspector][NonSerialized]
-        public readonly int id;
+        [HideInInspector][SerializeField]
+        private int id;
         
         public Type contextType = typeof(EntityContext);
         
@@ -41,8 +41,11 @@ namespace SpaceGame.AI {
 
 
         public Decision() {
-            this.id = idGenerator++;
+            this.id = UnityEngine.Random.Range(int.MinValue, int.MaxValue);
         }
+
+        public int Id => id;
+        public string Name => name;
 
     }
 

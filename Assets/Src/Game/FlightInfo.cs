@@ -2,7 +2,7 @@
 
 namespace SpaceGame {
 
-    public class ShipInfo {
+    public class FlightInfo {
 
         public float currentSpeed;
         public float currentThrottle;

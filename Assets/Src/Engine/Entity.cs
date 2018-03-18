@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using SpaceGame.AI;
+using SpaceGame.AI.Actions;
 using Src.Engine;
 using UnityEngine;
 using Weichx.ReflectionAttributes;
@@ -14,14 +15,11 @@ namespace SpaceGame {
         string GenerateName(Entity entity);
 
     }
-
-    public class FlightGroup { }
     
 
     public class EntityTemplate {
 
         public Faction faction;
-        public FlightGroup flightGroup;
         public INameGenerator nameGenerator;
         public AssetPointer<GameObject> chassis;
         
@@ -40,7 +38,17 @@ namespace SpaceGame {
         public float accelerationRate;
         
     }
-    
+
+    public class WeaponSystem {
+
+        public float CurrentWeaponCooldownRemaining;
+
+        public void Fire() { }
+
+    }
+
+    public class FlightSystem { }
+
     [SelectionBase]
     [DisallowMultipleComponent]
     [DebuggerDisplay("Id = {" + nameof(id) + "}")]
@@ -64,6 +72,9 @@ namespace SpaceGame {
 
         public Vector3 targetPosition;
         public ApproachType arrivalType;
+
+        public WeaponSystem WeaponSystem => WeaponSystem;
+        public FlightSystem FlightSystem => FlightSystem;
         
         private void Awake() {
             if (instanceID != 0) {

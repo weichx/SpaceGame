@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     public static class GUIUtilX {
 

@@ -1,7 +1,7 @@
 ﻿
 using Weichx.Util.Texture2DExtensions;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     using System;
     using System.Collections.Generic;

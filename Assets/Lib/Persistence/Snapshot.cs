@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 
 namespace Weichx.Persistence {
@@ -43,11 +45,22 @@ namespace Weichx.Persistence {
             referenceMap[target] = refNode;
             if (refNode.typeDefinition.IsArray) {
                 Array array = target as Array;
+                Debug.Assert(array != null, nameof(array) + " != null");
                 int length = array.Length;
                 refNode.fields = new FieldDefinition[length];
                 TypeDefinition elementType = refNode.typeDefinition.GetArrayLikeElementType();
                 for (int i = 0; i < length; i++) {
-                    refNode.fields[i] = CreateArrayMemberDefinition(elementType, array, i);
+                    refNode.fields[i] = CreateArrayMemberDefinition(elementType, array.GetValue(i), i);
+                }
+            }
+            else if (refNode.typeDefinition.IsArrayLike) {
+                IList list = target as IList;
+                Debug.Assert(list != null, nameof(list) + " != null");
+                int length = list.Count;
+                refNode.fields = new FieldDefinition[length];
+                TypeDefinition elementType = refNode.typeDefinition.GetArrayLikeElementType();
+                for (int i = 0; i < length; i++) {
+                    refNode.fields[i] = CreateArrayMemberDefinition(elementType, list[i], i);
                 }
             }
             else {
@@ -80,8 +93,7 @@ namespace Weichx.Persistence {
             return FieldType.Reference;
         }
 
-        private FieldDefinition CreateArrayMemberDefinition(TypeDefinition elementType, Array array, int index) {
-            object value = array.GetValue(index);
+        private FieldDefinition CreateArrayMemberDefinition(TypeDefinition elementType, object value, int index) {
             FieldDefinition fieldDefinition = new FieldDefinition();
             TypeDefinition typeDefinition = GetTypeDefinition(elementType, value);
             fieldDefinition.name = index.ToString();
@@ -198,9 +210,9 @@ namespace Weichx.Persistence {
             else {
                 target = Activator.CreateInstance(type);
             }
-            return new Snapshot<T>((T)target);
+            return new Snapshot<T>((T) target);
         }
-        
+
         public static string SerializeDefault() {
             Type type = typeof(T);
             object target;

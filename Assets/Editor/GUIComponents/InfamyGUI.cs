@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEngine;
 

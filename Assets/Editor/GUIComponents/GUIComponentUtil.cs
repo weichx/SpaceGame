@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     public static class GUIComponentUtil {
 

@@ -1,11 +1,8 @@
-﻿namespace SpaceGame {
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Text;
 using UnityEngine;
 
-namespace Persistence {
+namespace Weichx.Util {
 
     public class ByteBufferReader {
 
@@ -140,7 +137,5 @@ namespace Persistence {
         }
 
     }
-
-}
 
 }

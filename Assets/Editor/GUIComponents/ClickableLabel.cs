@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     public class ClickableLabel<T> {
 

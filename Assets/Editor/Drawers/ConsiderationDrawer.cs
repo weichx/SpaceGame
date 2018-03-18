@@ -1,7 +1,7 @@
 ﻿using System;
 using Editor.GUIComponents;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;

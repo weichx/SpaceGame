@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.Remoting;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using SpaceGame.FileTypes;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -10,16 +9,13 @@ using Weichx.EditorReflection;
 
 namespace SpaceGame.Editor.MissionWindow {
 
-    public class AIPage : MissionPage {
+    public class AIPage : MissionWindowPage {
 
         [SerializeField] private HorizontalPaneState splitterState;
 
-        private AITreeView treeView;
         private TreeViewState treeState;
-        private ReflectedListProperty decisionList;
         private ReflectedProperty selectedDecision;
-        private IList<int> selectedIds;
-        private DecisionEvaluatorDataFile evaluatorData;
+        private GameDataFile gameData;
         private const string NameField = nameof(Decision.name);
 
         public AIPage(MissionWindowState state) : base(state) {
@@ -33,14 +29,18 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         private void CreateDecision() {
-            decisionList.AddElement(new Decision());
+            Decision decision = new Decision();
+            selectedIds.Clear();
+            selectedIds.Add(decision.Id);
+            list.AddElement(decision);
             treeView.Reload();
+            treeView.SetSelection(selectedIds, TreeViewSelectionOptions.FireSelectionChanged | TreeViewSelectionOptions.RevealAndFrame);
         }
 
         private void RenderList() {
             EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
             InfamyGUI.Button("Create Decision", CreateDecision);
-            treeView.OnGUI(GUILayoutUtility.GetRect(0, 10000, 0, 10000));
+            this.treeView.OnGUI(GUILayoutUtility.GetRect(0, 10000, 0, 10000));
             EditorGUILayout.EndVertical();
         }
 
@@ -48,10 +48,10 @@ namespace SpaceGame.Editor.MissionWindow {
             if (selectedDecision == null) return;
 
             treeView.UpdateDisplayName(
-                selectedDecision.GetValue<Decision>().id,
+                selectedDecision.GetValue<Decision>().Id,
                 selectedDecision[NameField].stringValue
             );
-            
+
             EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
             EditorGUILayoutX.PropertyField(selectedDecision);
             GUILayout.FlexibleSpace();
@@ -64,7 +64,7 @@ namespace SpaceGame.Editor.MissionWindow {
             if (selectedDecision == null) return;
             string name = selectedDecision[NameField].stringValue;
             if (EditorUtility.DisplayDialog("Are you sure?", $"Really delete {name}?", "Yup", "Nope")) {
-                decisionList.RemoveElement(selectedDecision);
+                list.RemoveElement(selectedDecision);
                 selectedDecision = null;
                 treeView.SetSelection(new List<int>());
                 treeView.Reload();
@@ -72,24 +72,23 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         private bool FindSelectedDecision(ReflectedProperty property) {
-            return selectedIds.Contains(property.GetValue<Decision>().id);
+            return selectedIds.Contains(property.GetValue<Decision>().Id);
         }
 
         public override void OnEnable() {
-            evaluatorData = Resources.Load<DecisionEvaluatorDataFile>("AI/Evaluators");
-            decisionList = new ReflectedObject(evaluatorData.GetDecisions()).Root as ReflectedListProperty;
-            treeView = new AITreeView(decisionList, OnSelectionChanged);
-            treeView.SetSelection(selectedIds);
+            gameData = Resources.Load<GameDataFile>("Game Data");
+            list = new ReflectedObject(gameData.GetDecisions()).Root as ReflectedListProperty;
+            treeView = new AITreeView(list, OnSelectionChanged);
         }
 
         private void OnSelectionChanged(IList<int> selectedIds) {
             this.selectedIds = new List<int>(selectedIds);
-            selectedDecision = decisionList.Find(FindSelectedDecision);
+            selectedDecision = list.Find(FindSelectedDecision);
         }
-        
+
         public override void OnDisable() {
-            decisionList.ApplyChanges();
-            evaluatorData.Save((List<Decision>) decisionList.Value);
+            list.ApplyChanges();
+            gameData.Save((List<Decision>) list.Value);
         }
 
     }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using Weichx.Util.Texture2DExtensions;
 using UnityEngine;
 using UnityEditor;

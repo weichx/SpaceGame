@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Editor.GUIComponents;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using Weichx.Util;
 using UnityEditor;
 using UnityEngine;

@@ -335,17 +335,27 @@ namespace Weichx.EditorReflection {
             PropertyDrawerDescription drawerDesc = cache.GetItemFromCache<Type, PropertyDrawerDescription>(TypeDrawerCache, type);
 
             while (drawerDesc == null && type.BaseType != null) {
+                
+                if (type.IsGenericType) {
+                    Type genTypeDef = type.GetGenericTypeDefinition();
+                    drawerDesc = cache.GetItemFromCache<Type, PropertyDrawerDescription>(TypeDrawerCache, genTypeDef);
+                    if (drawerDesc != null) {
+                        cache.AddItemToCache(TypeDrawerCache, originalType, drawerDesc);
+                        return drawerDesc.type;
+                    }
+                }
+
                 type = type.BaseType;
                 drawerDesc = cache.GetItemFromCache<Type, PropertyDrawerDescription>(TypeDrawerCache, type);
+
                 // if there is no option to include subclasses, keep looking
                 if (drawerDesc != null && drawerDesc.option != PropertyDrawerForOption.IncludeSubclasses) {
                     drawerDesc = null;
                 }
-                else {
-                    cache.AddItemToCache(TypeDrawerCache, originalType, drawerDesc);
-                }
+              
             }
 
+            // if we dont find anything, create a generic one and cache it
             if (drawerDesc == null) {
                 drawerDesc = new PropertyDrawerDescription(typeof(GenericPropertyDrawer));
                 cache.AddItemToCache(TypeDrawerCache, originalType, drawerDesc);
@@ -370,6 +380,8 @@ namespace Weichx.EditorReflection {
             Type drawerType = GetPropertyDrawerForReflectedProperty(property);
             Debug.Assert(drawerType != null, "drawerType != null");
             ReflectedPropertyDrawer drawer = Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
+            // if drawer as GenericConstraintPropertyDrawer
+            // if 
             Debug.Assert(drawer != null, "drawer != null");
             drawer.OnInitialize();
             return drawer;
@@ -390,7 +402,7 @@ namespace Weichx.EditorReflection {
                 || name.StartsWith("_Util")
                 || name.StartsWith("_Plugin")) {
                 return false;
-            } 
+            }
             return name.IndexOf("-firstpass", StringComparison.Ordinal) == -1;
         }
 

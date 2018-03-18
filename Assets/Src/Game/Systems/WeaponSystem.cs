@@ -1,8 +1,5 @@
 ﻿using System;
-using SpaceGame.Events;
-using Weichx.Util;
 using SpaceGame.Weapons;
-using UnityEngine;
 
 namespace SpaceGame.Systems {
 

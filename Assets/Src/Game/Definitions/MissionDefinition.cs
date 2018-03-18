@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
+using System.Collections.Generic;
 using Weichx.ReflectionAttributes;
 
 namespace SpaceGame {
@@ -16,6 +16,8 @@ namespace SpaceGame {
         [HideInInspector]
         public string guid;
 
+        public List<Faction> factions;
+        public List<FlightGroup> flightGroups;
         public List<EntityDefinition> entityDefinitions;
         
         public MissionDefinition() {
@@ -24,6 +26,7 @@ namespace SpaceGame {
             this.entityDefinitions = new List<EntityDefinition>(8);
             this.createdAt = DateTime.Now.ToShortTimeString() + " on " + DateTime.Now.ToShortDateString();
         }
+        
         
 
     }

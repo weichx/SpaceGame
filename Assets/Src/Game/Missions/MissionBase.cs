@@ -28,12 +28,12 @@ namespace SpaceGame.Missions {
         public void Activate(Entity entity) {
             entity.gameObject.SetActive(true);
         }
-
-        public void Deactivate(EntityGroup entityGroup) {
-            for (int i = 0; i < entityGroup.entities.Count; i++) {
-                Deactivate(entityGroup.entities[i]);
-            }
-        }
+//
+//        public void Deactivate(EntityGroup entityGroup) {
+//            for (int i = 0; i < entityGroup.entities.Count; i++) {
+//                Deactivate(entityGroup.entities[i]);
+//            }
+//        }
 
         public void Deactivate(Entity entity) {
 //            EntityDatabase.ActiveEntites.Remove(entity);

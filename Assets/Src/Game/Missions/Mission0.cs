@@ -21,8 +21,6 @@ namespace SpaceGame.Missions {
 
         private StateChart stateChart;
 
-        public EntityGroup tieFighterAlpha;
-        public EntityGroup freighterOence;
         public Entity vanmyrStation;
 
         public WaypointPath oenceWaypoints;
@@ -56,18 +54,16 @@ namespace SpaceGame.Missions {
 
             State("Mission Init", () => {
                 Init(() => {
-                    // not to have to pre-allocate
-                    // de-allocate is a-ok
-                    Deactivate(freighterOence);
 
-                    SetTimeout(0f, () => Arrive(freighterOence.GetEntity("Oence 1")));
+                    //Deactivate(freighterOence);
+
+                    //SetTimeout(0f, () => Arrive(freighterOence.GetEntity("Oence 1")));
 //                    SetTimeout(3f, () => Arrive(freighterOence.GetEntity("Oence 2")));
 //                    SetTimeout(4f, () => Arrive(freighterOence.GetEntity("Oence 3")));
 //                    SetTimeout(5f, () => Arrive(freighterOence.GetEntity("Oence 4")));
 //                    SetTimeout(6f, () => Arrive(freighterOence.GetEntity("Oence 5")));
 
                     OnGameEvent<Evt_EntityArrived>((evt) => {
-                        Debug.Log("Arrived");
                         Entity entity = evt.Entity;
                         BehaviorSet behaviors = new BehaviorSet();
                         behaviors.decisions = new List<Decision>();

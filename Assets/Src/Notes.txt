@@ -26,6 +26,8 @@ enum OrderType {
 
 AI Target "stickiness" factor in range to target
 
+
+
 AttackShipDecision {
     name = ""
     description = "";

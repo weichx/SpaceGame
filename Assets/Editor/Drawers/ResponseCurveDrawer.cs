@@ -1,6 +1,6 @@
 ﻿using Editor.GUIComponents;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using Src.Editor;
 using Src.Editor.GUIComponents;
 using UnityEditor;

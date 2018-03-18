@@ -1,8 +1,7 @@
 ﻿using System;
 using Editor.GUIComponents;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
-using SpaceGame.FileTypes;
+using SpaceGame.EditorComponents;
 using UnityEngine;
 using Weichx.EditorReflection;
 
@@ -16,13 +15,6 @@ namespace SpaceGameEditor.Drawers {
         private const string EvaluatorField = nameof(Decision.evaluator);
         private const string ContextCreatorField = nameof(Decision.contextCreator);
         private const string ContextTypeField = nameof(Decision.contextType);
-
-        private DecisionEvaluatorDataFile evaluatorData;
-
-        public override void OnInitialize() {
-            // Resources returns a shared reference on subsequent calls
-            evaluatorData = Resources.Load<DecisionEvaluatorDataFile>("AI/Evaluators");
-        }
 
         public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
 
@@ -74,10 +66,6 @@ namespace SpaceGameEditor.Drawers {
             height += base.GetPropertyHeight(property[ContextCreatorField]);
             height += base.GetPropertyHeight(property[EvaluatorField]);
             return height;
-        }
-
-        public override void OnDestroy() {
-            evaluatorData = null;
         }
 
     }

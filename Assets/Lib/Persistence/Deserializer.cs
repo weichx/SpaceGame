@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Weichx.Persistence {
 
@@ -10,8 +12,6 @@ namespace Weichx.Persistence {
             private object[] referenceMap;
             private ReferenceDefinition[] referenceDefinitions;
 
-        
-            
             internal Deserializer(Dictionary<object, ReferenceDefinition> inputRefMap) {
                 int i = 0;
                 Dictionary<object, ReferenceDefinition>.ValueCollection refs = inputRefMap.Values;
@@ -20,14 +20,8 @@ namespace Weichx.Persistence {
                 foreach (ReferenceDefinition referenceDefinition in refs) {
                     referenceDefinitions[i++] = referenceDefinition;
                 }
-
-//                Array.Sort(referenceMap, SortReferenceDefinitions);
             }
 
-//            private static int SortReferenceDefinitions(ReferenceDefinition a, ReferenceDefinition b) {
-//                
-//            }
-            
             public T Deserialize() {
                 Array.Clear(referenceMap, 0, referenceMap.Length);
                 for (int i = 0; i < referenceDefinitions.Length; i++) {
@@ -36,6 +30,9 @@ namespace Weichx.Persistence {
                 for (int i = 0; i < referenceDefinitions.Length; i++) {
                     if (referenceDefinitions[i].typeDefinition.IsArray) {
                         CreateArrayMembers(referenceMap[i] as Array, referenceDefinitions[i]);
+                    }
+                    else if (referenceDefinitions[i].typeDefinition.IsList) {
+                        CreateListMembers(referenceMap[i] as IList, referenceDefinitions[i]);
                     }
                     else {
                         CreateFields(referenceMap[i], referenceDefinitions[i].fields);
@@ -50,9 +47,23 @@ namespace Weichx.Persistence {
                     Type typeElement = typeDefinition.type.GetElementType();
                     return Array.CreateInstance(typeElement, referenceDefinition.fields.Length);
                 }
+                else if (typeDefinition.IsList) {
+                    Type elementType = typeDefinition.GetArrayLikeElementType().type;
+                    IList list = Activator.CreateInstance(typeDefinition.type) as IList;
+                    Debug.Assert(list != null, nameof(list) + " != null");
+                    object defaultValue = GetDefaultForType(elementType);
+                    for (int i = 0; i < referenceDefinition.fields.Length; i++) {
+                        list.Add(defaultValue);
+                    }
+                    return list;
+                }
                 else {
                     return Activator.CreateInstance(typeDefinition.type);
                 }
+            }
+
+            private static object GetDefaultForType(Type type) {
+                return type.IsValueType ? Activator.CreateInstance(type) : null;
             }
 
             private void CreateFields(object target, FieldDefinition[] fields) {
@@ -61,7 +72,7 @@ namespace Weichx.Persistence {
                     switch (field.fieldType) {
                         case FieldType.Array:
                         case FieldType.Reference:
-                            field.fieldInfo.SetValue(target,field.refId == -1 ? null : referenceMap[field.refId]);
+                            field.fieldInfo.SetValue(target, field.refId == -1 ? null : referenceMap[field.refId]);
                             break;
                         case FieldType.Struct:
                             field.fieldInfo.SetValue(target, CreateStruct(field));
@@ -74,6 +85,33 @@ namespace Weichx.Persistence {
                             break;
                         case FieldType.Unity:
                             field.fieldInfo.SetValue(target, null);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+                }
+            }
+
+            private void CreateListMembers(IList target, ReferenceDefinition def) {
+                FieldDefinition[] fields = def.fields;
+                for (int i = 0; i < fields.Length; i++) {
+                    FieldDefinition field = fields[i];
+                    switch (field.fieldType) {
+                        case FieldType.Array:
+                        case FieldType.Reference:
+                            target[i] = field.refId == -1 ? null : referenceMap[field.refId];
+                            break;
+                        case FieldType.Struct:
+                            target[i] = CreateStruct(field);
+                            break;
+                        case FieldType.Primitive:
+                            target[i] = field.value;
+                            break;
+                        case FieldType.Type:
+                            target[i] = field.value;
+                            break;
+                        case FieldType.Unity:
+                            target[i] = null;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();
@@ -105,7 +143,7 @@ namespace Weichx.Persistence {
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
-                }         
+                }
             }
 
             private object CreateStruct(FieldDefinition structField) {

@@ -47,17 +47,13 @@ namespace SpaceGame.FileTypes {
             return asset;
         }
 
-        [MenuItem("Assets/Create Game Data File")]
+        [MenuItem("Assets/Custom/Create Game Data File")]
         public static void CreateShipDefinitionAsset() {
             CreateAsset<GameDataFile>();
         }
         
-        [MenuItem("Assets/Create AI Data File")]
-        public static void CreateDecisionEvaluatorDataFileAsset() {
-            CreateAsset<DecisionEvaluatorDataFile>();
-        }
-
-        [MenuItem("Assets/Clone Editor Skin")]
+     
+        [MenuItem("Assets/Custom/Clone Editor Skin")]
         public static void CloneEditorSkin() {
             GUISkin skin = EditorGUIUtility.GetBuiltinSkin(EditorSkin.Inspector);
             GUISkin skin2 = Object.Instantiate(skin);

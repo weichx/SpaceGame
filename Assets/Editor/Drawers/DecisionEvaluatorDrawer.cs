@@ -1,7 +1,7 @@
 ﻿using Editor.GUIComponents;
 using Rotorz.ReorderableList;
 using SpaceGame.AI;
-using SpaceGame.Editor.GUIComponents;
+using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;

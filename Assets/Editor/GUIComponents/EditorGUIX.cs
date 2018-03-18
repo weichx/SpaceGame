@@ -5,7 +5,7 @@ using Editor.GUIComponents;
 using UnityEditor;
 using Weichx.EditorReflection;
 
-namespace SpaceGame.Editor.GUIComponents {
+namespace SpaceGame.EditorComponents {
 
     public class EditorGUIX {
 

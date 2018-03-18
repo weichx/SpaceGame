@@ -61,7 +61,7 @@ namespace SpaceGame.Engine {
 
         public void Tick() {
             int count = agents.Count;
-
+    //todo need to 'instantiate' decisions. Right now they are all the same references
             for (int i = 0; i < count; i++) {
                 AIInfo agent = agents[i];
                 agent.decisionDuration = 1f;
