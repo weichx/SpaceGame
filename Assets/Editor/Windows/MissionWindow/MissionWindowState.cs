@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using UnityEngine;
 using Weichx.Persistence;
 
 namespace SpaceGame.Editor.MissionWindow {
@@ -8,6 +9,10 @@ namespace SpaceGame.Editor.MissionWindow {
         private const string EditorPrefKey = "MissionEditorState";
                 
         public int currentPageIndex;
+        public string activeMissionGuid;
+        
+        [SerializeField] 
+        private MissionDefinition activeMission;
         
         public static MissionWindowState Restore() {
             string serializedState = EditorPrefs.GetString(EditorPrefKey);

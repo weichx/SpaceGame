@@ -5,29 +5,52 @@ using Weichx.ReflectionAttributes;
 
 namespace SpaceGame {
 
-    public class MissionDefinition {
+    //class MissionTemplate : AssetTemplate<Mission>
+    //class MissionDefinition : AssetDefinition<MissionTemplate>
 
-        [ReadOnly]
-        public string createdAt;
-        public string name;
-        
-        [SerializeField] 
-        private string serializedEntityDefinitions;        
-        [HideInInspector]
-        public string guid;
+//    class AssetTemplate<T> {
+//
+//        public AssetDefinition<T> CreateDefinition() {
+//            return null;
+//        }
+//
+//    }
+//
+//    class Thing { }
+//
+//    abstract class AssetDefinition<T> {
+//
+//        protected AssetTemplate<T> template;
+//
+//        public abstract T CreateInstance();
+//
+//    }
+//
+//    class SomeAssetTemplate : AssetTemplate<Thing> { }
+//
+//    class SomeAssetDefinition : AssetDefinition<Thing> {
+//
+//        public override Thing CreateInstance() {
+//            SomeAssetDefinition x = (SomeAssetDefinition)template.CreateDefinition();
+//        }
+//
+//    }
 
-        public List<Faction> factions;
-        public List<FlightGroup> flightGroups;
+    public class MissionDefinition : AssetDefinition {
+
+        [ReadOnly] public string createdAt;
+
+        public List<FlightGroupDefinition> flightGroupDefinitions;
+        public List<FactionDefinition> factionsDefinitions;
         public List<EntityDefinition> entityDefinitions;
-        
+
         public MissionDefinition() {
             this.name = "Unnamed Mission";
-            this.guid = Guid.NewGuid().ToString();
-            this.entityDefinitions = new List<EntityDefinition>(8);
-            this.createdAt = DateTime.Now.ToShortTimeString() + " on " + DateTime.Now.ToShortDateString();
+            this.flightGroupDefinitions = new List<FlightGroupDefinition>(8);
+            this.factionsDefinitions = new List<FactionDefinition>(4);
+            this.entityDefinitions = new List<EntityDefinition>(16);
+            this.createdAt = $"{DateTime.Now.ToShortTimeString()} on {DateTime.Now.ToShortDateString()}";
         }
-        
-        
 
     }
 

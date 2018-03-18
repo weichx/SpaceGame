@@ -12,11 +12,10 @@ namespace SpaceGame.Editor.MissionWindow {
 
         [SerializeField] private HorizontalPaneState splitterState;
 
-        private GameDataFile data;
 
         private const string NameField = nameof(ShipDefinition.name);
 
-        public ShipPage(MissionWindowState state) : base(state) {
+        public ShipPage(MissionWindowState state, GameDataFile gameData) : base(state, gameData) {
             splitterState = new HorizontalPaneState();
         }
 
@@ -59,14 +58,13 @@ namespace SpaceGame.Editor.MissionWindow {
             ShipDefinition def = new ShipDefinition();
             list.AddElement(def);
             selectedIds.Clear();
-            selectedIds.Add(def.Id);
+            selectedIds.Add(def.id);
             treeView.Reload();
             treeView.SetSelection(selectedIds, TreeViewSelectionOptions.FireSelectionChanged | TreeViewSelectionOptions.RevealAndFrame);
         }
 
         public override void OnEnable() {
-            data = Resources.Load<GameDataFile>("Game Data");
-            list = new ReflectedObject(data.GetShipDefintions()).Root as ReflectedListProperty;
+            list = new ReflectedObject(gameData.GetShipDefintions()).Root as ReflectedListProperty;
             treeView = new ShipTreeView(list, OnSelectionChanged);
         }
 
@@ -77,7 +75,6 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public override void OnDisable() {
             list.ApplyChanges();
-            data.Save((List<ShipDefinition>) list.Value);
         }
         
         private bool FindSelected(ReflectedProperty property) {

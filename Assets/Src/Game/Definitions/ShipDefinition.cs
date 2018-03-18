@@ -1,17 +1,11 @@
 ﻿using System;
-using UnityEngine;
-using Weichx.ReflectionAttributes;
+using SpaceGame.FileTypes;
 
 namespace SpaceGame {
     
     [Serializable]
-    public class ShipDefinition : IIdentitifiable {
+    public class ShipDefinition : AssetDefinition {
 
-        [NonSerialized][HideInInspector]
-        public readonly int id;
-        
-        public string name;
-        
         public AssetPointer<Chassis> chassis;
         
         public float maxSpeed;
@@ -24,12 +18,8 @@ namespace SpaceGame {
         private static int idGenerator;
         
         public ShipDefinition() {
-            this.id = idGenerator++;
             this.name = "Unnamed Ship Def";
         }
-
-        public int Id => id;
-        public string Name => name;
 
     }
 

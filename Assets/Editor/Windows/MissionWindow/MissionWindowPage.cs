@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SpaceGame.FileTypes;
 using UnityEditor;
 using Weichx.EditorReflection;
 
@@ -11,12 +12,14 @@ namespace SpaceGame.Editor.MissionWindow {
         protected ReflectedListProperty list;
         protected BaseTreeView treeView;
         protected IList<int> selectedIds;
+        protected GameDataFile gameData;
 
-        protected MissionWindowPage(MissionWindowState state) {
+        protected MissionWindowPage(MissionWindowState state, GameDataFile gameData) {
             this.state = state;
+            this.gameData = gameData;
             this.selectedIds = new List<int>(4);
         }
-        
+
         public abstract void OnGUI();
 
         public virtual void OnEnable() { }
@@ -32,6 +35,7 @@ namespace SpaceGame.Editor.MissionWindow {
                 treeView.Reload();
             }
         }
+
     }
 
 }

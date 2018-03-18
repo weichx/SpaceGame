@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using SpaceGame.FileTypes;
+using UnityEditor;
 using UnityEngine;
 
 namespace SpaceGame.Editor.MissionWindow {
@@ -6,7 +7,7 @@ namespace SpaceGame.Editor.MissionWindow {
     public class MissionWindow : EditorWindow {
 
         private MissionWindowState state;
-
+        private GameDataFile gameData;
         private MissionWindowPage[] pages;
 
         private readonly string[] tabs = {
@@ -16,11 +17,12 @@ namespace SpaceGame.Editor.MissionWindow {
         };
 
         private void OnEnable() {
+            gameData = Resources.Load<GameDataFile>("Game Data");
             state = MissionWindowState.Restore();
             pages = new MissionWindowPage[] {
-                new MissionPage(state),
-                new AIPage(state),
-                new ShipPage(state),
+                new MissionPage(state, gameData),
+                new AIPage(state, gameData),
+                new ShipPage(state, gameData),
             };
             pages[state.currentPageIndex].OnEnable();
         }
@@ -39,8 +41,9 @@ namespace SpaceGame.Editor.MissionWindow {
         */
 
         private void OnDisable() {
-            state.Save();
             pages[state.currentPageIndex].OnDisable();
+            gameData.Save();
+            state.Save();
         }
 
         private void OnInspectorUpdate() {
@@ -58,6 +61,7 @@ namespace SpaceGame.Editor.MissionWindow {
 
             if (lastPage != state.currentPageIndex) {
                 pages[lastPage].OnDisable();
+                gameData.Save();
                 pages[state.currentPageIndex].OnEnable();
             }
 

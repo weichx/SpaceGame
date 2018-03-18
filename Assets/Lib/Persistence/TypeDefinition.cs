@@ -131,15 +131,10 @@ namespace Weichx.Persistence {
 
             s_fieldInfoList.Clear();
 
-            if (type.IsValueType) {
-                FieldInfo[] fieldInfos = type.GetFields(bindingFlags);
-                s_fieldInfoList.AddRange(fieldInfos);
-                return s_fieldInfoList;
-            }
-            // If this class doesn't have a base, don't waste any time
-            if (type.BaseType == typeof(object)) {
-                FieldInfo[] fieldInfos = type.GetFields(bindingFlags);
-                s_fieldInfoList.AddRange(fieldInfos);
+            s_fieldInfoList.AddRange(type.GetFields(bindingFlags));
+            
+            //structs and classes without parents we can shortcut
+            if (type.IsValueType || type.BaseType == typeof(object)) {
                 return s_fieldInfoList;
             }
 

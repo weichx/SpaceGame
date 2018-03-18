@@ -17,27 +17,27 @@ namespace SpaceGame {
     }
     
 
-    public class EntityTemplate {
-
-        public Faction faction;
-        public INameGenerator nameGenerator;
-        public AssetPointer<GameObject> chassis;
-        
-        //public AIGoalSet goals;
-        //public WeaponLoadout loadout;
-        //public AIPreferences preferences;
-        //public AIRestrictions restrictions;
-        
-        public int maxHitpoints;
-        public int startingHitpoints;
-
-        public float maxSpeed;
-        public float minSpeed;
-        public float breakingRate;
-        public float turnRateDegrees;
-        public float accelerationRate;
-        
-    }
+//    public class EntityTemplate {
+//
+//        public Faction faction;
+//        public INameGenerator nameGenerator;
+//        public AssetPointer<GameObject> chassis;
+//        
+//        //public AIGoalSet goals;
+//        //public WeaponLoadout loadout;
+//        //public AIPreferences preferences;
+//        //public AIRestrictions restrictions;
+//        
+//        public int maxHitpoints;
+//        public int startingHitpoints;
+//
+//        public float maxSpeed;
+//        public float minSpeed;
+//        public float breakingRate;
+//        public float turnRateDegrees;
+//        public float accelerationRate;
+//        
+//    }
 
     public class WeaponSystem {
 
@@ -60,7 +60,6 @@ namespace SpaceGame {
         [NonSerialized] public Faction faction;
         [NonSerialized] public int id;
         [UsePropertyDrawer(typeof(Faction))] [SerializeField] public int factionId;
-        public FactionReference factionReference;
         
         public float hitPoints = 100f;
         public float maxHitPoints = 120f;
@@ -73,8 +72,8 @@ namespace SpaceGame {
         public Vector3 targetPosition;
         public ApproachType arrivalType;
 
-        public WeaponSystem WeaponSystem => WeaponSystem;
-        public FlightSystem FlightSystem => FlightSystem;
+//        public WeaponSystem WeaponSystem => WeaponSystem;
+//        public FlightSystem FlightSystem => FlightSystem;
         
         private void Awake() {
             if (instanceID != 0) {

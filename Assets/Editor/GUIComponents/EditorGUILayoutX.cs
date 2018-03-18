@@ -32,7 +32,7 @@ namespace SpaceGame.EditorComponents {
         }
         
         public static void PropertyField(ReflectedObject obj) {
-            Rect rect = EditorGUILayout.GetControlRect(true, obj.Root.Drawer.GetPropertyHeight(obj.Root));
+            Rect rect = EditorGUILayout.GetControlRect(true, obj.Root.Drawer.GetPropertyHeight(obj.Root), (GUILayoutOption[])null);
             EditorGUIX.PropertyField(rect, obj.Root);
         }
 
@@ -45,6 +45,14 @@ namespace SpaceGame.EditorComponents {
             
             property.Drawer.OnGUILayout(property, label);
 
+        }
+
+        public static void BeginVertical() {
+            EditorGUILayout.BeginVertical((GUILayoutOption[])null);
+        }
+
+        public static void EndVertical() {
+            EditorGUILayout.EndVertical();
         }
 
     }

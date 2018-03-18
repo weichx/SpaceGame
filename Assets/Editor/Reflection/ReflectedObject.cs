@@ -55,6 +55,10 @@ namespace Weichx.EditorReflection {
             return root.FindProperty(path);
         }
 
+        public ReflectedListProperty GetList(string fieldName) {
+            return root.GetList(fieldName);
+        }
+
     }
 
 }

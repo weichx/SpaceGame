@@ -1,26 +1,38 @@
 ﻿using System.Collections.Generic;
+using JetBrains.Annotations;
+using SpaceGame.FileTypes;
 using UnityEngine;
 
 namespace SpaceGame {
 
-    public class FactionDescription {
+    public class FactionDefinition : AssetDefinition {
 
-        public Texture2D icon;
-        public string name;
-        public int factionId;
-
+        private Texture2D iconTexture;
+        
         public AssetPointer<Texture2D> iconPointer;
-        public List<EntityDefinition> entities;
+        [HideInInspector] public readonly List<EntityDefinition> entities;
 
-        public FactionDescription(Texture2D icon, string name, int id) {
-            this.icon = icon;
-            this.name = name;
-            this.factionId = id;
-            this.entities = new List<EntityDefinition>();
-            entities.Add(new EntityDefinition());
-            entities.Add(new EntityDefinition());
-            entities.Add(new EntityDefinition());
+        [PublicAPI]
+        public FactionDefinition() : this(string.Empty) { }
+
+        public FactionDefinition(string name) : base (name) {
+            this.iconPointer = new AssetPointer<Texture2D>();
+            this.entities = new List<EntityDefinition>(16);
         }
+
+        public Texture2D icon {
+            get {
+                if (iconTexture) {
+                    return iconTexture;
+                }
+                return null;
+            }
+            set {
+                iconPointer = new AssetPointer<Texture2D>(value);
+                iconTexture = iconPointer.GetAsset();
+            }
+        }
+        
 
     }
 

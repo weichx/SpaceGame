@@ -231,6 +231,8 @@ namespace Weichx.EditorReflection {
             }
         }
 
+        public ReflectedProperty Parent => parent;
+
         public override string ToString() {
             return Label;
         }
@@ -239,6 +241,14 @@ namespace Weichx.EditorReflection {
             get { return FindProperty(indexer); }
         }
 
+        public ReflectedListProperty GetList(string fieldName) {
+            return (ReflectedListProperty) FindProperty(fieldName);
+        }
+
+        protected static void Reparent(ReflectedProperty child, ReflectedProperty newParent) {
+            //
+        }
+        
         private static Type[] BuiltInTypes = {
             typeof(Rect),
             typeof(Color),

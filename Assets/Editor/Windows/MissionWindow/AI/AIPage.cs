@@ -15,10 +15,9 @@ namespace SpaceGame.Editor.MissionWindow {
 
         private TreeViewState treeState;
         private ReflectedProperty selectedDecision;
-        private GameDataFile gameData;
         private const string NameField = nameof(Decision.name);
 
-        public AIPage(MissionWindowState state) : base(state) {
+        public AIPage(MissionWindowState state, GameDataFile gameData) : base(state, gameData) {
             this.selectedIds = new List<int>(4);
             splitterState = new HorizontalPaneState();
             splitterState.initialLeftPaneWidth = 150;
@@ -88,7 +87,6 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public override void OnDisable() {
             list.ApplyChanges();
-            gameData.Save((List<Decision>) list.Value);
         }
 
     }

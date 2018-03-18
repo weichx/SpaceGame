@@ -45,10 +45,10 @@ namespace SpaceGame.AI.Actions {
 
             Vector3 toTarget = trasformInfo.DirectionTo(targetTransformInfo);
 
-            float cooldown = context.agent.WeaponSystem.CurrentWeaponCooldownRemaining;
-            if (cooldown <= 0) {
-                context.agent.WeaponSystem.Fire();
-            }
+//            float cooldown = context.agent.WeaponSystem.CurrentWeaponCooldownRemaining;
+//            if (cooldown <= 0) {
+//                context.agent.WeaponSystem.Fire();
+//            }
             
             EventSystem.Instance.Trigger(
                 Evt_WeaponFired.Spawn(new FiringParameters() {
