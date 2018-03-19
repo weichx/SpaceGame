@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
-using SpaceGame;
 using SpaceGame.AI;
 using SpaceGame.Events;
+using Src.Engine;
 using Weichx.Util;
 using UnityEngine;
 
-namespace Src.Engine {
+namespace SpaceGame.Engine {
 
     /// <summary>
     /// This is the ONLY place where we should be touching the unity transform properties!

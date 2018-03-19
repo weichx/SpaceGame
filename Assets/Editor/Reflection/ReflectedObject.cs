@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using JetBrains.Annotations;
+using System.Diagnostics;
 
 namespace Weichx.EditorReflection {
 
@@ -8,9 +9,29 @@ namespace Weichx.EditorReflection {
 
         private ReflectedProperty[] reflectedProperties;
         private ReflectedProperty root;
+    #if UNITY_EDITOR
+        private static readonly Stopwatch stopWatch;
+
+        static ReflectedObject() {
+            stopWatch = new Stopwatch();
+        }
+    #endif
+        
+        [Conditional("DEBUG")]
+        private static void StartProfile() {
+            stopWatch.Reset();
+            stopWatch.Start();
+        }
+
+        [Conditional("DEBUG")]
+        private static void EndProfile() {
+            stopWatch.Stop();
+            if (stopWatch.ElapsedMilliseconds > 10f) {
+                UnityEngine.Debug.Log($"Updating ReflectedObject took {stopWatch.ElapsedMilliseconds} millisecons");
+            }
+        }
 
         public ReflectedObject([NotNull] object target) {
-
             Type type = target.GetType();
             if (type.IsArray) {
                 root = new ReflectedArrayProperty(null, "--Root--", type, target);
@@ -27,7 +48,13 @@ namespace Weichx.EditorReflection {
         }
 
         public ReflectedProperty Root => root;
-        
+
+        public void Update() {
+            StartProfile();
+            root.Update();
+            EndProfile();
+        }
+
         public void ApplyModifiedProperties() {
             root.ApplyChanges();
         }

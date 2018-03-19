@@ -43,7 +43,7 @@ namespace SpaceGame.FileTypes {
         public List<MissionDefinition> GetMissions() {
             if (serializedMissions.Count == 0) {
                 List<MissionDefinition> missions = new List<MissionDefinition>(4);
-                missions.Add(new MissionDefinition());
+                missions.Add(MissionDefinition.CreateMission());
                 return missions;
             }
             return serializedMissions.Map((container) => {
@@ -51,18 +51,18 @@ namespace SpaceGame.FileTypes {
             });
         }
 
-        public void SaveMission(MissionDefinition missionDefinition) {
-            if (missionDefinition == null) return;
-            string serialized = Snapshot<MissionDefinition>.Serialize(missionDefinition);
-            for (int i = 0; i < serializedMissions.Count; i++) {
-                if (serializedMissions[i].guid == missionDefinition.guid) {
-                    serializedMissions[i].serializedMission = serialized;
-                    serializedMissions[i].entityCount = missionDefinition.entityDefinitions.Count;
-                    return;
-                }
-            }
-            serializedMissions.Add(new MissionContainer(missionDefinition.guid, serialized));
-        }
+//        public void SaveMission(MissionDefinition missionDefinition) {
+//            if (missionDefinition == null) return;
+//            string serialized = Snapshot<MissionDefinition>.Serialize(missionDefinition);
+//            for (int i = 0; i < serializedMissions.Count; i++) {
+//                if (serializedMissions[i].guid == missionDefinition.guid) {
+//                    serializedMissions[i].serializedMission = serialized;
+//                    serializedMissions[i].entityCount = missionDefinition.entityDefinitions.Count;
+//                    return;
+//                }
+//            }
+//            serializedMissions.Add(new MissionContainer(missionDefinition.guid, serialized));
+//        }
         
         public static MissionDataFile Create(string name) {
             MissionDataFile asset = CreateInstance<MissionDataFile>();

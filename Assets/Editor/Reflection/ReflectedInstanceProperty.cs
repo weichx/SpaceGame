@@ -52,14 +52,22 @@ namespace Weichx.EditorReflection {
         public override void Update() {
 
             if (parent != null) {
-                object parentValue = fieldInfo.GetValue(parent.Value);
-                if (parentValue != actualValue) {
-                    actualValue = parentValue;
-                    actualType = actualValue == null ? declaredType : actualValue.GetType();
-                    UpdateChildren();
+                //if we have a parent but no field info then we are part of an array 
+                //the parent will handle setting our value.
+                if (fieldInfo != null) {
+                    object parentValue = fieldInfo.GetValue(parent.Value);
+                    if (parentValue != actualValue) {
+                        actualValue = parentValue;
+                        actualType = actualValue == null ? declaredType : actualValue.GetType();
+                        UpdateChildren();
+                    }
                 }
             }
+            else {
+                UpdateChildren();
+            }
             
+            originalValue = actualValue;
             SetChanged(false);
             
         }

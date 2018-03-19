@@ -6,12 +6,6 @@ using System.Linq;
 
 namespace Weichx.Util {
 
-    public class ReadonlySearchableList<T> : List<T> {
-
-        public ReadonlySearchableList(List<T> list) { }
-
-    }
-
     public static class ListExtensions {
 
         [DebuggerStepThrough]
@@ -118,6 +112,38 @@ namespace Weichx.Util {
                 list.AddRange(Enumerable.Repeat(c, sz - cur));
         }
 
+        /// <summary>
+        /// Moves an item within this list to another index, shifting other items as needed.
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="oldIndex"></param>
+        /// <param name="insertIndex"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        [DebuggerStepThrough]
+        public static bool MoveToIndex<T>(this List<T> list, int oldIndex, int insertIndex) {
+            if ((uint)oldIndex > list.Count) return false;
+            if (insertIndex > oldIndex) insertIndex--;
+            if ((uint)insertIndex >= list.Count) return false;
+            T item = list[oldIndex];
+            list.RemoveAt(oldIndex);
+            list.Insert(insertIndex, item);
+            return true;
+        }
+        
+        /// <summary>
+        /// Moves an item within this list to another index, shifting other items as needed.
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="item"></param>
+        /// <param name="insertIndex"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        [DebuggerStepThrough]
+        public static bool MoveToIndex<T>(this List<T> list, T item, int insertIndex) {
+            return MoveToIndex(list, list.IndexOf(item), insertIndex);
+        }
+        
         [DebuggerStepThrough]
         public static T First<T>(this List<T> list) {
             return list.Count > 0 ? list[0] : default(T);

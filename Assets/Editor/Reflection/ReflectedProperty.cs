@@ -148,9 +148,10 @@ namespace Weichx.EditorReflection {
         }
 
         public virtual void Update() {
-            if (fieldInfo != null) {
+            if (parent != null && parent.Value != null && fieldInfo != null) {
                 Value = fieldInfo.GetValue(parent.Value);
             }
+            originalValue = actualValue;
             SetChanged(false);
         }
 
@@ -243,10 +244,6 @@ namespace Weichx.EditorReflection {
 
         public ReflectedListProperty GetList(string fieldName) {
             return (ReflectedListProperty) FindProperty(fieldName);
-        }
-
-        protected static void Reparent(ReflectedProperty child, ReflectedProperty newParent) {
-            //
         }
         
         private static Type[] BuiltInTypes = {
@@ -358,6 +355,10 @@ namespace Weichx.EditorReflection {
                     child.SetChanged(false);
                 }
             }
+        }
+
+        public ReflectedListProperty FindListProperty(string name) {
+            return FindProperty(name) as ReflectedListProperty;
         }
 
     }

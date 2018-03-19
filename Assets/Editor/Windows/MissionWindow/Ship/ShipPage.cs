@@ -11,6 +11,7 @@ namespace SpaceGame.Editor.MissionWindow {
     public class ShipPage : MissionWindowPage {
 
         [SerializeField] private HorizontalPaneState splitterState;
+        protected ReflectedProperty selection;
 
 
         private const string NameField = nameof(ShipDefinition.name);

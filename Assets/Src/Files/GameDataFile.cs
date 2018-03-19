@@ -35,7 +35,7 @@ namespace SpaceGame.FileTypes {
             }
             isMissionDefDirty = true;
             if (missionDefinitions.Count == 0) {
-                missionDefinitions.Add(new MissionDefinition());
+                missionDefinitions.Add(MissionDefinition.CreateMission());
             }
             
             return missionDefinitions[0];
@@ -89,7 +89,9 @@ namespace SpaceGame.FileTypes {
             isEntityDefDirty = false;
             EditorUtility.SetDirty(this);
             watch.Stop();
-            UnityEngine.Debug.Log($"Saving took {watch.ElapsedMilliseconds} milliseconds");
+            if (watch.ElapsedMilliseconds >= 10) {
+                UnityEngine.Debug.Log($"Saving took {watch.ElapsedMilliseconds} milliseconds");
+            }
         }
 
     }

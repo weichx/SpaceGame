@@ -1,14 +1,13 @@
 ﻿using System.Collections.Generic;
-using Weichx.EditorReflection;
 
 namespace SpaceGame.Editor.MissionWindow {
 
     public struct MissionTreeSelection {
 
         public readonly MissionTreeView.ItemType itemType;
-        public readonly List<ReflectedProperty> properties;
+        public readonly List<AssetDefinition> properties;
 
-        public MissionTreeSelection(MissionTreeView.ItemType itemType, List<ReflectedProperty> properties) {
+        public MissionTreeSelection(MissionTreeView.ItemType itemType, List<AssetDefinition> properties) {
             this.itemType = itemType;
             this.properties = properties;
         }

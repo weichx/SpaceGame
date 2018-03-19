@@ -27,6 +27,22 @@ namespace Weichx.EditorReflection {
             SetChanged(false);
         }
 
+        public override void Update() {
+            IList list = (IList) actualValue;
+            if (list != null) {
+                SetElementCount(list.Count, false);
+                for (int i = 0; i < list.Count; i++) {
+                    children[i].Update();
+                    list[i] = children[i].Value;
+                }
+            }
+            else {
+                SetElementCount(0, false);
+            }
+            originalValue = actualValue;
+            SetChanged(false);
+        }
+
         public virtual int ElementCount {
             get { return children.Count; }
             set {
@@ -35,7 +51,7 @@ namespace Weichx.EditorReflection {
             }
         }
 
-        protected virtual void SetElementCount(int size) {
+        protected virtual void SetElementCount(int size, bool shouldChange = true) {
             if (size > children.Count) {
                 Type elementType = declaredType.GetGenericArguments()[0];
                 //because we know this will be null or a primitive,
@@ -44,13 +60,17 @@ namespace Weichx.EditorReflection {
                 for (int i = children.Count; i < size; i++) {
                     children.Add(CreateChild(this, string.Empty, elementType, element));
                 }
-                SetChanged(true);
+                if (shouldChange) {
+                    SetChanged(true);
+                }
             }
             else if (size < children.Count) {
                 while (children.Count > size) {
                     DestroyChild(children.RemoveAndReturnAtIndex(children.Count - 1));
                 }
-                SetChanged(true);
+                if (shouldChange) {
+                    SetChanged(true);
+                }
             }
 
         }
@@ -99,7 +119,7 @@ namespace Weichx.EditorReflection {
         }
 
         public Type ElementType => declaredType.IsArray ? declaredType.GetElementType() : declaredType.GetGenericArguments()[0];
-        
+
         public ReflectedProperty Find(Predicate<ReflectedProperty> predicate) {
             return children.Find(predicate);
         }
@@ -113,7 +133,7 @@ namespace Weichx.EditorReflection {
             for (int i = 0; i < elements.Count; i++) {
                 children.Add(CreateChild(this, string.Empty, elementType, elements[i]));
             }
-            if(elements.Count > 0) SetChanged(true);
+            if (elements.Count > 0) SetChanged(true);
         }
 
         public void AddElement(object element) {
@@ -134,7 +154,7 @@ namespace Weichx.EditorReflection {
                 SetChanged(true);
             }
         }
-        
+
         public void InsertElement(ReflectedProperty property, int insertIndex) {
             InsertElement(insertIndex);
             children[insertIndex].Value = property?.Value;
@@ -172,26 +192,14 @@ namespace Weichx.EditorReflection {
         }
 
         public bool MoveElement(int oldIndex, int insertIndex) {
-            if (oldIndex < 0 || oldIndex >= children.Count) return false;
-            if (insertIndex < 0 || insertIndex >= children.Count) return false;
-            ReflectedProperty entity = children[oldIndex];
-            children.RemoveAt(oldIndex);
-            if (insertIndex > oldIndex) insertIndex--;
-            children.Insert(insertIndex, entity);
+            children.MoveToIndex(oldIndex, insertIndex);
             SetChanged(true);
             return true;
         }
 
-        public bool MoveElement(ReflectedProperty droppedItemProperty, int insertIndex) {
-            int oldIndex = children.IndexOf(droppedItemProperty);
-            if (oldIndex == -1) return false;
-            if (insertIndex < 0 || insertIndex >= children.Count) return false;
-            ReflectedProperty entity = children[oldIndex];
-            children.RemoveAt(oldIndex);
-            if (insertIndex > oldIndex) insertIndex--;
-            children.Insert(insertIndex, entity);
-            SetChanged(true);
-            return true;
+        public bool MoveElement(ReflectedProperty property, int insertIndex) {
+            if (property.Parent != this) return false;
+            return MoveElement(children.IndexOf(property), insertIndex);
         }
 
         public ReflectedProperty this[int indexer] {
@@ -206,8 +214,6 @@ namespace Weichx.EditorReflection {
                 SetChanged(true);
             }
         }
-
-  
 
     }
 

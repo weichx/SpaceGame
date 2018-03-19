@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
-using SpaceGame;
 using SpaceGame.AI;
 using SpaceGame.Events;
-using Weichx.Util;
 using UnityEngine;
+using Weichx.Util;
 
-namespace Src.Engine {
+namespace SpaceGame.Engine {
 
     public class HyperspaceManager : ManagerBase {
 

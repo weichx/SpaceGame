@@ -11,8 +11,8 @@ namespace Weichx.EditorReflection {
                 originalValue = actualValue;
             }
         }
-        
-        protected override void SetElementCount(int size) {
+
+        protected override void SetElementCount(int size, bool shouldChange = true) {
             if (size > children.Count) {
                 Type elementType = declaredType.GetElementType();
                 //because we know this will be null or a primitive,
@@ -21,17 +21,21 @@ namespace Weichx.EditorReflection {
                 for (int i = children.Count; i < size; i++) {
                     children.Add(CreateChild(this, i.ToString(), elementType, element));
                 }
-                SetChanged(true);
+                if (shouldChange) {
+                    SetChanged(true);
+                }
             }
-            else if(size < children.Count) {
+            else if (size < children.Count) {
                 while (children.Count > size) {
                     DestroyChild(children.RemoveAndReturnAtIndex(children.Count - 1));
-                } 
-                SetChanged(true);
+                }
+                if (shouldChange) {
+                    SetChanged(true);
+                }
             }
-           
+
         }
-      
+
         public override void ApplyChanges() {
             if (actualValue == null && children.Count == 0) {
                 return;
@@ -42,12 +46,28 @@ namespace Weichx.EditorReflection {
                 children[i].ApplyChanges();
                 array.SetValue(children[i].Value, i);
             }
-       
+
             originalValue = actualValue;
             actualType = actualValue.GetType();
             SetChanged(false);
         }
-        
+
+        public override void Update() {
+            Array array = (Array) actualValue;
+            if (array != null) {
+                SetElementCount(array.Length, false);
+                for (int i = 0; i < array.Length; i++) {
+                    children[i].Update();
+                    array.SetValue(children[i].Value, i);
+                }
+            }
+            else {
+                SetElementCount(0, false);
+            }
+            originalValue = actualValue;
+            SetChanged(false);
+        }
+
         protected override void ResizeActualValue() {
             Array actual = (Array) actualValue;
             if (children.Count == 0 || actual != null && actual.Length == children.Count) {
@@ -55,17 +75,18 @@ namespace Weichx.EditorReflection {
             }
             actualValue = Array.CreateInstance(declaredType, children.Count);
         }
-        
+
         protected override void CreateChildren() {
             if (actualValue == null) return;
             Array array = (Array) actualValue;
             Type elementType = actualType.GetElementType();
-            for(int i = 0; i < array.Length; i++) {
+            for (int i = 0; i < array.Length; i++) {
                 object value = array.GetValue(i);
                 children.Add(CreateChild(this, i.ToString(), elementType, value));
             }
-            
+
         }
+
     }
 
 }

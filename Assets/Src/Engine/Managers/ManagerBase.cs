@@ -1,8 +1,7 @@
 ﻿using System;
-using SpaceGame;
 using UnityEngine;
 
-namespace Src.Engine {
+namespace SpaceGame.Engine {
 
     public class ManagerBase : MonoBehaviour {
 

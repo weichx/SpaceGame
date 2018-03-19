@@ -1,55 +1,46 @@
 ﻿using System;
-using UnityEngine;
 using System.Collections.Generic;
 using Weichx.ReflectionAttributes;
+using Weichx.Util;
 
 namespace SpaceGame {
 
-    //class MissionTemplate : AssetTemplate<Mission>
-    //class MissionDefinition : AssetDefinition<MissionTemplate>
-
-//    class AssetTemplate<T> {
-//
-//        public AssetDefinition<T> CreateDefinition() {
-//            return null;
-//        }
-//
-//    }
-//
-//    class Thing { }
-//
-//    abstract class AssetDefinition<T> {
-//
-//        protected AssetTemplate<T> template;
-//
-//        public abstract T CreateInstance();
-//
-//    }
-//
-//    class SomeAssetTemplate : AssetTemplate<Thing> { }
-//
-//    class SomeAssetDefinition : AssetDefinition<Thing> {
-//
-//        public override Thing CreateInstance() {
-//            SomeAssetDefinition x = (SomeAssetDefinition)template.CreateDefinition();
-//        }
-//
-//    }
-
     public class MissionDefinition : AssetDefinition {
 
-        [ReadOnly] public string createdAt;
+        [ReadOnly] public readonly string createdAt;
 
-        public List<FlightGroupDefinition> flightGroupDefinitions;
-        public List<FactionDefinition> factionsDefinitions;
-        public List<EntityDefinition> entityDefinitions;
+        public readonly List<FactionDefinition> factionsDefinitions;
+        //public readonly List<EntityDefinition> entityDefinitions;
+        //public readonly List<FlightGroupDefinition> flightGroupDefinitions;
 
         public MissionDefinition() {
             this.name = "Unnamed Mission";
-            this.flightGroupDefinitions = new List<FlightGroupDefinition>(8);
             this.factionsDefinitions = new List<FactionDefinition>(4);
-            this.entityDefinitions = new List<EntityDefinition>(16);
+            //     this.entityDefinitions = new List<EntityDefinition>(32);
+            //     this.flightGroupDefinitions = new List<FlightGroupDefinition>(8);
             this.createdAt = $"{DateTime.Now.ToShortTimeString()} on {DateTime.Now.ToShortDateString()}";
+        }
+
+        public FactionDefinition AddFaction() {
+            FactionDefinition faction = new FactionDefinition("Faction");
+            faction.AddFlightGroup();
+            factionsDefinitions.Add(faction);
+            return faction;
+        }
+
+        public FactionDefinition RemoveFaction(FactionDefinition faction) {
+            return factionsDefinitions.Remove(faction) ? faction : null;
+        }
+
+        public static MissionDefinition CreateMission() {
+            MissionDefinition mission = new MissionDefinition();
+            mission.AddFaction();
+            return mission;
+        }
+
+        public bool MoveFaction(FactionDefinition child, int index) {
+            if (!factionsDefinitions.Contains(child)) return false;
+            return factionsDefinitions.MoveToIndex(child, index);
         }
 
     }

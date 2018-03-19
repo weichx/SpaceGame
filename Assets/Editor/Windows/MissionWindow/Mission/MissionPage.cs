@@ -11,8 +11,6 @@ namespace SpaceGame.Editor.MissionWindow {
 
     public class MissionPage : MissionWindowPage {
 
-        private const string FactionListField = nameof(MissionDefinition.factionsDefinitions);
-
         [Flags]
         private enum SelectionType {
 
@@ -27,8 +25,11 @@ namespace SpaceGame.Editor.MissionWindow {
         [SerializeField] private HorizontalPaneState splitterState;
         private TreeViewState treeState;
         private new MissionTreeView treeView;
-        private ReflectedObject mission;
+        private MissionDefinition mission;
+        private ReflectedObject reflectedMission;
+        private ReflectedObject reflectedSelection;
         private SelectionType selectionType;
+        private AssetDefinition selectedAsset;
 
         public MissionPage(MissionWindowState state, GameDataFile gameData) : base(state, gameData) {
             this.selectionType = SelectionType.None;
@@ -37,32 +38,36 @@ namespace SpaceGame.Editor.MissionWindow {
         private bool IsMultiSelect => (selectionType & SelectionType.Multiple) != 0;
 
         public override void OnEnable() {
-            MissionDefinition activeMission = gameData.GetMission(state.activeMissionGuid);
-            mission = new ReflectedObject(activeMission);
-            treeView = new MissionTreeView(mission, OnSelectionChanged);
+            mission = gameData.GetMission(state.activeMissionGuid);
+            reflectedMission = new ReflectedObject(mission);
+            treeView = new MissionTreeView(mission, state.missionPageTreeViewState, OnSelectionChanged);
         }
+
         public override void OnDisable() {
-            mission.ApplyModifiedProperties();
+            reflectedSelection?.ApplyModifiedProperties();
+            reflectedMission.Update();
             gameData.Save();
         }
 
         public override void OnGUI() {
             InfamyGUI.HorizontalSplitPane(splitterState, RenderList, RenderDetails);
-            if (treeView != null && selection != null) {
-                treeView.UpdateDisplayName(selection);
+            if (treeView != null && selectedAsset != null) {
+                treeView.UpdateDisplayName(selectedAsset);
             }
         }
 
         private void RenderList() {
             EditorGUILayoutX.BeginVertical();
+            reflectedSelection?.ApplyModifiedProperties();
             treeView.OnGUILayout();
+            reflectedSelection?.Update();
             GUILayout.FlexibleSpace();
             InfamyGUI.Button("Create Faction", OnCreateFaction);
             EditorGUILayoutX.EndVertical();
         }
 
         private void OnCreateFaction() {
-            mission.GetList(FactionListField).AddElement(new FactionDefinition("Faction"));
+            mission.AddFaction();
             treeView.Reload();
         }
 
@@ -79,6 +84,7 @@ namespace SpaceGame.Editor.MissionWindow {
                         RenderFactionInspector();
                         break;
                     case SelectionType.FlightGroup:
+                        RenderFlightGroupInspector();
                         break;
                     case SelectionType.Entity:
                         RenderEntityInspector();
@@ -114,24 +120,38 @@ namespace SpaceGame.Editor.MissionWindow {
 
         private void RenderFactionInspector() {
             EditorGUILayoutX.BeginVertical();
-            EditorGUILayoutX.DrawProperties(selection);
+            if (reflectedSelection != null) {
+                EditorGUILayoutX.DrawProperties(reflectedSelection);
+            }
             EditorGUILayoutX.EndVertical();
         }
 
-        private void RenderEntityInspector() {
+        private void RenderFlightGroupInspector() {
             EditorGUILayoutX.BeginVertical();
-            EditorGUILayoutX.DrawProperties(selection);
-            EditorGUILayoutX.EndVertical();   
+            if (reflectedSelection != null) {
+                EditorGUILayoutX.DrawProperties(reflectedSelection);
+            }
+            EditorGUILayoutX.EndVertical();
         }
         
+        private void RenderEntityInspector() {
+            EditorGUILayoutX.BeginVertical();
+            if (reflectedSelection != null) {
+                EditorGUILayoutX.DrawProperties(reflectedSelection);
+            }
+            EditorGUILayoutX.EndVertical();
+        }
+
         private void OnSelectionChanged(MissionTreeSelection treeSelection) {
             //todo currently ignoring multiselect
-            this.selectionType = TranslateSelectionType(treeSelection);
-            selection = treeSelection.properties?[0];
+            reflectedSelection?.ApplyModifiedProperties();
+            selectionType = TranslateSelectionType(treeSelection);
+            selectedAsset = treeSelection.properties?[0];
+            reflectedSelection = new ReflectedObject(selectedAsset);
         }
 
         private static SelectionType TranslateSelectionType(MissionTreeSelection treeSelection) {
-            List<ReflectedProperty> items = treeSelection.properties;
+            List<AssetDefinition> items = treeSelection.properties;
             MissionTreeView.ItemType itemType = treeSelection.itemType;
             
             if (items == null || items.Count == 0) return SelectionType.None;

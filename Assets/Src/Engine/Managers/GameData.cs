@@ -3,7 +3,7 @@ using SpaceGame;
 using SpaceGame.AI;
 using UnityEngine;
 
-namespace Src.Engine {
+namespace SpaceGame.Engine {
 
     public struct FlightInput {
 

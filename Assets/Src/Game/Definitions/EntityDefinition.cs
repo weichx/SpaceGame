@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace SpaceGame {
 
@@ -18,11 +19,14 @@ namespace SpaceGame {
     [Serializable]
     public class EntityDefinition : AssetDefinition {
 
+        [HideInInspector] public int factionId;
+        [HideInInspector] public int flightGroupId;
+        
         public string callsign;
         public string shipType;
         
         public EntityDefinition() {
-            this.name = "Entity";
+            this.name = $"Entity {id}";
             this.callsign = string.Empty;
             this.shipType = string.Empty;
         }

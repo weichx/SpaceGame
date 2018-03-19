@@ -4,20 +4,16 @@ using JetBrains.Annotations;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
-using Weichx.EditorReflection;
 
 namespace SpaceGame.Editor.MissionWindow {
 
     public partial class MissionTreeView : TreeView {
 
-        private const string FactionListField = nameof(MissionDefinition.factionsDefinitions);
-        private const string FactionEntityListField = nameof(FactionDefinition.entities);
-
-        private ReflectedObject mission;
+        private MissionDefinition mission;
         private List<int> utilList;
         private Action<MissionTreeSelection> onSelectionChanged;
 
-        public MissionTreeView(ReflectedObject mission, Action<MissionTreeSelection> onSelectionChanged) : base(new TreeViewState()) {
+        public MissionTreeView(MissionDefinition mission, TreeViewState state, Action<MissionTreeSelection> onSelectionChanged) : base(state) {
             this.mission = mission;
             this.utilList = new List<int>(16);
             this.onSelectionChanged = onSelectionChanged;
@@ -29,48 +25,48 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         private MissionTreeSelection GetFilteredSelection(IList<int> selectedIds) {
-            List<ReflectedProperty> selectedProperties = GetSelectionOfSameType(selectedIds);
-            if (selectedProperties == null || selectedProperties.Count == 0) {
+            List<AssetDefinition> selection = GetSelectionOfSameType(selectedIds);
+            if (selection == null || selection.Count == 0) {
                 return new MissionTreeSelection(ItemType.None, null);
             }
             else {
                 ItemType itemType = ((MissionTreeItem) FindItem(selectedIds[0], rootItem)).itemType;
-                return new MissionTreeSelection(itemType, selectedProperties);
+                return new MissionTreeSelection(itemType, selection);
             }
         }
 
         protected override TreeViewItem BuildRoot() {
             TreeViewItem root = new TreeViewItem(-9990, -1);
 
-            ReflectedListProperty factionList = mission.GetList(FactionListField);
-            int childCount = factionList.ElementCount;
+            foreach (FactionDefinition factionDefinition in mission.factionsDefinitions) {
 
-            for (int i = 0; i < childCount; i++) {
-                MissionTreeItem factionItem = new MissionTreeItem(factionList[i]);
-                root.AddChild(factionItem);
+                MissionTreeItem factionItem = new MissionTreeItem(factionDefinition);
+                foreach (FlightGroupDefinition flightGroup in factionDefinition.flightGroups) {
 
-                ReflectedListProperty entities = factionItem.property.GetList(FactionEntityListField);
-                for (int j = 0; j < entities.ChildCount; j++) {
-                    ReflectedProperty child = entities[j];
-                    factionItem.AddChild(new MissionTreeItem(child));
+                    MissionTreeItem flightGroupItem = new MissionTreeItem(flightGroup);
+
+                    foreach (EntityDefinition entity in flightGroup.entities) {
+                        flightGroupItem.AddChild(new MissionTreeItem(entity));
+                    }
+                    factionItem.AddChild(flightGroupItem);
+
                 }
+
+                root.AddChild(factionItem);
 
             }
 
             if (!root.hasChildren) {
-                // default this or we get a null exception
-                root.AddChild(new TreeViewItem(1, 0));
+                root.children = new List<TreeViewItem>();
             }
-
             SetupDepthsFromParentsAndChildren(root);
             return root;
         }
 
-        public void UpdateDisplayName(ReflectedProperty property) {
-            int id = property[nameof(AssetDefinition.id)].intValue;
-            string name = property[nameof(AssetDefinition.name)].stringValue;
-            TreeViewItem item = FindItem(id, rootItem);
-            if (item != null) item.displayName = name;
+        [PublicAPI]
+        public void UpdateDisplayName(AssetDefinition asset) {
+            TreeViewItem item = FindItem(asset.id, rootItem);
+            if (item != null) item.displayName = asset.name;
         }
 
         [PublicAPI]
@@ -83,51 +79,86 @@ namespace SpaceGame.Editor.MissionWindow {
             MissionTreeItem item = FindMissionItem(itemId);
             GenericMenu menu = new GenericMenu();
             menu.AddItem(new GUIContent("Create Entity"), false, OnCreateEntity, item);
+            menu.AddItem(new GUIContent("Create Faction"), false, OnCreateFaction, item);
+            menu.AddItem(new GUIContent("Create Flight Group"), false, OnCreateFlightGroup, item);
+            menu.AddSeparator("");
             menu.AddItem(new GUIContent("Delete"), false, OnDeleteItem, item);
             menu.ShowAsContext();
         }
 
-        private void OnDeleteItem(object userdata) {
-            MissionTreeItem item = (MissionTreeItem) userdata;
-            switch (item.itemType) {
+        private void OnCreateEntity(object data) {
+            EntityDefinition entityDefinition;
+            MissionTreeItem clickedItem = (MissionTreeItem) data;
 
-                case ItemType.None:
-                    break;
+            switch (clickedItem.itemType) {
                 case ItemType.Faction:
-                    mission.GetList(FactionListField).RemoveElement(item.property);
-                    Reload();
-                    break;
-                case ItemType.FlightGroup:
+                    entityDefinition = clickedItem.GetFaction().GetDefaultFlightGroup().AddEntity();
                     break;
                 case ItemType.Entity:
+                case ItemType.FlightGroup:
+                    entityDefinition = clickedItem.GetFlightGroup().AddEntity();
+                    Debug.Log(clickedItem.GetFlightGroup().entities.Count);
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        private void OnCreateEntity(object userdata) {
-            MissionTreeItem item = (MissionTreeItem) userdata;
-            EntityDefinition entityDefinition = new EntityDefinition();
-
-            switch (item.itemType) {
-                case ItemType.Faction:
-                    //todo maybe delegate this
-                    item.property.GetList(FactionEntityListField).AddElement(entityDefinition);
-                    break;
-                case ItemType.Entity:
-                    MissionTreeItem itemParent = item.ParentAsMissionTreeItem;
-                    if (itemParent.itemType == ItemType.Faction) {
-                        item.ParentAsMissionTreeItem.property.GetList(FactionEntityListField).AddElement(entityDefinition);
-                    }
-                    else if (itemParent.itemType == ItemType.FlightGroup) { }
-                    break;
-                case ItemType.FlightGroup:
-                    break;
+                    return;
             }
 
             Reload();
             SelectFireAndFrame(entityDefinition.id);
+        }
+
+        private void OnCreateFlightGroup(object data) {
+            MissionTreeItem item = (MissionTreeItem) data;
+            FlightGroupDefinition flightGroup = item.GetFaction().AddFlightGroup();
+            if (flightGroup != null) {
+                Reload();
+                SelectFireAndFrame(flightGroup.id);
+            }
+        }
+
+        private void OnCreateFaction(object data) {
+            FactionDefinition faction = mission.AddFaction();
+            Reload();
+            SelectFireAndFrame(faction.id);
+        }
+
+        private void OnDeleteItem(object userdata) {
+            MissionTreeItem item = (MissionTreeItem) userdata;
+            AssetDefinition removed;
+            switch (item.itemType) {
+                case ItemType.Faction:
+                    removed = mission.RemoveFaction(item.GetFaction());
+                    break;
+                case ItemType.FlightGroup:
+                    removed = item.GetFaction().RemoveFlightGroup(item.GetFlightGroup());
+                    break;
+                case ItemType.Entity:
+                    removed = item.GetFlightGroup().RemoveEntity(item.GetEntity());
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+            if (removed != null && IsInSelectedHierarchy(removed.id)) {
+                ClearSelection();
+            }
+            Reload();
+        }
+
+        private bool IsInSelectedHierarchy(int id) {
+            TreeViewItem item = FindItem(id, rootItem);
+            IList<int> selection = GetSelection();
+            while (item != rootItem) {
+                if (selection.Contains(item.id)) {
+                    return true;
+                }
+                item = item.parent;
+            }
+            return false;
+        }
+
+        private void ClearSelection() {
+            utilList.Clear();
+            SetSelection(utilList);
         }
 
         private void SelectFireAndFrame(int id) {
@@ -155,61 +186,102 @@ namespace SpaceGame.Editor.MissionWindow {
             bool isMultiDrag = args.draggedItemIDs.Count > 1;
             if (isMultiDrag) { }
             else {
-                DragAndDrop.SetGenericData("MissionEditor_Drag", "something");
+                DragAndDrop.SetGenericData("MissionEditor_Drag", SortItemIDsInRowOrder(args.draggedItemIDs)[0]);
             }
             DragAndDrop.StartDrag("MissionEditor");
         }
 
-        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
-            if (args.performDrop) {
-                MissionTreeItem parent = ToMissionItem(args.parentItem);
-                MissionTreeItem droppedItem = FindMissionItem((int) DragAndDrop.GetGenericData("MissionEditor_Drag"));
-
-                if (parent.IsFaction) {
-                    
-                    ReflectedListProperty droppedParentFactionList = parent.property.GetList(FactionEntityListField);
-                    
-                    switch (droppedItem.itemType) {
-                        case ItemType.None:
-                            break;
-                        case ItemType.Faction:
-                            break;
-                        case ItemType.FlightGroup:
-                            break;
-                        case ItemType.Entity:
-                            if (droppedItem.parent == parent) {
-                                droppedParentFactionList.MoveElement(droppedItem.property, args.insertAtIndex);
-                            }
-                            else {
-                                droppedParentFactionList.RemoveElement(droppedItem.property);
-                                parent.property.GetList(FactionEntityListField).InsertElement(droppedItem.property, args.insertAtIndex);
-                            }
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
-                    }
+        private void OnEntityDrop(AssetDefinition dropTarget, EntityDefinition child, int index) {
+            MissionTreeItem dropItem = FindMissionItem(child.id);
+            MissionTreeItem dropTargetItem = FindMissionItem(dropTarget.id);
+            if (dropTarget is FactionDefinition) {
+                dropItem.GetFlightGroup().RemoveEntity(child);
+                dropTargetItem.GetFaction().GetDefaultFlightGroup().AddEntity(child);
+            }
+            else if (dropTarget is EntityDefinition || dropTarget is FlightGroupDefinition) {
+                if (dropTargetItem.parent == dropItem.parent) {
+                    dropItem.GetFlightGroup().MoveEntity(child, index);
                 }
-                else if (parent.IsEntity) {
-                    if (droppedItem.IsEntity) {
-                        MissionTreeItem targetParent = FindNextValidEntityParent(parent);
-                        
-                    }
-                }
-                else if (parent.IsFlightGroup) { }
-
-                switch (args.dragAndDropPosition) {
-
-                    case DragAndDropPosition.UponItem:
-                        break;
-                    case DragAndDropPosition.BetweenItems:
-//                        FindNextValidInsertParent(args.parentItemargs.parentItem
-                        break;
-                    case DragAndDropPosition.OutsideItems:
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                else {
+                    dropItem.GetFlightGroup().RemoveEntity(child);
+                    dropTargetItem.GetFlightGroup().InsertEntity(child, index);
                 }
             }
+
+        }
+
+        private void OnFlightGroupDrop(AssetDefinition dropTarget, FlightGroupDefinition child, int index) {
+//            MissionTreeItem dropItem = FindMissionItem(child.id);
+//            MissionTreeItem dropTargetItem = FindMissionItem(dropTarget.id);
+//            if (dropTarget is FactionDefinition) {
+//                if (dropTarget == dropItem.GetFaction()) {
+//                    dropItem.GetFaction().MoveFlightGroup(child, index);
+//                }
+//                else {
+//                    dropItem.GetFaction().RemoveFlightGroup(child);
+//                    dropTargetItem.InsertFaction(index);
+//                }
+//                dropItem.GetFlightGroup().RemoveEntity(dropItem.GetEntity());
+//                dropTargetItem.GetFaction().GetDefaultFlightGroup().AddEntity(dropItem.GetEntity());
+//            }
+//            else if (dropTarget is FlightGroupDefinition) {
+//                if (dropTargetItem.parent == dropItem.parent) {
+//                    dropItem.GetFlightGroup().MoveEntity(child, index);
+//                }
+//                else {
+//                    dropItem.GetFlightGroup().RemoveEntity(dropItem.GetEntity());
+//                    dropTargetItem.GetFlightGroup().InsertEntity(dropItem.GetEntity(), index);
+//                }
+//            }
+
+        }
+
+        private void OnFactionDrop(AssetDefinition dropTarget, FactionDefinition child, int index) {
+            if (dropTarget == null) {
+                mission.MoveFaction(child, index);
+            }
+            else if (dropTarget is FactionDefinition) {
+                if (index == -1) {
+                    index = mission.factionsDefinitions.IndexOf((FactionDefinition) dropTarget);
+                }
+                mission.MoveFaction(child, index);
+                Reload();
+            }
+//            MissionTreeItem dropItem = FindMissionItem(child.id);
+//            MissionTreeItem dropTargetItem = FindMissionItem(dropTarget.id);
+//            if (dropTarget == null || dropTarget is FactionDefinition) {
+
+//            }
+        }
+
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
+            if (args.performDrop) {
+
+                if (args.dragAndDropPosition == DragAndDropPosition.OutsideItems) return DragAndDropVisualMode.Rejected;
+
+                MissionTreeItem newParentItem;
+
+                if (args.parentItem == rootItem) {
+                    newParentItem = ToMissionItem(args.parentItem.children[args.insertAtIndex]);
+                }
+                else {
+                    newParentItem = ToMissionItem(args.parentItem);
+                }
+
+                MissionTreeItem droppedItem = FindMissionItem((int) DragAndDrop.GetGenericData("MissionEditor_Drag"));
+
+                if (droppedItem.IsEntity) {
+                    OnEntityDrop(newParentItem.asset, droppedItem.GetEntity(), args.insertAtIndex);
+                }
+                else if (droppedItem.IsFlightGroup) {
+                    OnFlightGroupDrop(newParentItem.asset, droppedItem.GetFlightGroup(), args.insertAtIndex);
+                }
+                else if (newParentItem.IsFaction) {
+                    OnFactionDrop(newParentItem.asset, droppedItem.GetFaction(), args.insertAtIndex);
+                }
+
+            }
+            Reload();
             return DragAndDropVisualMode.Move;
         }
 
@@ -224,20 +296,18 @@ namespace SpaceGame.Editor.MissionWindow {
             return (MissionTreeItem) item;
         }
 
-        private void DragEntityToFaction() { }
-
-        private List<ReflectedProperty> GetSelectionOfSameType(IList<int> selectedIds) {
+        private List<AssetDefinition> GetSelectionOfSameType(IList<int> selectedIds) {
             if (selectedIds.Count == 0) return null;
-            List<ReflectedProperty> retn = new List<ReflectedProperty>(selectedIds.Count);
+            List<AssetDefinition> retn = new List<AssetDefinition>(selectedIds.Count);
             MissionTreeItem firstItem = FindMissionItem(selectedIds[0]);
             ItemType itemType = firstItem.itemType;
-            retn.Add(firstItem.property);
+            retn.Add(firstItem.asset);
             for (int i = 1; i < selectedIds.Count; i++) {
                 MissionTreeItem item = FindMissionItem(selectedIds[i]);
                 if (item.itemType != itemType) {
                     return null;
                 }
-                retn.Add(item.property);
+                retn.Add(item.asset);
             }
             return retn;
         }

@@ -22,35 +22,35 @@ namespace SpaceGame.Editor.MissionWindow {
         private class MissionTreeItem : TreeViewItem {
 
             public readonly ItemType itemType;
-            public readonly ReflectedProperty property;
+            public readonly AssetDefinition asset;
 
             private static int idGenerator;
 
-            public MissionTreeItem(ReflectedProperty property) {
-                this.id = property[nameof(AssetDefinition.id)].intValue;
-                this.displayName = property[nameof(AssetDefinition.name)].stringValue;
+            public MissionTreeItem(AssetDefinition asset) {
+                this.id = asset.id;
+                this.displayName = asset.name;
 
-                this.property = property;
-                if (property.DeclaredType == typeof(FactionDefinition)) {
+                this.asset = asset;
+                if (asset is FactionDefinition) {
                     this.itemType = ItemType.Faction;
                 }
-                else if (property.DeclaredType == typeof(FlightGroupDefinition)) {
+                else if (asset is FlightGroupDefinition) {
                     this.itemType = ItemType.FlightGroup;
                 }
-                else if (property.DeclaredType == typeof(EntityDefinition)) {
+                else if (asset is EntityDefinition) {
                     this.itemType = ItemType.Entity;
                 }
                 else {
-                    throw new ArgumentException($"Cannot make a TreeItem for {property.DeclaredType.Name}");
+                    throw new ArgumentException($"Cannot make a TreeItem for {asset?.GetType().Name}");
                 }
             }
 
             public MissionTreeItem ParentAsMissionTreeItem => parent as MissionTreeItem;
-            
+
             public override Texture2D icon {
                 get {
                     if (itemType == ItemType.Faction) {
-                        return property[IconField].GetValue<AssetPointer<Texture2D>>().GetAsset();
+                        return ((FactionDefinition) asset).iconPointer.GetAsset();
                     }
                     return null;
                 }
@@ -59,6 +59,22 @@ namespace SpaceGame.Editor.MissionWindow {
             public bool IsFaction => itemType == ItemType.Faction;
             public bool IsEntity => itemType == ItemType.Entity;
             public bool IsFlightGroup => itemType == ItemType.FlightGroup;
+
+            public FactionDefinition GetFaction() {
+                if (itemType == ItemType.Faction) return asset as FactionDefinition;
+                return ParentAsMissionTreeItem?.GetFaction();
+            }
+
+            public FlightGroupDefinition GetFlightGroup() {
+                if (itemType == ItemType.FlightGroup) return asset as FlightGroupDefinition;
+                if (itemType != ItemType.Entity) return null;
+                return ParentAsMissionTreeItem?.GetFlightGroup();
+            }
+
+            public EntityDefinition GetEntity() {
+                if (itemType != ItemType.Entity) return null;
+                return asset as EntityDefinition;
+            }
 
         }
 
