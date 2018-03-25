@@ -4,7 +4,7 @@ namespace SpaceGame.AI {
 
     public class FacingForwardAxisConsideration : Consideration<EntityContext> {
 
-        public override float Score(EntityContext context) {
+        protected override float Score(EntityContext context) {
             TransformInfo info = context.agent.transformInfo;
             TransformInfo otherInfo = context.other.transformInfo;
 

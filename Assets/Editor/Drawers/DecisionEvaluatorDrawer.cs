@@ -21,8 +21,6 @@ namespace SpaceGameEditor.Drawers {
         private ReflectedPropertyAdapter adapter;
         private GUIRect guiRect = new GUIRect();
 
-        public override void OnInitialize() { }
-
         public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
 
             if (property == null) return;
@@ -31,15 +29,17 @@ namespace SpaceGameEditor.Drawers {
 
             EditorGUIX.Foldout(guiRect, property);
 
-            EditorGUI.indentLevel += 2;
-            EditorGUIX.PropertyField(guiRect, property[NameField]);
-            EditorGUIX.PropertyField(guiRect, property[WeightField]);
-            EditorGUIX.PropertyField(guiRect, property[BonusCalculatorField]);
+            property.IsExpanded = true; //temp
+            if (property.IsExpanded) {
+                EditorGUI.indentLevel++;
+                EditorGUIX.PropertyField(guiRect, property[NameField]);
+                EditorGUIX.PropertyField(guiRect, property[WeightField]);
+                EditorGUIX.PropertyField(guiRect, property[BonusCalculatorField]);
 
-            ReorderableListGUI.ListFieldAbsolute((guiRect.GetRect()), adapter);
+                ReorderableListGUI.ListFieldAbsolute(EditorGUI.IndentedRect(guiRect.GetRect()), adapter);
 
-            EditorGUI.indentLevel -= 2;
-
+                EditorGUI.indentLevel--;
+            }
         }
 
         public void Initialize(ReflectedProperty source) {
@@ -51,10 +51,10 @@ namespace SpaceGameEditor.Drawers {
         }
 
         public override float GetPropertyHeight(ReflectedProperty property) {
-            float height = 0f;
-            if (property != null && property.Value != null) {
+            float height = EditorGUIUtility.singleLineHeight;
+            if (property?.Value != null && property.IsExpanded) {
                 Initialize(property);
-                height += EditorGUIX.singleLineHeight * 4f;
+                height += EditorGUIX.singleLineHeight * 3f;
                 height += ReorderableListGUI.CalculateListFieldHeight(adapter);
             }
             return height;

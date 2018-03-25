@@ -7,9 +7,6 @@ using UnityEngine;
 
 namespace SpaceGame.Engine {
 
-    /// <summary>
-    /// This is the ONLY place where we should be touching the unity transform properties!
-    /// </summary>
     public class PropulsionManager : ManagerBase {
 
         [Header("Arrival")] public ResponseCurve arrivalSpeedCurve; // exp = 0.42, invert = true;
@@ -51,13 +48,6 @@ namespace SpaceGame.Engine {
         }
 
         private void TickActives() {
-            // Fighters
-            // Largeships
-            // Physics
-            // No Physics
-            // Player
-            // Linear Weapons
-            // Aspect Warheads
             List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
             int count = actives.Count;
             float deltaTime = GameTimer.Instance.deltaTime;
@@ -67,8 +57,8 @@ namespace SpaceGame.Engine {
                 AIInfo agent = GameData.Instance.aiInfoMap[entityId];
                 Quaternion rotation = PropulsionUtil.RotateTowardsDirection(
                     entityTransform.rotation,
-                    entityTransform.DirectionTo(agent.Entity.targetPosition),
-                    90f,//turnRate,
+                    entityTransform.DirectionTo(agent.Entity.FlightSystem.targetPosition),
+                    agent.Entity.FlightSystem.turnRate,
                     deltaTime
                 );
 
@@ -125,7 +115,8 @@ namespace SpaceGame.Engine {
             }
         }
 
-        private void OnEntityArriving(Evt_EntityArriving evt) {
+        private void OnEntityArriving(Evt_EntityArriving evt)
+        {
             TransformInfo transformInfo = GameData.Instance.transformInfoMap[evt.entityId];
             Vector3 position = transformInfo.position;
             Vector3 offset = (-transformInfo.forward * arrivalHyperspaceDistance);

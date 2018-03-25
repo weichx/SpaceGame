@@ -14,11 +14,11 @@ namespace SpaceGame {
         }
 
         public static Entity GetEntity(int id) {
-            return entities.Find((e) => e.id == id);
+            return entities.Find((e) => e.index == id);
         }
         
         public static Entity GetEntityById(int id) {
-            return entities.Find((e) => e.id == id);
+            return entities.Find((e) => e.index == id);
         }
         
         public static void RemoveEntity(Entity entity) {

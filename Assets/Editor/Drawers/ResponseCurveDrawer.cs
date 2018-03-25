@@ -9,8 +9,6 @@ using Weichx.Util.Texture2DExtensions;
 
 namespace SpaceGameEditor.Drawers {
     
-   
-
     [CustomPropertyDrawer(typeof(ResponseCurve))]
     public class ResponseCurveDrawer : PropertyDrawer {
 

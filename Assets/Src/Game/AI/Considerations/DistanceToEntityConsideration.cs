@@ -2,7 +2,7 @@
 
     public class DistanceToEntityConsideration : Consideration<EntityContext> {
 
-        public override float Score(EntityContext context) {
+        protected override float Score(EntityContext context) {
             return 0f;
         }
 

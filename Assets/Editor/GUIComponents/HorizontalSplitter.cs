@@ -18,46 +18,6 @@
             minPaneWidthLeft = 75,
             minPaneWidthRight = 75;
 
-        /*
-        * Unity can, apparently, recycle state objects.  In that event we want to
-        * wipe the slate clean and just start over to avoid wackiness.
-        */
-        private void Reset(int newId) {
-            id = newId;
-            isDraggingSplitter = false;
-            isPaneWidthChanged = false;
-            leftPaneWidth = -1;
-            initialLeftPaneWidth = -1;
-            lastAvailableWidth = -1;
-            availableWidth = 0;
-            minPaneWidthLeft = 75;
-            minPaneWidthRight = 75;
-        }
-
-        /*
-        * Some aspects of our state are really just static configuration that
-        * shouldn't be modified by the control, so we blindly set them if we have a
-        * prototype from which to do so.
-        */
-        private void InitFromPrototype(int newId, HorizontalPaneState prototype) {
-            id = newId;
-            initialLeftPaneWidth = prototype.initialLeftPaneWidth;
-            minPaneWidthLeft = prototype.minPaneWidthLeft;
-            minPaneWidthRight = prototype.minPaneWidthRight;
-        }
-
-        /*
-        * This method takes care of guarding against state object recycling, and
-        * ensures we pick up what we need, when we need to, from the prototype state
-        * object.
-        */
-        public void ResolveStateToCurrentContext(int currentId, HorizontalPaneState prototype) {
-            if (id != currentId)
-                Reset(currentId);
-            else if (prototype != null)
-                InitFromPrototype(currentId, prototype);
-        }
-
     }
 
     public static class EditorGUILayoutHorizontalPanes {
@@ -65,14 +25,9 @@
         // TODO: This makes it impossible to nest pane sets!
         private static HorizontalPaneState hState;
 
-        public static void Begin() {
-            Begin(null);
-        }
-
-        public static void Begin(HorizontalPaneState prototype) {
-            int id = GUIUtility.GetControlID(FocusType.Passive);
-            hState = (HorizontalPaneState) GUIUtility.GetStateObject(typeof(HorizontalPaneState), id);
-            hState.ResolveStateToCurrentContext(id, prototype);
+        public static void Begin(HorizontalPaneState planeState) {
+            hState = planeState;
+            hState.id = GUIUtility.GetControlID(FocusType.Passive);
 
             // *INDENT-OFF*
             Rect totalArea = EditorGUILayout.BeginHorizontal();
@@ -159,14 +114,13 @@
         private static Texture2D SplitterImage;
 
         static HorizontalPaneStyles() {
-            // TODO: Change the image color based on chosen editor skin.
             SplitterImage = new Texture2D(1, 1, TextureFormat.ARGB32, false) {
                 hideFlags = HideFlags.HideAndDontSave,
                 anisoLevel = 0,
                 filterMode = FilterMode.Point,
                 wrapMode = TextureWrapMode.Clamp
             };
-            SplitterImage.SetPixels(new Color[] {Color.gray});
+            SplitterImage.SetPixels(new Color[] { Color.gray });
             SplitterImage.Apply();
         }
 
@@ -177,7 +131,7 @@
                 if (_Splitter == null) {
                     // *INDENT-OFF*
                     _Splitter = new GUIStyle() {
-                            normal = new GUIStyleState() {background = SplitterImage},
+                            normal = new GUIStyleState() { background = SplitterImage },
                             imagePosition = ImagePosition.ImageOnly,
                             wordWrap = false,
                             alignment = TextAnchor.MiddleCenter,

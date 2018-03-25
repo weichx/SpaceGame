@@ -1,88 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using UnityEngine;
+using Weichx.ReflectionAttributes;
 using Weichx.Util;
 
 namespace Weichx.EditorReflection {
 
+    [DebuggerDisplay("{" + nameof(Type) + "}")]
     public class ReflectedInstanceProperty : ReflectedProperty {
 
         private ReflectedProperty circularReference;
+        
+        private List<ReflectedProperty> childSet;
 
         public ReflectedInstanceProperty(ReflectedProperty parent, string name, Type declaredType, object value)
             : base(parent, name, declaredType, value) {
             if (actualValue == null) {
-                actualValue = CreateValue(declaredType);
+                actualValue = HasAttribute<CreateOnReflect>() ? CreateValue(declaredType) : null;
                 actualType = declaredType;
-                originalValue = actualValue;
             }
             CreateChildren();
         }
 
-        public override bool IsCircular => circularReference != null;
-        public override int ChildCount => circularReference != null ? circularReference.ChildCount : children.Count;
-
-        public override ReflectedProperty ChildAt(int index) {
-            if (circularReference != null) {
-                return circularReference.ChildAt(index);
-            }
-            return base.ChildAt(index);
-        }
-        
         protected override void SetValue(object value) {
             if (value == null) {
                 actualType = declaredType;
                 actualValue = null;
-                this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
+                UpdateDrawer();
                 DestroyChildren();
             }
             else {
                 Type newType = value.GetType();
                 if (newType != actualType) {
-                    this.Drawer = EditorReflector.CreateReflectedPropertyDrawer(this);
+                    UpdateDrawer();
                 }
                 actualType = newType;
                 actualValue = value;
                 CreateChildren();
             }
-            SetChanged(true);
         }
-        
-        public override void Update() {
 
-            if (parent != null) {
-                //if we have a parent but no field info then we are part of an array 
-                //the parent will handle setting our value.
-                if (fieldInfo != null) {
-                    object parentValue = fieldInfo.GetValue(parent.Value);
-                    if (parentValue != actualValue) {
-                        actualValue = parentValue;
-                        actualType = actualValue == null ? declaredType : actualValue.GetType();
-                        UpdateChildren();
-                    }
-                }
+        protected override void UpdateInternal(object value) {
+            object oldValue = actualValue;
+            UpdateInternalCommon(value);
+
+            if (actualValue == null) {
+                DestroyChildren();
+            }
+            else if (oldValue == null) {
+                CreateChildren();
             }
             else {
                 UpdateChildren();
             }
-            
-            originalValue = actualValue;
-            SetChanged(false);
-            
         }
+
 
         private void UpdateChildren() {
 
             FieldInfo[] fieldInfos = EditorReflector.GetFields(actualType);
-            HashSet<ReflectedProperty> childSet = new HashSet<ReflectedProperty>(children);
+
+            childSet = childSet ?? new List<ReflectedProperty>(8);
+            
+            for (int i = 0; i < children.Count; i++) {
+                childSet.Add(children[i]);
+            }
 
             for (int i = 0; i < fieldInfos.Length; i++) {
                 FieldInfo info = fieldInfos[i];
                 if (ShouldReflectProperty(info)) {
                     ReflectedProperty child = children.Find(info, (c, fInfo) => c.name == fInfo.Name);
                     if (child != null) {
-                        child.Update();
+                        UpdateChildIntenal(child, info.GetValue(actualValue));
                         childSet.Remove(child);
                     }
                     else {
@@ -91,17 +82,23 @@ namespace Weichx.EditorReflection {
                 }
             }
 
-            foreach (ReflectedProperty toRemove in childSet) {
-                children.Remove(toRemove);
+            for (int i = 0; i < childSet.Count; i++) {
+                children.Remove(childSet[i]);
             }
-           
+
+            childSet.Clear();
+            UnityEngine.Debug.Assert(isDirty == false && changedChildren.Count == 0);
         }
-        
+
         private void CreateChildren() {
             if (actualValue == null) return;
-            children.Clear(); // destroy?
+
+            DestroyChildren();
+
             circularReference = CheckCircularReference(this);
-            if (circularReference != null) return;
+
+            UnityEngine.Debug.Assert(circularReference == null, "circularReference == null");
+
             FieldInfo[] fieldInfos = EditorReflector.GetFields(actualType);
             for (int i = 0; i < fieldInfos.Length; i++) {
                 FieldInfo fi = fieldInfos[i];
@@ -112,18 +109,7 @@ namespace Weichx.EditorReflection {
         }
 
         private static bool ShouldReflectProperty(FieldInfo fi) {
-            if (fi.IsNotSerialized) {
-                return false;
-            }
-            return fi.IsPublic || EditorReflector.HasAttribute(fi, typeof(SerializeField));
-        }
-
-        private static object CreateValue(Type type) {
-            ConstructorInfo ctor = type.GetConstructor(Type.EmptyTypes);
-            if (ctor != null && !type.IsAbstract) {
-                return Activator.CreateInstance(type);
-            }
-            return null;
+            return !fi.IsNotSerialized && (fi.IsPublic || EditorReflector.HasAttribute(fi, typeof(SerializeField)));
         }
 
     }

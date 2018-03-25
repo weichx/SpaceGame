@@ -1,24 +1,40 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using SpaceGame.AI;
 using SpaceGame.FileTypes;
 using UnityEngine;
+using Weichx.ReflectionAttributes;
 using Weichx.Util;
 
 namespace SpaceGame {
 
     public class FactionDefinition : AssetDefinition {
 
-        private Texture2D iconTexture;
-
         public AssetPointer<Texture2D> iconPointer;
-        [HideInInspector] public readonly List<FlightGroupDefinition> flightGroups;
+        
+        [CreateOnReflect]
+        public readonly List<FlightGroupDefinition> flightGroups;
+        
+        [DefaultExpanded] [CreateOnReflect]
+        public readonly List<Goal> goals;
+        
+        private Texture2D iconTexture;
+        
+        [HideInInspector]
+        public readonly MissionDefinition mission;
+        
+        [UsedImplicitly]
+        public FactionDefinition() { }
 
-        [PublicAPI]
-        public FactionDefinition() : this("Faction") { }
+        public FactionDefinition(int id, MissionDefinition mission) : base(id) {
+            this.name = $"Faction {id}";
+            this.mission = mission;
+            this.flightGroups = new List<FlightGroupDefinition>();
+        }
 
-        public FactionDefinition(string name) : base(name) {
+        public FactionDefinition(int id, string name) : base(id, name) {
             this.iconPointer = new AssetPointer<Texture2D>();
-            this.flightGroups = new List<FlightGroupDefinition>(16);
+            this.flightGroups = new List<FlightGroupDefinition>();
         }
 
         public Texture2D icon {
@@ -34,42 +50,31 @@ namespace SpaceGame {
             }
         }
 
-        public FlightGroupDefinition FindFlightGroupById(int id) {
-            return flightGroups.Find(id, (fg, targetId) => fg.id == targetId);
-        }
-
-        public FlightGroupDefinition AddFlightGroup() {
-            FlightGroupDefinition flightGroupDefinition = new FlightGroupDefinition("Flight Group");
-            flightGroupDefinition.factionId = id;
-            flightGroups.Add(flightGroupDefinition);
-            return flightGroupDefinition;
-        }
-
-        public FlightGroupDefinition InsertFlightGroup(FlightGroupDefinition flightGroup, int index) {
-            int currentIndex = flightGroups.IndexOf(flightGroup);
-            if (currentIndex == -1) {
-                flightGroups.Insert(index, flightGroup);
-            }
-            else {
-                flightGroups.MoveToIndex(currentIndex, index);
-            }
-
-            return flightGroup;
-        }
-
-        public FlightGroupDefinition RemoveFlightGroup(FlightGroupDefinition flightGroup) {
-            if (flightGroup == flightGroups[0]) return null;
-            return flightGroups.Remove(flightGroup) ? flightGroup : null;
-        }
-
         public FlightGroupDefinition GetDefaultFlightGroup() {
             return flightGroups[0];
         }
 
-        public static FactionDefinition CreateFaction() {
-            FactionDefinition faction = new FactionDefinition();
-            faction.AddFlightGroup();
-            return faction;
+        public FlightGroupDefinition AddFlightGroup(FlightGroupDefinition flightGroup, int index = -1) {
+            if (flightGroup.factionId == id) {
+                if (index == -1) index = 0;
+                Debug.Assert(flightGroups.Contains(flightGroup), "flightGroups.Contains(flightGroup)");
+                flightGroups.MoveToIndex(flightGroup, index);
+                return flightGroup;
+            }
+            flightGroup.factionId = id;
+            if (index == -1) {
+                flightGroups.Add(flightGroup);
+            }
+            else {
+                flightGroups.Insert(index, flightGroup);
+            }
+            return flightGroup;
+        }
+        
+        public void RemoveFlightGroup(FlightGroupDefinition flightGroup) {
+            if (flightGroups.Remove(flightGroup)) {
+                flightGroup.factionId = -1;
+            }
         }
 
     }

@@ -62,9 +62,11 @@ namespace SpaceGameEditor.Drawers {
 
         public override float GetPropertyHeight(ReflectedProperty property) {
             float height = EditorGUIX.singleLineHeight;
-            height += base.GetPropertyHeight(property[ActionField]);
-            height += base.GetPropertyHeight(property[ContextCreatorField]);
-            height += base.GetPropertyHeight(property[EvaluatorField]);
+            height += property[NameField].GetPropertyHeight();
+            height += property[ContextTypeField].GetPropertyHeight();
+            height += property[ActionField].GetPropertyHeight();
+            height += property[ContextCreatorField].GetPropertyHeight();
+            height += property[EvaluatorField].GetPropertyHeight();
             return height;
         }
 

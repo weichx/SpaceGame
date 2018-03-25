@@ -21,7 +21,7 @@ namespace SpaceGame.Engine {
             public readonly Transform transform;
             
             public Arrival(Entity entity, Vector3 startPoint) {
-                this.entityId = entity.id;
+                this.entityId = entity.index;
                 this.startPoint = startPoint;
                 this.transform = entity.transform;
             }

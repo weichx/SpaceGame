@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using SpaceGame;
 using SpaceGame.EditorComponents;
 using SpaceGame.FileTypes;
@@ -27,7 +26,8 @@ namespace SpaceGameEditor.Drawers {
                 property.Value = new AssetPointer<Chassis>();
                 return;
             }
-            property.Value = new AssetPointer<Chassis>(asset.GetComponent<Chassis>());
+            string path = AssetDatabase.GetAssetPath(asset.GetInstanceID());
+            property.Value = new AssetPointer<Chassis>(path);
         }
 
         private bool HasComponent(GameObject asset) {
@@ -77,7 +77,8 @@ namespace SpaceGameEditor.Drawers {
                 property.Value = new AssetPointer<Texture2D>();
                 return;
             }
-            property.Value = new AssetPointer<Texture2D>(asset);
+            string path = AssetDatabase.GetAssetPath(asset.GetInstanceID());
+            property.Value = new AssetPointer<Texture2D>(path);
         }
        
         private static bool InResourcePath(Texture2D asset) {

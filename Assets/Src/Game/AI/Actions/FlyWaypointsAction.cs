@@ -13,7 +13,7 @@ namespace SpaceGame.AI {
             WaypointPath path = context.path;
             Debug.Assert(path != null, nameof(path) + " != null");
 
-            WaypointTracker tracker = path.GetTrackerForEntity(context.agent.id);
+            WaypointTracker tracker = path.GetTrackerForEntity(context.agent.index);
             int completedLaps = tracker.CompletedLaps;
 
             Vector3 waypoint = tracker.CurrentWaypoint;
@@ -26,7 +26,7 @@ namespace SpaceGame.AI {
 
             waypoint = tracker.CurrentWaypoint;
             ApproachType approachType = tracker.IsFinalWaypoint ? ApproachType.Arrive : ApproachType.Normal;
-            agent.SetTargetPosition(waypoint, approachType);
+            agent.FlightSystem.SetTargetPosition(waypoint, approachType);
             return tracker.CompletedLaps != completedLaps;
         }
 

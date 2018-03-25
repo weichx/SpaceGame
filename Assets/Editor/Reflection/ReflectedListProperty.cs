@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Diagnostics;
+using JetBrains.Annotations;
+using Weichx.ReflectionAttributes;
 using Weichx.Util;
 
 namespace Weichx.EditorReflection {
@@ -9,53 +11,59 @@ namespace Weichx.EditorReflection {
 
         public ReflectedListProperty(ReflectedProperty parent, string name, Type declaredType, object value)
             : base(parent, name, declaredType, value) {
-            if (actualValue == null) {
-                actualType = declaredType;
-                originalValue = actualValue;
+            if (actualValue == null && HasAttribute<CreateOnReflect>()) {
+                actualValue = CreateValue(declaredType);
+                actualType = actualValue.GetType();
             }
             CreateChildren();
         }
 
-        public override void ApplyChanges() {
+        [PublicAPI]
+        public Type ElementType => GetElementType();
+
+        public int ElementCount {
+            [DebuggerStepThrough] get { return children.Count; }
+            set { SetElementCount(value >= 0 ? value : 0); }
+        }
+
+        protected override void ApplyChangesInternal() {
+            if (!HasModifiedProperties) {
+                return;
+            }
             ResizeActualValue();
             IList list = (IList) actualValue;
             for (int i = 0; i < children.Count; i++) {
-                children[i].ApplyChanges();
+                ApplyChildChanges(children[i]);
                 list[i] = children[i].Value;
             }
-            originalValue = actualValue;
-            SetChanged(false);
+            if (parent != null && fieldInfo != null) {
+                fieldInfo.SetValue(parent.Value, actualValue);
+            }
+            changedChildren.Clear();
+            isDirty = false;
         }
 
-        public override void Update() {
-            IList list = (IList) actualValue;
-            if (list != null) {
-                SetElementCount(list.Count, false);
-                for (int i = 0; i < list.Count; i++) {
-                    children[i].Update();
-                    list[i] = children[i].Value;
-                }
+        protected override void UpdateInternal(object value) {
+            object oldValue = actualValue;
+            UpdateInternalCommon(value);
+
+            if (actualValue == null) {
+                DestroyChildren();
+            }
+            else if (oldValue == null) {
+                CreateChildren();
             }
             else {
-                SetElementCount(0, false);
-            }
-            originalValue = actualValue;
-            SetChanged(false);
-        }
-
-        public virtual int ElementCount {
-            get { return children.Count; }
-            set {
-                if (value < 0) return;
-                SetElementCount(value);
+                UpdateChildren();
             }
         }
 
         protected virtual void SetElementCount(int size, bool shouldChange = true) {
             if (size > children.Count) {
-                Type elementType = declaredType.GetGenericArguments()[0];
+                Type elementType = GetElementType();
                 //because we know this will be null or a primitive,
                 //it is safe to pass the same element to every new index
+                //todo maybe make a real instance when we can
                 object element = EditorReflector.GetDefaultForType(elementType);
                 for (int i = children.Count; i < size; i++) {
                     children.Add(CreateChild(this, string.Empty, elementType, element));
@@ -86,15 +94,28 @@ namespace Weichx.EditorReflection {
                 actualType = value.GetType();
                 CreateChildren();
             }
-            SetChanged(true);
+        }
+
+        [DebuggerStepThrough]
+        protected virtual Type GetElementType() {
+            return declaredType.GetGenericArguments()[0];
         }
 
         protected virtual void CreateChildren() {
             IList list = (IList) actualValue;
-            Type elementType = declaredType.GetGenericArguments()[0];
+            if (list == null) return;
+            Type elementType = GetElementType();
             for (int i = 0; i < list.Count; i++) {
-                object value = list[i];
-                children.Add(CreateChild(this, i.ToString(), elementType, value));
+                children.Add(CreateChild(this, string.Empty, elementType, list[i]));
+            }
+        }
+
+        protected void UpdateChildren() {
+            IList list = actualValue as IList;
+            Debug.Assert(list != null, nameof(list) + " != null");
+            SetElementCount(list.Count, false);
+            for (int i = 0; i < list.Count; i++) {
+                UpdateChildIntenal(children[i], list[i]);
             }
         }
 
@@ -103,7 +124,7 @@ namespace Weichx.EditorReflection {
             if (children.Count == 0 || (list != null && list.Count == children.Count)) {
                 return;
             }
-            list = list ?? Activator.CreateInstance(declaredType) as IList;
+            list = list ?? EditorReflector.MakeInstance<IList>(declaredType);
             Debug.Assert(list != null, nameof(list) + " != null");
             if (list.Count > children.Count) {
                 while (list.Count > children.Count) {
@@ -118,8 +139,6 @@ namespace Weichx.EditorReflection {
             actualValue = list;
         }
 
-        public Type ElementType => declaredType.IsArray ? declaredType.GetElementType() : declaredType.GetGenericArguments()[0];
-
         public ReflectedProperty Find(Predicate<ReflectedProperty> predicate) {
             return children.Find(predicate);
         }
@@ -129,7 +148,7 @@ namespace Weichx.EditorReflection {
         }
 
         public void AddElements(IList elements) {
-            Type elementType = ElementType;
+            Type elementType = GetElementType();
             for (int i = 0; i < elements.Count; i++) {
                 children.Add(CreateChild(this, string.Empty, elementType, elements[i]));
             }
@@ -137,18 +156,19 @@ namespace Weichx.EditorReflection {
         }
 
         public void AddElement(object element) {
-            Type elementType = ElementType;
+            Type elementType = GetElementType();
             children.Add(CreateChild(this, string.Empty, elementType, element));
             SetChanged(true);
         }
 
         public void InsertElement(int index) {
             if (index >= 0 && index <= ChildCount) {
-                Type elementType = ElementType;
+                Type elementType = GetElementType();
                 object defaultValue = EditorReflector.GetDefaultForType(declaredType);
                 ReflectedProperty child = CreateChild(this, string.Empty, elementType, defaultValue);
                 if (index == ChildCount) {
                     AddElement(child);
+                    return;
                 }
                 children.Insert(index, child);
                 SetChanged(true);
@@ -162,23 +182,9 @@ namespace Weichx.EditorReflection {
 
         public void Duplicate(int index) {
             UnityEngine.Debug.Log("Duplicate not yet implemented");
-//            ReflectedProperty child = children[index];
-//            if (child.Value == null) {
-//            }
-//            else {
-//                object value = child.Value;
-//                object clonedValue;
-//                if (child.Type.IsArray) {
-//                    clonedValue = Array.CreateInstance(child.Type, ((Array)child.Value).Length);
-//                }
-//                else {
-//                    clonedValue = Activator.CreateInstance(child.Type);
-//                }
-//                ReflectedProperty clone = CreateChild(this, )
-//            }
         }
 
-        public virtual void RemoveElementAt(int index) {
+        public void RemoveElementAt(int index) {
             ReflectedProperty child = children.RemoveAndReturnAtIndex(index);
             if (child != null) {
                 DestroyChild(child);
@@ -186,7 +192,7 @@ namespace Weichx.EditorReflection {
             SetChanged(true);
         }
 
-        public virtual void Clear() {
+        public void Clear() {
             DestroyChildren();
             SetChanged(true);
         }
@@ -202,10 +208,6 @@ namespace Weichx.EditorReflection {
             return MoveElement(children.IndexOf(property), insertIndex);
         }
 
-        public ReflectedProperty this[int indexer] {
-            get { return children?[indexer]; }
-        }
-
         public void RemoveElement(ReflectedProperty selectedDecision) {
             ReflectedProperty child = children?.Find(selectedDecision);
             if (child != null) {
@@ -213,6 +215,10 @@ namespace Weichx.EditorReflection {
                 DestroyChild(child);
                 SetChanged(true);
             }
+        }
+
+        public ReflectedProperty this[int indexer] {
+            [DebuggerStepThrough] get { return children?[indexer]; }
         }
 
     }

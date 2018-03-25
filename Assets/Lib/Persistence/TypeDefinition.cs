@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Linq;
 
 namespace Weichx.Persistence {
 
@@ -83,6 +84,7 @@ namespace Weichx.Persistence {
         private static readonly Dictionary<Type, TypeDefinition> typeDefinitions = new Dictionary<Type, TypeDefinition>();
 
         public static TypeDefinition Get(Type type) {
+            if (type == null) return null;
             if (typeDefinitions.ContainsKey(type)) return typeDefinitions[type];
             TypeDefinition typeDefinition = new TypeDefinition(type);
 
@@ -98,24 +100,31 @@ namespace Weichx.Persistence {
         private static List<FieldInfo> fieldInfoContainer = new List<FieldInfo>(16);
 
         private static FieldInfo[] GetFields(TypeDefinition typeDefinition) {
+            
             if (typeDefinition.IsType || typeDefinition.IsPrimitiveLike || typeDefinition.IsArrayLike) {
                 return new FieldInfo[0];
             }
+            
             fieldInfoContainer.Clear();
+            
             IReadOnlyList<FieldInfo> fieldInfos = GetFieldsIncludingBaseClasses(typeDefinition.type);
 
+            // we special case collections
+            if (typeof(ICollection).IsAssignableFrom(typeDefinition.type)) {
+                return fieldInfos.Where((fi) => !fi.IsNotSerialized).ToArray();
+            }
+            
             for (int i = 0; i < fieldInfos.Count; i++) {
                 FieldInfo fieldInfo = fieldInfos[i];
                 if (ShouldReflectField(fieldInfo)) {
                     fieldInfoContainer.Add(fieldInfo);
                 }
             }
+            
             return fieldInfoContainer.ToArray();
         }
 
         private static bool ShouldReflectField(FieldInfo fi) {
-//            return !fi.IsNotSerialized;
-            // if we include this line we need to make custom adapters for collection types
             return !fi.IsNotSerialized && (fi.IsPublic || fi.GetCustomAttributes(typeof(SerializeField), false).Length != 0);
         }
 

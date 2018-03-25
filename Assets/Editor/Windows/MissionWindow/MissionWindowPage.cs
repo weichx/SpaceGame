@@ -8,15 +8,11 @@ namespace SpaceGame.Editor.MissionWindow {
     public abstract class MissionWindowPage {
 
         protected MissionWindowState state;
-        protected ReflectedListProperty list;
-        protected BaseTreeView treeView;
-        protected IList<int> selectedIds;
-        protected GameDataFile gameData;
+        protected GameDatabase db;
 
-        protected MissionWindowPage(MissionWindowState state, GameDataFile gameData) {
+        protected MissionWindowPage(MissionWindowState state, GameDatabase db) {
             this.state = state;
-            this.gameData = gameData;
-            this.selectedIds = new List<int>(4);
+            this.db = db;
         }
 
         public abstract void OnGUI();

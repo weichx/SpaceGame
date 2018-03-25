@@ -211,7 +211,7 @@ namespace SpaceGame {
         }
 
         public static void ParseFactionFile() {
-            TextAsset json = Resources.Load<TextAsset>("Factions");
+            TextAsset json = Resources.Load<TextAsset>("Data/Factions");
             FactionDefinition[] factionDefinitions = JsonUtility.FromJson<Wrapper>(json.text).data;
             for (int i = 0; i < factionDefinitions.Length; i++) {
                 FactionDefinition def = factionDefinitions[i];

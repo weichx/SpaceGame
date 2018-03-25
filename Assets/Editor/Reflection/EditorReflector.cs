@@ -4,7 +4,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using UnityEngine;
 using Weichx.ReflectionAttributes;
 
@@ -31,11 +30,8 @@ namespace Weichx.EditorReflection {
                                                BindingFlags.Instance;
 
         private const string SubclassCache = nameof(SubclassCache);
-        private const string GenericSubclassCache = nameof(GenericSubclassCache);
-        private const string NonGenericSubclassCache = nameof(NonGenericSubclassCache);
         private const string PointableMethodCache = nameof(PointableMethodCache);
         private const string TypeDrawerCache = nameof(TypeDrawerCache);
-        private const string DelegateCache = nameof(DelegateCache);
         private const string FieldInfoCache = nameof(FieldInfoCache);
 
         private static GenericCache cache;
@@ -72,8 +68,25 @@ namespace Weichx.EditorReflection {
             }
         }
 
+        public static object MakeInstance(Type type, Type[] signature, object[] parameters) {
+            return type.GetConstructor(signature)?.Invoke(parameters);
+
+        }
+
+        public static object MakeInstance(Type type) {
+            return Activator.CreateInstance(type, true);
+        }
+
+        public static T MakeInstance<T>(Type type) {
+            return (T) Activator.CreateInstance(type, true);
+        }
+
+        public static T MakeInstance<T>() {
+            return (T) Activator.CreateInstance(typeof(T), true);
+        }
+
         public static object GetDefaultForType(Type type) {
-            return type.IsValueType ? Activator.CreateInstance(type) : null;
+            return type.IsValueType ? MakeInstance(type) : null;
         }
 
         private static void FindPointableMethods() {
@@ -246,6 +259,18 @@ namespace Weichx.EditorReflection {
             return FindSubClasses(typeof(T));
         }
 
+        public static bool HasConstructor(Type target, Type[] signature) {
+            return target.GetConstructor(signature) != null;
+        }
+
+        public static bool IsDefaultConstructable(Type type) {
+            return HasDefaultConstructor(type) && !type.IsAbstract && !type.IsArray;
+        }
+        
+        public static bool HasDefaultConstructor(Type target) {
+            return target.GetConstructor(Type.EmptyTypes) != null;
+        }
+
         public static bool IsDerivedOfTypeWithGenericArgument(Type inputType, Type targetGeneric) {
             while (inputType != null && inputType != typeof(object)) {
                 if (inputType.IsGenericType) {
@@ -335,7 +360,7 @@ namespace Weichx.EditorReflection {
             PropertyDrawerDescription drawerDesc = cache.GetItemFromCache<Type, PropertyDrawerDescription>(TypeDrawerCache, type);
 
             while (drawerDesc == null && type.BaseType != null) {
-                
+
                 if (type.IsGenericType) {
                     Type genTypeDef = type.GetGenericTypeDefinition();
                     drawerDesc = cache.GetItemFromCache<Type, PropertyDrawerDescription>(TypeDrawerCache, genTypeDef);
@@ -352,7 +377,7 @@ namespace Weichx.EditorReflection {
                 if (drawerDesc != null && drawerDesc.option != PropertyDrawerForOption.IncludeSubclasses) {
                     drawerDesc = null;
                 }
-              
+
             }
 
             // if we dont find anything, create a generic one and cache it
@@ -379,11 +404,9 @@ namespace Weichx.EditorReflection {
         public static ReflectedPropertyDrawer CreateReflectedPropertyDrawer(ReflectedProperty property) {
             Type drawerType = GetPropertyDrawerForReflectedProperty(property);
             Debug.Assert(drawerType != null, "drawerType != null");
-            ReflectedPropertyDrawer drawer = Activator.CreateInstance(drawerType) as ReflectedPropertyDrawer;
-            // if drawer as GenericConstraintPropertyDrawer
-            // if 
+            ReflectedPropertyDrawer drawer = MakeInstance(drawerType) as ReflectedPropertyDrawer;
             Debug.Assert(drawer != null, "drawer != null");
-            drawer.OnInitialize();
+            drawer.SetProperty(property);
             return drawer;
         }
 
@@ -411,7 +434,15 @@ namespace Weichx.EditorReflection {
             typeArgs[0] = genericArgument;
             Type makeme = type.MakeGenericType(typeArgs);
             Debug.Assert(makeme.GetConstructor(Type.EmptyTypes) != null, "makeme.GetConstructor(Type.EmptyTypes) != null");
-            return Activator.CreateInstance(makeme);
+            return MakeInstance(makeme);
+        }
+
+        public static object InvokeMethod(object target, string data) {
+            MethodInfo methodInfo = target.GetType().GetMethod(data, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (methodInfo != null) {
+                return methodInfo.Invoke(target, new object[0]);
+            }
+            return null;
         }
 
     }

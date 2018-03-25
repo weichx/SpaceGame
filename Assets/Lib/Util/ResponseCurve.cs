@@ -1,4 +1,7 @@
-﻿namespace SpaceGame.AI {
+﻿using System.Collections.Generic;
+using Weichx.Util.Texture2DExtensions;
+
+namespace SpaceGame.AI {
 
     using UnityEngine;
     using System;
@@ -24,6 +27,8 @@
     #if UNITY_EDITOR
         [HideInInspector] public bool __editorOnlyFoldout__;
     #endif
+
+        private static List<Vector2Int> s_pointList = new List<Vector2Int>(128);
 
         public ResponseCurveType curveType;
         public float slope; //(m)
@@ -99,7 +104,7 @@
                     output = input > hShift ? (1.0f - vShift) : (0.0f - (1.0f - slope));
                     break;
                 default:
-                    throw new Exception(curveType + " curve has not been implemented yet");
+                    throw new Exception($"{curveType} curve has not been implemented yet");
             }
 
             if (invert) output = 1f - output;
@@ -116,7 +121,7 @@
         }
 
         public string DisplayString {
-            get { return " slope: " + slope + " exp: " + exp + " vShift: " + vShift + " hShift: " + hShift + " \n threshold: " + threshold + " inverted: " + invert; }
+            get { return $" slope: {slope} exp: {exp} vShift: {vShift} hShift: {hShift} \n threshold: {threshold} inverted: {invert}"; }
         }
 
         public string ShortDisplayString {
@@ -129,8 +134,7 @@
         }
 
         public override string ToString() {
-            return "{type: " + curveType + ", slope: " + slope +
-                   ", exp: " + exp + ", vShift: " + vShift + ", hShift: " + hShift + "}";
+            return $"{{type: {curveType}, slope: {slope}, exp: {exp}, vShift: {vShift}, hShift: {hShift}}}";
         }
 
         public static ResponseCurve CreateLinearCurve() {
@@ -171,6 +175,73 @@
 
         public static ResponseCurve CreateInverted8PolyCurve() {
             return new ResponseCurve(ResponseCurveType.Polynomial, 1, 8, 0, 0, 0, true);
+        }
+
+        public void DrawGraph(Texture2D graphTexture, float width, float height) {
+            graphTexture.Resize((int) width, (int) height);
+            Rect graphRect = new Rect(0, 0, width, height);
+            DrawGraphLines(graphRect, graphTexture);
+            graphTexture.FlipVertically();
+            graphTexture.Apply(true);
+        }
+
+        public void DrawGraphLines(Rect rect, Texture2D graphTexture, Color background, Color lineColor) {
+            int graphX = (int) rect.x;
+            int graphY = (int) rect.y;
+            int graphWidth = (int) rect.width;
+            int graphHeight = (int) rect.height;
+
+            Color[] pixels = graphTexture.GetPixels(graphX, graphY, graphWidth, graphHeight);
+
+            for (int i = 0; i < pixels.Length; i++) {
+                pixels[i] = background;
+            }
+
+            graphTexture.SetPixels(graphX, graphY, graphWidth, graphHeight, pixels);
+
+            s_pointList.Clear();
+
+            for (int i = 0; i < graphWidth; i++) {
+                float x = i / (float) graphWidth;
+                float y = Evaluate(x);
+
+                if (float.IsNaN(y)) continue; //not sure why this can happen but it does with non integer exponents
+
+                //inverted y because text rendindering is upside down and i cant figure out 
+                //how to flip the text correctly, so im flipping the graph instead
+
+                s_pointList.Add(new Vector2Int(i, (int) ((1 - y) * graphHeight)));
+            }
+
+            Color fadedGrey = new Color(0.24f, 0.24f, 0.24f, 0.5f);
+            int quarterWidth = (int) (graphWidth * 0.25f);
+            int quarterHeight = (int) (graphHeight * 0.25f);
+
+//            graphTexture.DrawLine(graphX, graphY + graphHeight, graphX + graphWidth, graphY, fadedGrey);
+
+            graphTexture.DrawLine(graphX, quarterHeight * 1, graphX + graphWidth, quarterHeight * 1, fadedGrey);
+            graphTexture.DrawLine(graphX, quarterHeight * 2, graphX + graphWidth, quarterHeight * 2, fadedGrey);
+            graphTexture.DrawLine(graphX, quarterHeight * 3, graphX + graphWidth, quarterHeight * 3, fadedGrey);
+
+            graphTexture.DrawLine(quarterWidth * 1, graphY, quarterWidth * 1, graphY + graphHeight, fadedGrey);
+            graphTexture.DrawLine(quarterWidth * 2, graphY, quarterWidth * 2, graphY + graphHeight, fadedGrey);
+            graphTexture.DrawLine(quarterWidth * 3, graphY, quarterWidth * 3, graphY + graphHeight, fadedGrey);
+
+            if (s_pointList.Count >= 2) {
+                int lastX = s_pointList[0].x;
+                int lastY = s_pointList[0].y;
+                for (int i = 1; i < s_pointList.Count; i++) {
+                    int y = s_pointList[i].y;
+                    graphTexture.DrawLine(lastX, lastY, i, y, lineColor);
+
+                    lastX = i;
+                    lastY = y;
+                }
+            }
+        }
+
+        public void DrawGraphLines(Rect rect, Texture2D graphTexture) {
+            DrawGraphLines(rect, graphTexture, new Color(0.2f, 0.2f, 0.2f), Color.green);
         }
 
         public object Clone() {

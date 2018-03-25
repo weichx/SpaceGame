@@ -19,12 +19,11 @@ namespace SpaceGame.Engine {
             actionsToTick = new List<AIAction>(16);
             actionsToSetup = new List<AIAction>(16);
             actionsToTeardown = new List<AIAction>(16);
-
-            AddListener<Evt_EntityBehaviorChanged>(OnEntityBehaviorChanged);
+            AddListener<Evt_EntityActivated>(OnEntityActivated);
             AddListener<Evt_EntityDeparting>(OnEntityDeparting);
         }
 
-        private void OnEntityBehaviorChanged(Evt_EntityBehaviorChanged evt) {
+        private void OnEntityActivated(Evt_EntityActivated evt) {
             AIInfo aiInfo = GameData.Instance.aiInfoMap[evt.entityId];
 
             if (aiInfo.decisions != null && aiInfo.decisions.Count > 0) {

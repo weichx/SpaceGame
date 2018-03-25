@@ -42,16 +42,16 @@ namespace SpaceGame.Missions {
         }
 
         public void Depart(Entity entity) {
-            Trigger(new Evt_EntityDeparting(entity.id));    
+            Trigger(new Evt_EntityDeparting(entity.index));    
         }
         
         public void Arrive(Entity entity) {
             GameData.Instance.RegisterEntity(entity);
-            Trigger(new Evt_EntityArriving(entity.id, ArrivalType.Spawn));
+            Trigger(new Evt_EntityArriving(entity.index, ArrivalType.Spawn));
         }
 
         public void ArriveFromHyperspace(Entity entity) {
-            Trigger(new Evt_EntityArriving(entity.id, ArrivalType.Hyperspace));
+            Trigger(new Evt_EntityArriving(entity.index, ArrivalType.Hyperspace));
         }
         
         protected abstract void BuildStateChart(StateChart.StateChartBuilder builder);

@@ -1,7 +1,11 @@
-﻿using SpaceGame.FileTypes;
+﻿using System;
+using System.Collections.Generic;
+using SpaceGame.FileTypes;
 using UnityEditor;
 using UnityEngine;
-using Weichx.EditorReflection;
+using UnityEditor.SceneManagement;
+using UnityEngine.SceneManagement;
+using Weichx.Persistence;
 
 namespace SpaceGame.Editor.MissionWindow {
 
@@ -10,41 +14,119 @@ namespace SpaceGame.Editor.MissionWindow {
         private MissionWindowState state;
         private GameDataFile gameData;
         private MissionWindowPage[] pages;
-
+        private List<Entity> sceneEntities;
+        private Dictionary<Entity, string> entityToId;
+        private GameDatabase db;
+        
         private readonly string[] tabs = {
             "Missions",
-            "AI",
-            "Ships"
+            "Ships",
+//            "AI",
         };
 
         private void OnEnable() {
             gameData = Resources.Load<GameDataFile>("Game Data");
+            if (gameData == null) {
+                gameData = CreateInstance<GameDataFile>();
+                AssetDatabase.CreateAsset(gameData, "Assets/Resources/Game Data");
+            }
+            
+            LoadSceneEntities();
+            entityToId = new Dictionary<Entity, string>();
+            foreach (Entity entity in sceneEntities) {
+                if (string.IsNullOrEmpty(entity.guid)) {
+                    entity.guid = Guid.NewGuid().ToString();
+                }
+                entityToId.Add(entity, entity.guid);
+                EditorUtility.SetDirty(entity);
+            }
+
+            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+
             state = MissionWindowState.Restore();
+            
+            db = Snapshot<GameDatabase>.Deserialize(gameData.database);
+            GameDatabase.ActiveInstance = db;
+            
             pages = new MissionWindowPage[] {
-                new MissionPage(state, gameData),
-                new AIPage(state, gameData),
-                new ShipPage(state, gameData),
+                new MissionPage(Save, state, db),
+                new ShipPage(state, db)
+//                new AIPage(state, db),
             };
-            pages[state.currentPageIndex].OnEnable();
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
+            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
+
+            state.currentPageIndex = Mathf.Clamp(state.currentPageIndex, 0, pages.Length - 1);
+            pages[state.currentPageIndex].OnEnable();           
+            
         }
 
-        /*
-            hydrate scene from mission file
-            add entities to scene by normal unity methods ie drop / duplicate / new GameObject()
-            entity definition -> template or instance?
-            positioning done in editor
-            can spawn entities that didnt start in the scene
+        private void Save() {
+            gameData.database = Snapshot<GameDatabase>.Serialize(db);
+            EditorUtility.SetDirty(gameData);
+            state.Save();
+        }
+        
+        private void OnHierarchyChange() {
+            LoadSceneEntities();
+            bool didChange = false;
+            for (int i = 0; i < sceneEntities.Count; i++) {
+                Entity entity = sceneEntities[i];
+                string id = entity.guid;
+                string storedId;
+                if (entityToId.TryGetValue(entity, out storedId)) {
+                    if (id != storedId) {
+                        Debug.Assert(false, $"Should never hit this. Expected {id} to be {storedId}");
+                    }
+                }
+                else {
+                    string newGuid = Guid.NewGuid().ToString();
+                    if (entity.guid != "--default--") {
+                        Debug.Log("Duplicated");
+                       // gameData.GetMission(state.activeMissionGuid).CloneEntityDefinition(entity.guid, newGuid);
+                    }
+                    else {
+                        Debug.Log("Created");
+                        //gameData.GetMission(state.activeMissionGuid).CreateEntityDefinition(newGuid);
+                    }
+                    entity.guid = newGuid;
+                    entityToId.Add(entity, entity.guid);
+                    EditorUtility.SetDirty(entity);
+                    didChange = true;
+                }
+            }
+            if (didChange) {
+                EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            }
+        }
 
-            2 structures: Template -> Defines things like ship type, capabilities, basic generic behaviors
-                          Instance -> Has a name, can override anything in the template
-                          If no instance is explicitly set on an entity, then it can create a blank one from its template
-                          All entities require an instance, instances need to be built off of a template. Use generic template if none is specified          
-        */
+        private void OnBeforeAssemblyReload() { }
+
+        private void LoadSceneEntities() {
+            if (sceneEntities == null) sceneEntities = new List<Entity>();
+            sceneEntities.Clear();
+
+            Entity[] entities = Resources.FindObjectsOfTypeAll<Entity>();
+
+            for (int i = 0; i < entities.Length; i++) {
+                if (!EditorUtility.IsPersistent(entities[i])) {
+                    sceneEntities.Add(entities[i]);
+                }
+            }
+
+        }
+
+        private void OnAfterAssemblyReload() { }
 
         private void OnDisable() {
-            pages[state.currentPageIndex].OnDisable();
-            gameData.Save();
-            state.Save();
+            try {
+                pages[state.currentPageIndex].OnDisable();
+                Save();
+            }
+            catch (Exception e) { }
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+
         }
 
         private void OnInspectorUpdate() {
@@ -52,7 +134,7 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         public void OnGUI() {
-            if (state == null) return;            
+            if (state == null) return;
 
             if (pages == null) return;
 
@@ -60,12 +142,12 @@ namespace SpaceGame.Editor.MissionWindow {
 
             state.currentPageIndex = GUILayout.Toolbar(lastPage, tabs, (GUILayoutOption[]) null);
 
+            state.currentPageIndex = Mathf.Clamp(state.currentPageIndex, 0, pages.Length - 1);
+
             if (lastPage != state.currentPageIndex) {
                 pages[lastPage].OnDisable();
-                gameData.Save();
                 pages[state.currentPageIndex].OnEnable();
             }
-
             pages[state.currentPageIndex].OnGUI();
         }
 

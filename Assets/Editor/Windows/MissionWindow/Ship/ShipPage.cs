@@ -10,76 +10,81 @@ namespace SpaceGame.Editor.MissionWindow {
 
     public class ShipPage : MissionWindowPage {
 
-        [SerializeField] private HorizontalPaneState splitterState;
-        protected ReflectedProperty selection;
+        protected ReflectedObject selection;
 
+        private ShipTreeView treeView;
 
+        private const string IdField = nameof(ShipDefinition.id);
         private const string NameField = nameof(ShipDefinition.name);
 
-        public ShipPage(MissionWindowState state, GameDataFile gameData) : base(state, gameData) {
-            splitterState = new HorizontalPaneState();
-        }
+        public ShipPage(MissionWindowState state, GameDatabase db) : base(state, db) {}
 
         public override void OnGUI() {
-            InfamyGUI.HorizontalSplitPane(splitterState, RenderList, RenderDetails);
+            InfamyGUI.HorizontalSplitPane(state.shipPageSplitterState, RenderList, RenderDetails);
+        }
+
+        private void RenderList() {
+            EditorGUILayoutX.BeginVertical();
+            treeView.OnGUILayout();
+            GUILayout.FlexibleSpace();
+            InfamyGUI.Button("Create Ship", CreateShipDefintion);
+            EditorGUILayoutX.EndVertical();
         }
 
         private void RenderDetails() {
-            if (selection == null || treeView == null) return;
+            if (selection == null) return;
             treeView.UpdateDisplayName(
-                selection.GetValue<ShipDefinition>().id,
+                selection[IdField].intValue,
                 selection[NameField].stringValue
             );
             EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
             EditorGUILayoutX.PropertyField(selection);
+            if (selection.HasModifiedProperties) {
+                selection.ApplyModifiedProperties();
+                treeView.SetDataAndRebuild(db.shipDefinitions);
+            }
             GUILayout.FlexibleSpace();
             InfamyGUI.Button("Delete Defintion", DeleteShipDefinition);
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void CreateShipDefintion() {
+            treeView.SetSingleSelection(db.CreateAsset<ShipDefinition>().id);
         }
 
         private void DeleteShipDefinition() {
             if (selection == null) return;
             string name = selection[NameField].stringValue;
             if (EditorUtility.DisplayDialog("Are you sure?", $"Really delete {name}?", "Yup", "Nope")) {
-                list.RemoveElement(selection);
-                selection = null;
-                treeView.SetSelection(new List<int>());
+                db.DestroyAsset<ShipDefinition>(selection[IdField].intValue);
+                treeView.ClearSelection();
                 treeView.Reload();
             }
         }
 
-        private void RenderList() {
-            EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
-            InfamyGUI.Button("Create Ship Def", CreateShipDefintion);
-            treeView.OnGUI(GUILayoutUtility.GetRect(0, 10000, 0, 10000));
-            EditorGUILayout.EndVertical();
-        }
-
-        private void CreateShipDefintion() {
-            ShipDefinition def = new ShipDefinition();
-            list.AddElement(def);
-            selectedIds.Clear();
-            selectedIds.Add(def.id);
-            treeView.Reload();
-            treeView.SetSelection(selectedIds, TreeViewSelectionOptions.FireSelectionChanged | TreeViewSelectionOptions.RevealAndFrame);
-        }
-
         public override void OnEnable() {
-            list = new ReflectedObject(gameData.GetShipDefintions()).Root as ReflectedListProperty;
-            treeView = new ShipTreeView(list, OnSelectionChanged);
-        }
-
-        private void OnSelectionChanged(IList<int> selectedIds) {
-            this.selectedIds = new List<int>(selectedIds);
-            selection = list.Find(FindSelected);
+            state.shipPageTreeViewState = state.shipPageTreeViewState ?? new TreeViewState();
+            treeView = new ShipTreeView(state.shipPageTreeViewState);
+            treeView.selectionChanged += OnSelectionChanged;
+            treeView.hierarchyChanged += OnHierarchyChanged;
+            treeView.SetDataAndRebuild(db.shipDefinitions);
         }
 
         public override void OnDisable() {
-            list.ApplyChanges();
+            treeView.selectionChanged -= OnSelectionChanged;
+            treeView.hierarchyChanged -= OnHierarchyChanged;
         }
-        
-        private bool FindSelected(ReflectedProperty property) {
-            return selectedIds.Contains(property.GetValue<IIdentitifiable>().Id);
+
+        private void OnHierarchyChanged() { }
+
+        private void OnSelectionChanged(ShipDefinition newSelection) {
+            selection?.ApplyModifiedProperties();
+            if (newSelection != null) {
+                selection = new ReflectedObject(newSelection);
+            }
+            else {
+                selection = null;
+            }
         }
 
     }

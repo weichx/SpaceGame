@@ -12,7 +12,7 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public enum ItemType {
 
-            None,
+            Root,
             Faction,
             FlightGroup,
             Entity
@@ -26,6 +26,12 @@ namespace SpaceGame.Editor.MissionWindow {
 
             private static int idGenerator;
 
+            public MissionTreeItem() {
+                this.id = -9999;
+                this.depth = -1;
+                this.itemType = ItemType.Root;
+            }
+            
             public MissionTreeItem(AssetDefinition asset) {
                 this.id = asset.id;
                 this.displayName = asset.name;
@@ -41,7 +47,7 @@ namespace SpaceGame.Editor.MissionWindow {
                     this.itemType = ItemType.Entity;
                 }
                 else {
-                    throw new ArgumentException($"Cannot make a TreeItem for {asset?.GetType().Name}");
+                    throw new ArgumentException("Asset must be non null and a known type");
                 }
             }
 
@@ -59,14 +65,32 @@ namespace SpaceGame.Editor.MissionWindow {
             public bool IsFaction => itemType == ItemType.Faction;
             public bool IsEntity => itemType == ItemType.Entity;
             public bool IsFlightGroup => itemType == ItemType.FlightGroup;
+            public bool IsRoot => itemType == ItemType.Root;
 
             public FactionDefinition GetFaction() {
                 if (itemType == ItemType.Faction) return asset as FactionDefinition;
                 return ParentAsMissionTreeItem?.GetFaction();
             }
 
+            public bool CanDropOn(MissionTreeItem droppedOn) {
+                switch (itemType) {
+                   case ItemType.Entity:
+                       return !droppedOn.IsRoot;
+                   case ItemType.Faction:
+                       return droppedOn.IsRoot;
+                   case ItemType.FlightGroup:
+                       return droppedOn.IsFaction || droppedOn.IsFlightGroup;
+                }
+                return false;
+            }
+            
             public FlightGroupDefinition GetFlightGroup() {
-                if (itemType == ItemType.FlightGroup) return asset as FlightGroupDefinition;
+                switch (itemType) {
+                    case ItemType.Faction:
+                        return ((FactionDefinition) asset).GetDefaultFlightGroup();
+                    case ItemType.FlightGroup:
+                        return asset as FlightGroupDefinition;
+                }
                 if (itemType != ItemType.Entity) return null;
                 return ParentAsMissionTreeItem?.GetFlightGroup();
             }

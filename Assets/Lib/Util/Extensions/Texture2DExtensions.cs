@@ -141,7 +141,7 @@ namespace Weichx.Util {
 
             return a;
         }
-
+        
         public static void FlipVertically(this Texture2D tex) {
             tex.SetPixels(Colors_FlipVertically(tex.GetPixels(), tex.width, tex.height));
         }

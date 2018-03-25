@@ -52,6 +52,11 @@ namespace Editor.GUIComponents {
             return retn;
         }
 
+        public void Indent(float width) {
+            rect.x += width;
+            rect.width -= width;
+        }      
+
     }
 
 }

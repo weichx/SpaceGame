@@ -1,6 +1,6 @@
-﻿using UnityEditor;
+﻿using SpaceGame.EditorComponents;
+using UnityEditor;
 using UnityEditor.IMGUI.Controls;
-using UnityEngine;
 using Weichx.Persistence;
 
 namespace SpaceGame.Editor.MissionWindow {
@@ -10,16 +10,20 @@ namespace SpaceGame.Editor.MissionWindow {
         private const string EditorPrefKey = "MissionEditorState";
 
         public TreeViewState missionPageTreeViewState;
+        public TreeViewState shipPageTreeViewState;
+        public TreeViewState aiPageTreeViewState;
+
+        public HorizontalPaneState missionPageSplitterState;
+        
         public int currentPageIndex;
-        public string activeMissionGuid;
+        public HorizontalPaneState shipPageSplitterState;
 
         public MissionWindowState() {
             missionPageTreeViewState = new TreeViewState();
+            missionPageSplitterState = new HorizontalPaneState();
+            shipPageSplitterState = new HorizontalPaneState();
         }
-        
-        [SerializeField] 
-        private MissionDefinition activeMission;
-        
+                
         public static MissionWindowState Restore() {
             string serializedState = EditorPrefs.GetString(EditorPrefKey);
             MissionWindowState state = Snapshot<MissionWindowState>.Deserialize(serializedState);

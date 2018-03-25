@@ -5,24 +5,27 @@ using Weichx.Util;
 
 namespace SpaceGame.AI {
 
-    public abstract class Evaluator {
+    public class Evaluator {
 
-            
+
         public string name;
-        [UnityEngine.Range(0.1f, 10f)]
-        public float weight;
+        [UnityEngine.Range(0.1f, 10f)] public float weight;
+
         [UsePropertyDrawer(typeof(ConstructableSubclass))]
         public BonusCalculator bonusCalculator;
+
         public Consideration[] considerations;
 
         protected Evaluator() {
             considerations = new Consideration[1];
         }
-        
-        internal abstract ScoreResult Score(Entity agent, Decision decision, float cutoff);
+
+        internal virtual ScoreResult Score(Entity agent, Decision decision, float cutoff) {
+            return default(ScoreResult);
+        }
 
     }
-    
+
     public sealed class Evaluator<TContext> : Evaluator where TContext : DecisionContext {
 
 //        public BonusCalculator<TContext> bonusCalculator;

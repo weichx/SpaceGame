@@ -41,6 +41,20 @@ namespace Weichx.Util {
             return new Vector2(uCoord, vCoord);
         }
 
+        public static Vector3 WaveLerp(Vector3 origin, Vector3 dest, Vector3 up, float amplitude, float freq, float fraction) {
+            float x = fraction * (dest - origin).magnitude;
+            float w = 2 * Mathf.PI * freq;
+            float y = amplitude * Mathf.Sin(w * x);
+
+            Vector3 xDir = (dest - origin).normalized;
+            Vector3 yDir = Vector3.Cross(xDir, up).normalized;
+
+            Vector3 pathOffset = x * xDir;
+            Vector3 waveOffset = y * yDir;
+
+            return origin + pathOffset + waveOffset;
+        }
+
         //increase or decrease the length of vector by size
         public static Vector3 AddVectorLength(Vector3 vector, float size) {
             //get the vector length
@@ -523,7 +537,7 @@ namespace Weichx.Util {
             Camera currentCamera;
             Vector3 mousePosition;
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
             if (Camera.current != null) {
                 currentCamera = Camera.current;
             }
@@ -534,10 +548,10 @@ namespace Weichx.Util {
             //convert format because y is flipped
             mousePosition = new Vector3(Event.current.mousePosition.x, currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
 
-#else
+        #else
 		currentCamera = Camera.main;
 		mousePosition = Input.mousePosition;
-#endif
+        #endif
 
             Vector3 screenPos1 = currentCamera.WorldToScreenPoint(linePoint1);
             Vector3 screenPos2 = currentCamera.WorldToScreenPoint(linePoint2);
@@ -553,6 +567,7 @@ namespace Weichx.Util {
         public static float MouseDistanceToPoint(Vector3 point) {
             return MouseDistanceToCircle(point, 0);
         }
+
         //Returns the pixel distance from the mouse pointer to a camera facing circle.
         //Alternative for HandleUtility.DistanceToCircle(). Works both in Editor mode and Play mode.
         //Do not call this function from OnGUI() as the mouse position will be wrong.
@@ -561,7 +576,7 @@ namespace Weichx.Util {
             Camera currentCamera;
             Vector3 mousePosition;
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
             if (Camera.current != null) {
                 currentCamera = Camera.current;
             }
@@ -571,10 +586,10 @@ namespace Weichx.Util {
 
             //convert format because y is flipped
             mousePosition = new Vector3(Event.current.mousePosition.x, currentCamera.pixelHeight - Event.current.mousePosition.y, 0f);
-#else
+        #else
 		currentCamera = Camera.main;
 		mousePosition = Input.mousePosition;
-#endif
+        #endif
 
             Vector3 screenPos = currentCamera.WorldToScreenPoint(point);
 

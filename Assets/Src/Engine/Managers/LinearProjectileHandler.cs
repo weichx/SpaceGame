@@ -105,7 +105,7 @@ namespace SpaceGame {
                     if (impactedEntity == null) {
                         DebugConsole.Log("Impacted a collider without an Entity attached: ", hit.transform.name);
                     }
-                    else if (impactedEntity.id != ownerIds[i]) {
+                    else if (impactedEntity.index != ownerIds[i]) {
                         // todo -- do a deeper ray cast agains geometry here before despawning
                         Despawn(i, WeaponDespawnType.Collision, hit);
                         i--;
@@ -135,7 +135,7 @@ namespace SpaceGame {
                     Entity entity = despawn.raycastHit.transform.GetComponent<Entity>();
                     if (entity != null) {
                         EventSystem.Instance.Trigger(
-                            new Evt_WeaponImpact(entity.id, despawn.raycastHit)
+                            new Evt_WeaponImpact(entity.index, despawn.raycastHit)
                         );
                     }
                 }

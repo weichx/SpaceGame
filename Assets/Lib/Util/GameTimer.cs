@@ -10,6 +10,8 @@ namespace Weichx.Util {
         private readonly List<Timeout> timers;
 
         public static readonly GameTimer Instance = new GameTimer();
+        
+        private static readonly DateTime Epoch = new DateTime(1970, 1, 1);
 
         private uint frameNumber;
 
@@ -80,6 +82,11 @@ namespace Weichx.Util {
 
         public bool FrameTimeElapsed(float duration, float from) {
             return GetFrameTimestamp() - from >= duration;
+        }
+
+
+        public static int GetUnixSeconds() {
+            return (int) (DateTime.UtcNow.Subtract(Epoch)).TotalSeconds;
         }
 
         private enum TimerType {

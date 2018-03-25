@@ -5,7 +5,8 @@
         "_SourceAsm",
         "_UtilAsm",
         "_PersistenceAsm",
-        "_GUIAsm"
+        "_GUIAsm",
+        "_AttributeAsm"
     ],
     "includePlatforms": [],
     "excludePlatforms": []

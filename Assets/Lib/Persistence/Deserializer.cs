@@ -49,7 +49,7 @@ namespace Weichx.Persistence {
                 }
                 else if (typeDefinition.IsList) {
                     Type elementType = typeDefinition.GetArrayLikeElementType().type;
-                    IList list = Activator.CreateInstance(typeDefinition.type) as IList;
+                    IList list = MakeInstance<IList>(typeDefinition.type);
                     Debug.Assert(list != null, nameof(list) + " != null");
                     object defaultValue = GetDefaultForType(elementType);
                     for (int i = 0; i < referenceDefinition.fields.Length; i++) {
@@ -58,12 +58,12 @@ namespace Weichx.Persistence {
                     return list;
                 }
                 else {
-                    return Activator.CreateInstance(typeDefinition.type);
+                    return MakeInstance(typeDefinition.type);
                 }
             }
 
             private static object GetDefaultForType(Type type) {
-                return type.IsValueType ? Activator.CreateInstance(type) : null;
+                return type.IsValueType ? MakeInstance(type) : null;
             }
 
             private void CreateFields(object target, FieldDefinition[] fields) {
@@ -147,7 +147,7 @@ namespace Weichx.Persistence {
             }
 
             private object CreateStruct(FieldDefinition structField) {
-                object structVal = Activator.CreateInstance(structField.typeDefinition.type);
+                object structVal = MakeInstance(structField.typeDefinition.type);
                 CreateFields(structVal, structField.members);
                 return structVal;
             }

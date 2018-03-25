@@ -1,13 +1,21 @@
-﻿using System;
+﻿using JetBrains.Annotations;
 using SpaceGame.FileTypes;
 
 namespace SpaceGame {
-    
-    [Serializable]
+
+    public enum ShipType {
+
+        Starfighter,
+        Bomber,
+        Frigate,
+        Transport
+
+    }
+
     public class ShipDefinition : AssetDefinition {
 
         public AssetPointer<Chassis> chassis;
-        
+
         public float maxSpeed;
         public float turnRate;
         public float accelerationRate;
@@ -15,10 +23,14 @@ namespace SpaceGame {
         public float hitpoints;
         public float shieldPoints;
 
-        private static int idGenerator;
-        
-        public ShipDefinition() {
-            this.name = "Unnamed Ship Def";
+        public ShipType shipType;
+
+        [UsedImplicitly]
+        public ShipDefinition() {}
+
+        public ShipDefinition(int id) : base(id) {
+            shipType = ShipType.Starfighter;
+            name = $"Star Ship {id}";
         }
 
     }

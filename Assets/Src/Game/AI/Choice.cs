@@ -63,6 +63,7 @@
         }
 
         private int MakeChoice(T[] options) {
+            
             int maxIndex = -1;
             float maxScore = float.MinValue;
             float modFactor = 1f - (1f / considerationCount);

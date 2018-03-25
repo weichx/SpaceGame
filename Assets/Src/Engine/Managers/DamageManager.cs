@@ -21,21 +21,21 @@ namespace SpaceGame.Engine {
         }
 
         public void Tick() {
-            for (int i = 0; i < damages.Count; i++) {
-                DamageParameters damage = damages[i];
-                Entity target = EntityDatabase.GetEntity(damage.entityId);
-                
-                if(target == null) continue;
-                
-                // this is super simple for now
-                if (target.hitPoints > 0) {
-                    target.hitPoints -= damage.damagePoints;
-                }
-
-                if (target.hitPoints <= 0) {
-                    EventSystem.Instance.Trigger(Evt_EntityDestroyed.Spawn(target.id));
-                }
-            }
+//            for (int i = 0; i < damages.Count; i++) {
+//                DamageParameters damage = damages[i];
+//                Entity target = EntityDatabase.GetEntity(damage.entityId);
+//                
+//                if(target == null) continue;
+//                
+//                // this is super simple for now
+//                if (target.hitPoints > 0) {
+//                    target.hitPoints -= damage.damagePoints;
+//                }
+//
+//                if (target.hitPoints <= 0) {
+//                    EventSystem.Instance.Trigger(Evt_EntityDestroyed.Spawn(target.id));
+//                }
+//            }
             damages.Clear();
         }
         

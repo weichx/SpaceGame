@@ -14,7 +14,7 @@ namespace Weichx.EditorReflection {
             Type type = property.Type;
 
             if (type.IsEnum) {
-                property.Value = EditorGUI.EnumPopup(position, (Enum) property.Value);
+                property.Value = EditorGUI.EnumPopup(position, property.GUIContent, (Enum) property.Value);
             }
             else if (type.IsSubclassOf(typeof(Object))) {
                 property.Value = EditorGUI.ObjectField(position, label, (Object) property.Value, type, true);
@@ -58,7 +58,9 @@ namespace Weichx.EditorReflection {
                 EditorGUI.indentLevel++;
                 tempContent.text = "Size";
                 listProperty.ElementCount = EditorGUI.IntField(sizeRect, tempContent, listProperty.ElementCount);
+                EditorGUI.indentLevel++;
                 DrawProperties(bodyRect, listProperty);
+                EditorGUI.indentLevel--;
                 EditorGUI.indentLevel--;
             }
         }
@@ -83,7 +85,7 @@ namespace Weichx.EditorReflection {
             if (label == null) label = property.GUIContent;
 
             Debug.Assert(property.Drawer != null, "property.Drawer != null");
-
+            if(!property.Drawer.IsInitialized) property.Drawer.OnInitialize();
             property.Drawer.OnGUI(position, property, label);
 
         }
@@ -104,7 +106,7 @@ namespace Weichx.EditorReflection {
                 }
                 return height;
             }
-            return 0;
+            return EditorGUIUtility.singleLineHeight;
         }
 
     }

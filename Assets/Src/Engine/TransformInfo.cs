@@ -9,7 +9,7 @@ namespace SpaceGame {
         public Quaternion rotation;
 
         public TransformInfo(Entity entity) {
-            this.entityId = entity.id;
+            this.entityId = entity.index;
             this.position = entity.transform.position;
             this.rotation = entity.transform.rotation;
         }

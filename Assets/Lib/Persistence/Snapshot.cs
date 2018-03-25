@@ -56,7 +56,9 @@ namespace Weichx.Persistence {
             else if (refNode.typeDefinition.IsArrayLike) {
                 IList list = target as IList;
                 Debug.Assert(list != null, nameof(list) + " != null");
+                
                 int length = list.Count;
+                
                 refNode.fields = new FieldDefinition[length];
                 TypeDefinition elementType = refNode.typeDefinition.GetArrayLikeElementType();
                 for (int i = 0; i < length; i++) {
@@ -198,7 +200,7 @@ namespace Weichx.Persistence {
             if (string.IsNullOrEmpty(serializedSnapshot)) {
                 return DefaultSnapshot();
             }
-            return new Snapshot<T>(new StringDeserializer().ObjectFromString<T>(serializedSnapshot));
+            return new Snapshot<T>(new StringDeserializer().ObjectFromString(serializedSnapshot));
         }
 
         public static Snapshot<T> DefaultSnapshot() {
@@ -208,7 +210,7 @@ namespace Weichx.Persistence {
                 target = Array.CreateInstance(type.GetElementType(), 0);
             }
             else {
-                target = Activator.CreateInstance(type);
+                target = MakeInstance(type);
             }
             return new Snapshot<T>((T) target);
         }
@@ -220,7 +222,7 @@ namespace Weichx.Persistence {
                 target = Array.CreateInstance(type.GetElementType(), 0);
             }
             else {
-                target = Activator.CreateInstance(type);
+                target = MakeInstance(type);
             }
             return new Snapshot<T>((T) target).Serialize();
         }
@@ -232,9 +234,19 @@ namespace Weichx.Persistence {
                 target = Array.CreateInstance(type.GetElementType(), 0);
             }
             else {
-                target = Activator.CreateInstance(type);
+                target = MakeInstance(type);
             }
             return new Snapshot<T>((T) target).Deserialize();
+        }
+
+        private static object MakeInstance(Type type) {
+            if (type == null) return null;
+            return Activator.CreateInstance(type, true);
+        }
+        
+        private static TType MakeInstance<TType>(Type type) {
+            if (type == null) return default(TType);
+            return (TType) Activator.CreateInstance(type, true);
         }
 
     }

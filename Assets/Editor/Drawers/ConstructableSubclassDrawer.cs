@@ -46,7 +46,7 @@ namespace SpaceGameEditor.Drawers {
 
             if (index != newIndex) {
                 property.SetValueAndCopyCompatibleProperties(
-                    newIndex == -1 ? null : Activator.CreateInstance(subclasses[newIndex])
+                    newIndex == -1 ? null : EditorReflector.MakeInstance(subclasses[newIndex])
                 );
                 property.IsExpanded = newIndex != -1;
 
