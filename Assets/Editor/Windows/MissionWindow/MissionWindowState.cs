@@ -17,16 +17,20 @@ namespace SpaceGame.Editor.MissionWindow {
         
         public int currentPageIndex;
         public HorizontalPaneState shipPageSplitterState;
+        public HorizontalPaneState aiPageSplitterState;
 
         public MissionWindowState() {
             missionPageTreeViewState = new TreeViewState();
+            aiPageTreeViewState = new TreeViewState();
             missionPageSplitterState = new HorizontalPaneState();
             shipPageSplitterState = new HorizontalPaneState();
+            aiPageSplitterState = new HorizontalPaneState();
         }
                 
         public static MissionWindowState Restore() {
             string serializedState = EditorPrefs.GetString(EditorPrefKey);
             MissionWindowState state = Snapshot<MissionWindowState>.Deserialize(serializedState);
+            if(state.aiPageTreeViewState == null) state.aiPageTreeViewState = new TreeViewState();
             return state;
         }
 

@@ -71,7 +71,7 @@ namespace SpaceGame.AI {
         public float Evaluate(float input) {
             input = Mathf.Clamp01(input);
             float output;
-            if (input < threshold && curveType != ResponseCurveType.Constant) return 0;
+            if (input < threshold && curveType != ResponseCurveType.Constant) return 0f;
             switch (curveType) {
                 case ResponseCurveType.Constant:
                     output = threshold;
@@ -104,7 +104,7 @@ namespace SpaceGame.AI {
                     output = input > hShift ? (1.0f - vShift) : (0.0f - (1.0f - slope));
                     break;
                 default:
-                    throw new Exception($"{curveType} curve has not been implemented yet");
+                    return 0f;// throw new Exception($"{curveType} curve has not been implemented yet");
             }
 
             if (invert) output = 1f - output;

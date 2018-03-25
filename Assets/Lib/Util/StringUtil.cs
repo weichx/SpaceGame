@@ -9,6 +9,10 @@ namespace Weichx.Util {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(Regex.Replace(input, "(\\B[A-Z])", " $1"));
         }
 
+        public static string NicifyName(string input, string replace = null) {
+            if (replace != null) input = input.Replace(replace, string.Empty);
+            return SplitAndTitlize(input);
+        }
     }
 
 }

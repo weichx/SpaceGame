@@ -17,20 +17,22 @@ namespace SpaceGame.Editor.MissionWindow {
         private List<Entity> sceneEntities;
         private Dictionary<Entity, string> entityToId;
         private GameDatabase db;
-        
+
         private readonly string[] tabs = {
             "Missions",
             "Ships",
-//            "AI",
+            "AI",
         };
 
         private void OnEnable() {
-            gameData = Resources.Load<GameDataFile>("Game Data");
+            gameData = Resources.Load<GameDataFile>("Data/GameDatabase");
             if (gameData == null) {
                 gameData = CreateInstance<GameDataFile>();
-                AssetDatabase.CreateAsset(gameData, "Assets/Resources/Game Data");
+                AssetDatabase.CreateAsset(gameData, "Assets/Resources/Data/GameDatabase.asset");
+                EditorUtility.SetDirty(gameData);
+                AssetDatabase.SaveAssets();
             }
-            
+
             LoadSceneEntities();
             entityToId = new Dictionary<Entity, string>();
             foreach (Entity entity in sceneEntities) {
@@ -44,21 +46,26 @@ namespace SpaceGame.Editor.MissionWindow {
             EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
 
             state = MissionWindowState.Restore();
-            
-            db = Snapshot<GameDatabase>.Deserialize(gameData.database);
+
+            if (gameData.debugReset) {
+                db = Snapshot<GameDatabase>.DeserializeDefault();
+            }
+            else {
+                db = Snapshot<GameDatabase>.Deserialize(gameData.database);
+            }
             GameDatabase.ActiveInstance = db;
-            
+
             pages = new MissionWindowPage[] {
                 new MissionPage(Save, state, db),
-                new ShipPage(state, db)
-//                new AIPage(state, db),
+                new ShipPage(state, db),
+                new AIPage(state, db)
             };
             AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
 
             state.currentPageIndex = Mathf.Clamp(state.currentPageIndex, 0, pages.Length - 1);
-            pages[state.currentPageIndex].OnEnable();           
-            
+            pages[state.currentPageIndex].OnEnable();
+
         }
 
         private void Save() {
@@ -66,7 +73,7 @@ namespace SpaceGame.Editor.MissionWindow {
             EditorUtility.SetDirty(gameData);
             state.Save();
         }
-        
+
         private void OnHierarchyChange() {
             LoadSceneEntities();
             bool didChange = false;
@@ -83,7 +90,7 @@ namespace SpaceGame.Editor.MissionWindow {
                     string newGuid = Guid.NewGuid().ToString();
                     if (entity.guid != "--default--") {
                         Debug.Log("Duplicated");
-                       // gameData.GetMission(state.activeMissionGuid).CloneEntityDefinition(entity.guid, newGuid);
+                        // gameData.GetMission(state.activeMissionGuid).CloneEntityDefinition(entity.guid, newGuid);
                     }
                     else {
                         Debug.Log("Created");
@@ -119,11 +126,8 @@ namespace SpaceGame.Editor.MissionWindow {
         private void OnAfterAssemblyReload() { }
 
         private void OnDisable() {
-            try {
-                pages[state.currentPageIndex].OnDisable();
-                Save();
-            }
-            catch (Exception e) { }
+            pages[state.currentPageIndex].OnDisable();
+            Save();
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
 

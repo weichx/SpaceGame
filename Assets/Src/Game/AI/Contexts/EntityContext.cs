@@ -7,7 +7,7 @@ namespace SpaceGame.AI {
 
         [HideInInspector][NonSerialized] public readonly Entity other;
 
-        protected EntityContext(Entity agent, Entity other) : base(agent) {
+        public EntityContext(Entity agent, Entity other) : base(agent) {
             this.other = other;
         }
 

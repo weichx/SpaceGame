@@ -1,10 +1,13 @@
 ﻿using JetBrains.Annotations;
+using SpaceGame.Assets;
 using SpaceGame.FileTypes;
+using UnityEngine;
 
 namespace SpaceGame {
 
-    public enum ShipType {
+    public enum ShipCategory {
 
+        SmallFighter,
         Starfighter,
         Bomber,
         Frigate,
@@ -12,7 +15,7 @@ namespace SpaceGame {
 
     }
 
-    public class ShipDefinition : AssetDefinition {
+    public class ShipType : GameAsset {
 
         public AssetPointer<Chassis> chassis;
 
@@ -23,15 +26,11 @@ namespace SpaceGame {
         public float hitpoints;
         public float shieldPoints;
 
-        public ShipType shipType;
+        [HideInInspector] public int shipGroupId;
 
-        [UsedImplicitly]
-        public ShipDefinition() {}
-
-        public ShipDefinition(int id) : base(id) {
-            shipType = ShipType.Starfighter;
-            name = $"Star Ship {id}";
-        }
+        [UsedImplicitly] private ShipType() { }
+        
+        private ShipType(int id, string name) : base(id, name) { }
 
     }
 

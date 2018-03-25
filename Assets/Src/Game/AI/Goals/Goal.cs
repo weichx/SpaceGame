@@ -1,65 +1,32 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using JetBrains.Annotations;
+using Lib.Util;
 using UnityEngine;
 using Weichx.ReflectionAttributes;
-using Weichx.ReflectionAttributes.Markers;
 
 namespace SpaceGame.AI {
 
-    public class Goal {
+    public abstract class Goal {
 
         [HideInInspector] public int id;
         [HideInInspector] public string name;
         [HideInInspector] public GoalLevel goalLevel;
+        [HideInInspector] public GoalType goalType;
 
         public float priority = 1;
 
-        [CreateOnReflect, DefaultExpanded]  public Consideration[] considerations;
+        [UsedImplicitly] [CreateOnReflect] [DefaultExpanded]
+        public Consideration[] considerations;
 
         [UsedImplicitly]
-        public Goal() { }
+        protected Goal() { }
 
-    }
+        //contexts in which this goal is prioritized against other goals
+        public abstract IReadonlyListX<DecisionContext> GetEvaluationContexts(Entity agent);
 
-
-
-    public class DestroyShips : Goal {
-
-        public List<int> shipIds = new List<int>();
-
-    }
-
-    public class AttackGoal : Goal {
-
-        [UsePropertyDrawer(typeof(EntitySelector))]
-        public int entityId;
+        //contexts in which this goal is actually executed by behaviors
+        public abstract IReadonlyListX<DecisionContext> GetExecutionContexts(Entity agent);
         
-        [UsePropertyDrawer(typeof(EntitySelector))]
-        public int flightGroupId;
-
-        [UsedImplicitly]
-        public AttackGoal() { }
-
-    }
-
-    public enum GoalType {
-
-        Attack,
-        Defend,
-        Inspect,
-        Escort,
-        Patrol,
-        Dock
-
-    }
-
-    public enum GoalLevel {
-
-        Faction,
-        FlightGroup,
-        Entity
-
     }
 
 }

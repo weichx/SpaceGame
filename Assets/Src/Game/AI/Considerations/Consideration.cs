@@ -5,7 +5,7 @@ namespace SpaceGame.AI {
 
     public abstract class Consideration : IContextAware {
 
-        [SerializeField] protected ResponseCurve curve;
+        [SerializeField] public ResponseCurve curve;
 
         protected Consideration() {
             this.curve = new ResponseCurve();

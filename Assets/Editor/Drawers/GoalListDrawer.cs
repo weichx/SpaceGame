@@ -31,12 +31,11 @@ namespace SpaceGameEditor.Drawers {
 
             listControl = new ReorderableListControl(
                 ReorderableListFlags.HideAddButton |
-                ReorderableListFlags.DisableDuplicateCommand |
-                ReorderableListFlags.HideRemoveButtons
+                ReorderableListFlags.DisableDuplicateCommand
             );
             
             GUISkin skin = AssetDatabase.LoadAssetAtPath<GUISkin>("Assets/Editor Default Resources/MissionWindowSkin.asset");
-            listControl.ContainerStyle = skin.FindStyle("goal_list");
+            listControl.ContainerStyle = skin?.FindStyle("goal_list") ?? listControl.ContainerStyle;
 
             adapter = new ReflectedPropertyAdapter((ReflectedListProperty) property);
 

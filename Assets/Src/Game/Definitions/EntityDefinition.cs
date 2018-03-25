@@ -19,7 +19,7 @@ namespace SpaceGame {
     }
 
     [Serializable]
-    public class EntityDefinition : AssetDefinition {
+    public class EntityDefinition : MissionAsset {
 
         [HideInInspector] public int factionId;
         [HideInInspector] public int flightGroupId;

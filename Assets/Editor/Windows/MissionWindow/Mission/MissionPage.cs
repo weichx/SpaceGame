@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using SpaceGame.Assets;
 using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
@@ -26,7 +27,7 @@ namespace SpaceGame.Editor.MissionWindow {
         private MissionDefinition mission;
         private ReflectedObject reflectedSelection;
         private SelectionType selectionType;
-        private AssetDefinition selectedAsset;
+        private MissionAsset selectedAsset;
         private Action saveCallback;
         private Vector2 scroll = Vector2.zero;
 
@@ -40,7 +41,7 @@ namespace SpaceGame.Editor.MissionWindow {
         public override void OnEnable() {
             mission = db.GetCurrentMission();
             treeView = new MissionTreeView(state.missionPageTreeViewState);
-            treeView.SetDataAndRebuild(mission);
+            treeView.SetDataRebuildAndSelect(mission);
             treeView.createEntity += mission.CreateEntity;
             treeView.createFlightGroup += mission.CreateFlightGroup;
             treeView.createFaction += mission.CreateFaction;
@@ -53,8 +54,7 @@ namespace SpaceGame.Editor.MissionWindow {
             
             mission.onChange += (changedId) => {
                 reflectedSelection?.Update();
-                treeView.SetDataAndRebuild(mission);
-                treeView.SetSingleSelection(changedId);
+                treeView.SetDataRebuildAndSelect(mission, changedId);
             };
             treeView.PingSelection();
         }
@@ -156,11 +156,16 @@ namespace SpaceGame.Editor.MissionWindow {
             //todo currently ignoring multiselect
             selectionType = TranslateSelectionType(treeSelection);
             selectedAsset = treeSelection.properties?[0];
-            reflectedSelection = new ReflectedObject(selectedAsset);
+            if (selectedAsset == null) {
+                reflectedSelection = null;
+            }
+            else {
+                reflectedSelection = new ReflectedObject(selectedAsset);
+            }
         }
 
         private static SelectionType TranslateSelectionType(MissionTreeSelection treeSelection) {
-            List<AssetDefinition> items = treeSelection.properties;
+            List<MissionAsset> items = treeSelection.properties;
             MissionTreeView.ItemType itemType = treeSelection.itemType;
 
             if (items == null || items.Count == 0) return SelectionType.None;

@@ -4,7 +4,7 @@ namespace SpaceGame.AI {
 
     public class FlyWaypointsAction : AIAction<WaypointContext> {
 
-        public override void Setup() {
+        public override void OnSetup() {
             Debug.Log("Setup");
         }
         

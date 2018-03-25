@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SpaceGame;
 using SpaceGame.AI;
+using SpaceGame.Assets;
 using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;

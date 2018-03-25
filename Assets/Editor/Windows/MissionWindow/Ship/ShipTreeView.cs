@@ -1,36 +1,118 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using SpaceGame.Assets;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
+using UnityEngine;
+using UnityEngine.Networking;
 using Weichx.Util;
 
 namespace SpaceGame.Editor.MissionWindow {
 
     public class ShipTreeView : TreeBase {
 
-        private List<ShipDefinition> shipDefinitions;
+        public delegate void SelectionChangedCallback(ShipTreeViewSelection selection);
 
-        public delegate void HierarchyChangedCallback();
+        public delegate void CreateShipTypeGroupCallback(int index);
 
-        public delegate void SelectionChangedCallback(ShipDefinition shipDefinition);
+        public delegate void CreateShipTypeCallback(int groupId);
 
+        public delegate void DeleteShipTypeCallback(int id);
+
+        public delegate void DeleteShipTypeGroupCallback(int id);
+
+        public delegate void SetShipTypeShipGroupCallback(ShipType shipType, int shipGroupId, int index);
+
+        public delegate void SetShipTypeGroupIndex(ShipTypeGroup shipTypeGroup, int index);
+        
+        private List<ShipTypeGroup> shipTypes;
+
+        public event CreateShipTypeGroupCallback createShipTypeGroup;
+        public event CreateShipTypeCallback createShipType;
+        public event DeleteShipTypeCallback deleteShipType;
+        public event DeleteShipTypeGroupCallback deleteShipTypeGroup;
+        public event SetShipTypeGroupIndex setShipTypeGroupIndex;
+        public event SetShipTypeShipGroupCallback setShipTypeShipGroup;
         public event SelectionChangedCallback selectionChanged;
-        public event HierarchyChangedCallback hierarchyChanged;
 
         public ShipTreeView(TreeViewState state) : base(state) { }
 
-        public void SetDataAndRebuild(List<ShipDefinition> shipDefinitions) {
-            this.shipDefinitions = shipDefinitions;
+        public void SetDataRebuildAndSelect(List<ShipTypeGroup> shipGroups, int selectionId = -1) {
+            this.shipTypes = shipGroups;
             Reload();
+            if (selectionId != -1) {
+                SelectFireAndFrame(selectionId);
+            }
         }
 
-        protected virtual void OnHierarchyChanged() {
-            hierarchyChanged?.Invoke();
+        protected override TreeViewItem BuildRoot() {
+            TreeViewItem root = new TreeViewItem(-9999, -1);
+
+            for (int i = 0; i < shipTypes.Count; i++) {
+                ShipTypeGroupItem item = new ShipTypeGroupItem(i, shipTypes[i]);
+                root.AddChild(item);
+                if (shipTypes[i].ships == null) shipTypes[i].ships = new List<ShipType>();
+                for (int j = 0; j < shipTypes[i].ships.Count; j++) {
+                    ShipType shipType = shipTypes[i].ships[j];
+                    item.AddChild(new ShipTypeItem(j, shipType));
+                }
+            }
+
+            if (root.children == null) {
+                root.children = new List<TreeViewItem>();
+            }
+
+            SetupDepthsFromParentsAndChildren(root);
+            return root;
         }
 
-        protected virtual void OnSelectionChanged(ShipDefinition shipdefinition) {
-            selectionChanged?.Invoke(shipdefinition);
+        protected override void ContextClicked() {
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Create Ship Group"), false, OnCreateShipTypeGroup, -1);
+            menu.ShowAsContext();
+            Event.current.Use();
+        }
+
+        protected override void ContextClickedItem(int id) {
+            GenericMenu menu = new GenericMenu();
+            TreeViewItem item = FindItem(id, rootItem);
+            Debug.Assert(item != null, "item != null");
+
+            ShipTypeGroupItem typeGroupItem = item as ShipTypeGroupItem;
+            if (typeGroupItem != null) {
+                menu.AddItem(new GUIContent("Create Ship Group"), false, OnCreateShipTypeGroup, typeGroupItem.index);
+                menu.AddItem(new GUIContent("Create Ship Type"), false, OnCreateShipType, typeGroupItem.id);
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent($"Delete Ship Group {typeGroupItem.displayName}"), false, OnDeleteShipTypeGroup, item.id);
+            }
+            else if (item is ShipTypeItem) {
+                menu.AddItem(
+                    new GUIContent("Create Ship Type"), false,
+                    OnCreateShipType, ((ShipTypeItem) item).shipType.shipGroupId
+                );
+                menu.AddSeparator(string.Empty);
+                menu.AddItem(new GUIContent($"Delete Ship Type {item.displayName}"), false, OnDeleteShipType, item.id);
+            }
+            menu.ShowAsContext();
+            Event.current.Use();
+        }
+
+        protected void OnDeleteShipType(object data) {
+            deleteShipType?.Invoke((int) data);
+        }
+
+        protected void OnDeleteShipTypeGroup(object data) {
+            deleteShipTypeGroup?.Invoke((int) data);
+
+        }
+
+        protected void OnCreateShipTypeGroup(object data) {
+            createShipTypeGroup?.Invoke((int) data);
+        }
+
+        protected void OnCreateShipType(object data) {
+            createShipType?.Invoke((int) data);
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args) {
@@ -39,94 +121,84 @@ namespace SpaceGame.Editor.MissionWindow {
             DragAndDrop.StartDrag("ShipTreeView_Drag");
         }
 
-        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
-            if (args.performDrop && args.parentItem is ShipTreeRootItem) {
-                ShipTreeRootItem parentItem = (ShipTreeRootItem) args.parentItem;
-                TreeViewItem item = FindItem((int) DragAndDrop.GetGenericData("ShipTreeView"), rootItem);
-                ShipTreeItem shipItem = item as ShipTreeItem;
-
-                if (shipItem == null) return DragAndDropVisualMode.Rejected;
-
-                if (parentItem.shipType == shipItem.shipDefinition.shipType) {
-                    int startIndex = shipDefinitions.FindIndex((def) => def.shipType == parentItem.shipType);
-                    int currentIndex = shipDefinitions.IndexOf(shipItem.shipDefinition);
-                    shipDefinitions.MoveToIndex(currentIndex, startIndex + args.insertAtIndex);
-                }
-                
-                Reload();
+        private void OnShipTypeDrop(ShipType shipType, TreeViewItem droppedOn, int index) {
+            if (droppedOn is ShipTypeItem) {
+                ShipTypeItem dropShipItem = (ShipTypeItem) droppedOn;
+                setShipTypeShipGroup?.Invoke(shipType, dropShipItem.shipType.shipGroupId, index);
             }
+            else if (droppedOn is ShipTypeGroupItem) {
+                setShipTypeShipGroup?.Invoke(shipType, ((ShipTypeGroupItem)droppedOn).shipTypeGroup.id, index);
+            }
+        }
 
+        private void OnShipTypeGroupDrop(ShipTypeGroup shipTypeGroup, int index) {
+        }
+        
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
+            if (args.performDrop) {
+                TreeViewItem droppedOn = args.parentItem;
+                TreeViewItem droppedItem = FindItem((int) DragAndDrop.GetGenericData("ShipTreeView"), rootItem);
+
+                ShipTypeItem item = droppedItem as ShipTypeItem;
+                if (item != null) {
+                    OnShipTypeDrop(item.shipType, droppedOn, args.insertAtIndex);
+                }
+                else if (droppedItem is ShipTypeGroupItem) {
+                    setShipTypeGroupIndex?.Invoke(((ShipTypeGroupItem) droppedItem).shipTypeGroup, args.insertAtIndex);
+                }
+
+            }
             return DragAndDropVisualMode.Move;
         }
 
         protected override bool CanStartDrag(CanStartDragArgs args) {
-            return args.draggedItem is ShipTreeItem;
+            return args.draggedItemIDs.Count == 1;
         }
 
-        protected override TreeViewItem BuildRoot() {
-            TreeViewItem root = new TreeViewItem(0, -1);
-            string[] names = Enum.GetNames(typeof(ShipType));
+        public struct ShipTreeViewSelection {
 
-            var groups = shipDefinitions
-                .GroupBy((shipDef) => shipDef.shipType);
+            public readonly ShipType ship;
+            public readonly ShipTypeGroup shipGroup;
 
-            for (int i = 0; i < names.Length; i++) {
-
-                ShipTreeRootItem item = new ShipTreeRootItem(-(i + 1), (ShipType) i);
-
-                ShipType shipType = (ShipType) i;
-
-                var group = groups.FirstOrDefault((g) => g.Key == shipType);
-                if (group != null) {
-                    item.children = group.Select((shipDef) => {
-                        return new ShipTreeItem(shipDef) as TreeViewItem;
-                    }).ToList();
-                }
-
-                root.AddChild(item);
+            public ShipTreeViewSelection(ShipTypeGroup shipGroup, ShipType ship) {
+                this.shipGroup = shipGroup;
+                this.ship = ship;
             }
 
-            SetupDepthsFromParentsAndChildren(root);
-            return root;
         }
 
         protected override void SelectionChanged(IList<int> selectedIds) {
-            selectedIds = SortItemIDsInRowOrder(selectedIds);
-            if (selectedIds.Count == 0) {
-                OnSelectionChanged(null);
-            }
-            else {
-                TreeViewItem item = FindItem(selectedIds[0], rootItem);
-                ShipTreeItem treeItem = item as ShipTreeItem;
-                if (treeItem != null) {
-                    OnSelectionChanged(treeItem.shipDefinition);
-                }
-                else {
-                    OnSelectionChanged(null);
-                }
-            }
+            int id = selectedIds.Count > 0 ? selectedIds[0] : -1;
+            TreeViewItem item = FindItem(id, rootItem);
+            ShipTypeGroupItem typeGroupItem = item as ShipTypeGroupItem;
+            ShipTypeItem shipItem = item as ShipTypeItem;
+            selectionChanged?.Invoke(new ShipTreeViewSelection(typeGroupItem?.shipTypeGroup, shipItem?.shipType));
         }
 
-        private class ShipTreeItem : TreeViewItem {
+        private class ShipTypeItem : TreeViewItem {
 
-            public readonly ShipDefinition shipDefinition;
-
-            public ShipTreeItem(ShipDefinition shipDefinition) {
-                this.shipDefinition = shipDefinition;
-                this.id = shipDefinition.id;
-                this.displayName = shipDefinition.name;
-            }
-
-        }
-
-        private class ShipTreeRootItem : TreeViewItem {
-
+            public readonly int index;
             public readonly ShipType shipType;
 
-            public ShipTreeRootItem(int id, ShipType shipType) {
-                this.id = id;
+            public ShipTypeItem(int index, ShipType shipType) {
+                this.index = index;
                 this.shipType = shipType;
-                this.displayName = Enum.GetName(typeof(ShipType), shipType);
+                this.id = shipType.id;
+                this.displayName = shipType.name;
+            }
+
+        }
+
+        private class ShipTypeGroupItem : TreeViewItem {
+
+            public readonly int index;
+            public readonly ShipTypeGroup shipTypeGroup;
+
+            public ShipTypeGroupItem(int index, ShipTypeGroup shipTypeGroup) {
+                this.index = index;
+                this.id = shipTypeGroup.id;
+                this.shipTypeGroup = shipTypeGroup;
+                this.displayName = shipTypeGroup.name;
             }
 
         }

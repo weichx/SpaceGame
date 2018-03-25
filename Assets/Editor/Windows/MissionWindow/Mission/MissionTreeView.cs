@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SpaceGame.Assets;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -11,25 +12,17 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public delegate void SelectionChangedCallback(MissionTreeSelection selection);
 
-        public delegate void FactionSelected();
-
-        public delegate void EntitySelected();
-
-        public delegate void FlightGroupSelected();
-
-        public delegate void GoalSelected();
-
         public delegate EntityDefinition CreateEntityCallback(FlightGroupDefinition flightGroup);
 
         public delegate FlightGroupDefinition CreateFlightGroupCallback(FactionDefinition faction);
 
         public delegate FactionDefinition CreateFactionCallback();
 
-        public delegate void DeleteAssetCallback(AssetDefinition assetDefinition);
+        public delegate void DeleteAssetCallback(MissionAsset missionAsset);
 
-        public delegate void SetEntityFactionCallback(EntityDefinition entityDefinition, FactionDefinition faction, int index);
+        public delegate void SetEntityFactionCallback(EntityDefinition entity, FactionDefinition faction, int index);
 
-        public delegate void SetEntityFlightGroupCallback(EntityDefinition entityDefinition, FlightGroupDefinition fg, int index);
+        public delegate void SetEntityFlightGroupCallback(EntityDefinition entity, FlightGroupDefinition fg, int index);
 
         public delegate void SetFlightGroupFactionCallback(FlightGroupDefinition flightGroup, FactionDefinition factionDefinition, int index);
 
@@ -48,17 +41,20 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public MissionTreeView(TreeViewState state) : base(state) { }
 
-        public void SetDataAndRebuild(MissionDefinition mission) {
+        public void SetDataRebuildAndSelect(MissionDefinition mission, int selectionId = -1) {
             this.mission = mission;
             Reload();
+            if (selectionId != -1) {
+                SelectFireAndFrame(selectionId);
+            }
         }
-
+        
         protected override void SelectionChanged(IList<int> selectedIds) {
             selectionChanged?.Invoke(GetFilteredSelection(selectedIds));
         }
 
         private MissionTreeSelection GetFilteredSelection(IList<int> selectedIds) {
-            List<AssetDefinition> selection = GetSelectionOfSameType(selectedIds);
+            List<MissionAsset> selection = GetSelectionOfSameType(selectedIds);
             if (selection == null || selection.Count == 0) {
                 return new MissionTreeSelection(ItemType.Root, null);
             }
@@ -163,7 +159,7 @@ namespace SpaceGame.Editor.MissionWindow {
             DragAndDrop.StartDrag("MissionEditor");
         }
 
-        private void OnEntityDrop(EntityDefinition entity, AssetDefinition dropTarget, int index) {
+        private void OnEntityDrop(EntityDefinition entity, MissionAsset dropTarget, int index) {
             MissionTreeItem dropTargetItem = FindMissionItem(dropTarget.id);
             FactionDefinition factionDefinition = dropTarget as FactionDefinition;
             if (factionDefinition != null) {
@@ -177,7 +173,7 @@ namespace SpaceGame.Editor.MissionWindow {
             }
         }
 
-        private void OnFlightGroupDrop(FlightGroupDefinition child, AssetDefinition dropTarget, int index) {
+        private void OnFlightGroupDrop(FlightGroupDefinition child, MissionAsset dropTarget, int index) {
             MissionTreeItem dropTargetItem = FindMissionItem(dropTarget.id);
             FactionDefinition faction = dropTarget as FactionDefinition;
             FlightGroupDefinition flightGroup = dropTarget as FlightGroupDefinition;
@@ -247,10 +243,13 @@ namespace SpaceGame.Editor.MissionWindow {
             return item as MissionTreeItem;
         }
 
-        private List<AssetDefinition> GetSelectionOfSameType(IList<int> selectedIds) {
+        private List<MissionAsset> GetSelectionOfSameType(IList<int> selectedIds) {
             if (selectedIds.Count == 0) return null;
-            List<AssetDefinition> retn = new List<AssetDefinition>(selectedIds.Count);
+            List<MissionAsset> retn = new List<MissionAsset>(selectedIds.Count);
             MissionTreeItem firstItem = FindMissionItem(selectedIds[0]);
+            if (firstItem == null) {
+                return null;
+            }
             ItemType itemType = firstItem.itemType;
             retn.Add(firstItem.asset);
             for (int i = 1; i < selectedIds.Count; i++) {
@@ -271,9 +270,7 @@ namespace SpaceGame.Editor.MissionWindow {
             return (MissionTreeItem) FindItem(id, rootItem);
         }
 
-        protected virtual void SetEntityFlightGroup(EntityDefinition entitydefinition, FlightGroupDefinition fg, int index) {
-            setEntityFlightGroup?.Invoke(entitydefinition, fg, index);
-        }
+      
 
     }
 

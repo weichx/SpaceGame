@@ -82,7 +82,7 @@ namespace SpaceGame.Engine {
             count = actionsToSetup.Count;
 
             for (int i = 0; i < count; i++) {
-                actionsToSetup[i].Setup();
+                actionsToSetup[i].OnSetup();
                 actionsToTick.Add(actionsToSetup[i]);
             }
 

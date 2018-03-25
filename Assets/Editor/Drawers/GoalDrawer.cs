@@ -24,11 +24,7 @@ namespace Editor.Drawers {
             position = EditorGUI.IndentedRect(position);
             GUIRect guiRect = new GUIRect(position);
 
-            string goalName = property.Type.Name;
-            int index = goalName.IndexOf("Goal", StringComparison.Ordinal);
-            if (index != -1) {
-                goalName = goalName.Substring(0, index);
-            }
+            string goalName = property.Type.Name.Replace("Goal", "");
             goalName = $"[{ObjectNames.NicifyVariableName(goalName)}]";
 
             GUIContent content = EditorGUIX.TempLabel(goalName);

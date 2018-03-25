@@ -4,7 +4,7 @@ namespace SpaceGame.AI.Actions {
 
     public class BasicAttackAction : AIAction<EntityContext> {
 
-        public override void Setup() { }
+        public override void OnSetup() { }
 
         public override bool Tick() {
             TransformInfo trasformInfo = context.agent.transformInfo;

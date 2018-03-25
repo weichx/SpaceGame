@@ -6,7 +6,7 @@ using Weichx.ReflectionAttributes;
 
 namespace SpaceGame {
 
-    public class FlightGroupDefinition : AssetDefinition {
+    public class FlightGroupDefinition : MissionAsset {
 
         [HideInInspector] public int factionId;
 

@@ -5,6 +5,7 @@ using Editor.GUIComponents;
 using SpaceGame.AI;
 using UnityEditor;
 using Weichx.EditorReflection;
+using Weichx.ReflectionAttributes;
 
 namespace SpaceGame.EditorComponents {
 
@@ -228,8 +229,9 @@ namespace SpaceGame.EditorComponents {
             if (!property.Drawer.IsInitialized) {
                 property.Drawer.Initialize();
             }
-            
+            GUI.enabled = !property.HasAttribute<ReadOnlyAttribute>(); 
             property.Drawer.OnGUI(position, property, label);
+            GUI.enabled = true;
 
         }
 

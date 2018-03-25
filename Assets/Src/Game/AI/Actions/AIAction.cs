@@ -2,15 +2,32 @@
 
 namespace SpaceGame.AI {
 
+    public enum AIActionStatus {
+
+        None, Running, Succeeded, Failed, Interrupted
+
+    }
     public abstract class AIAction : IContextAware {
 
-        public virtual void Setup() { }
+        private bool isSetup;
+        
+        public void Setup() {
+            
+        }
+        
+        public virtual void OnSetup() { }
         public abstract bool Tick();
         public virtual void Teardown() { }
 
         public abstract void SetContext(DecisionContext bestResultContext);
 
         public abstract Type GetContextType();
+
+        public Consideration[] considerations;
+
+        public float Score(DecisionContext context, float maxScore) {
+            return 1f;
+        }
 
     }
 

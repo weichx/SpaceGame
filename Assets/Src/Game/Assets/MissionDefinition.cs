@@ -1,28 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using JetBrains.Annotations;
 using UnityEngine;
-using Weichx.ReflectionAttributes;
 using Weichx.Util;
 
-namespace SpaceGame {
+namespace SpaceGame.Assets {
 
-    public class MissionDefinition : AssetDefinition {
-
-        [ReadOnly] public readonly string createdAt;
-
-        public readonly List<FactionDefinition> factions;
+    public class MissionDefinition : GameAsset {
 
         public delegate void MissionDataChangedCallback(int changedItemId);
+
+        public readonly List<FactionDefinition> factions;
 
         public event MissionDataChangedCallback onChange;
 
         [SerializeField] private int assetIdGenerator;
 
-        public MissionDefinition() {
-            this.name = "Mission";
-            this.createdAt = $"{DateTime.Now.ToShortTimeString()} on {DateTime.Now.ToShortDateString()}";
+        [UsedImplicitly]
+        private MissionDefinition() { }
+
+        public MissionDefinition(int id, string name) : base(id, name) {
             this.factions = new List<FactionDefinition>();
         }
 
@@ -52,7 +50,7 @@ namespace SpaceGame {
         }
 
         public FactionDefinition CreateFaction() {
-            FactionDefinition faction = new FactionDefinition(NextAssetId, this);
+            FactionDefinition faction = new FactionDefinition(NextAssetId);
             faction.AddFlightGroup(new FlightGroupDefinition(NextAssetId));
             factions.Add(faction);
             onChange?.Invoke(faction.id);
@@ -105,7 +103,7 @@ namespace SpaceGame {
             onChange?.Invoke(faction.id);
         }
 
-        public void DeleteAsset(AssetDefinition asset) {
+        public void DeleteAsset(MissionAsset asset) {
             Debug.Assert(asset != null, "asset != null");
 
             EntityDefinition entity = asset as EntityDefinition;
@@ -155,7 +153,7 @@ namespace SpaceGame {
         public List<FlightGroupDefinition> GetFlightGroups() {
             return factions.SelectMany((faction) => faction.flightGroups).ToList();
         }
-        
+
         public FactionDefinition GetFactionById(int factionId) {
             return factions.Find(factionId, (f, fid) => f.id == fid);
         }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace Weichx.Persistence {
 
@@ -56,9 +57,9 @@ namespace Weichx.Persistence {
             else if (refNode.typeDefinition.IsArrayLike) {
                 IList list = target as IList;
                 Debug.Assert(list != null, nameof(list) + " != null");
-                
+
                 int length = list.Count;
-                
+
                 refNode.fields = new FieldDefinition[length];
                 TypeDefinition elementType = refNode.typeDefinition.GetArrayLikeElementType();
                 for (int i = 0; i < length; i++) {
@@ -239,14 +240,30 @@ namespace Weichx.Persistence {
             return new Snapshot<T>((T) target).Deserialize();
         }
 
+        private const BindingFlags bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        
         private static object MakeInstance(Type type) {
             if (type == null) return null;
-            return Activator.CreateInstance(type, true);
+            if (type.GetConstructor(bindFlags, null, Type.EmptyTypes, null) != null) {
+                return Activator.CreateInstance(type, true);
+            }
+            if (type.IsValueType) {
+                return Activator.CreateInstance(type, true);
+            }
+            UnityEngine.Debug.Log("Unitialized " + type.Name);
+            return FormatterServices.GetUninitializedObject(type);
         }
-        
+
         private static TType MakeInstance<TType>(Type type) {
             if (type == null) return default(TType);
-            return (TType) Activator.CreateInstance(type, true);
+            if (type.GetConstructor(bindFlags, null, Type.EmptyTypes, null) != null) {
+                return (TType) Activator.CreateInstance(type, true);
+            }
+            if (type.IsValueType) {
+                return (TType) Activator.CreateInstance(type, true);
+            }
+            UnityEngine.Debug.Log("Unitialized " + type.Name);
+            return (TType) FormatterServices.GetUninitializedObject(type);
         }
 
     }

@@ -122,7 +122,10 @@ namespace Weichx.Util {
         /// <returns></returns>
         [DebuggerStepThrough]
         public static bool MoveToIndex<T>(this List<T> list, int oldIndex, int insertIndex) {
-            if ((uint)oldIndex > list.Count) return false;
+            if (insertIndex == -1) {
+                insertIndex = list.Count - 1;
+            }
+            if ((uint)oldIndex >= list.Count) return false;
             if (insertIndex > oldIndex) insertIndex--;
             if ((uint)insertIndex >= list.Count) return false;
             T item = list[oldIndex];

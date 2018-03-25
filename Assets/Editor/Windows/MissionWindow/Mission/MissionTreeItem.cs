@@ -22,9 +22,7 @@ namespace SpaceGame.Editor.MissionWindow {
         private class MissionTreeItem : TreeViewItem {
 
             public readonly ItemType itemType;
-            public readonly AssetDefinition asset;
-
-            private static int idGenerator;
+            public readonly MissionAsset asset;
 
             public MissionTreeItem() {
                 this.id = -9999;
@@ -32,7 +30,7 @@ namespace SpaceGame.Editor.MissionWindow {
                 this.itemType = ItemType.Root;
             }
             
-            public MissionTreeItem(AssetDefinition asset) {
+            public MissionTreeItem(MissionAsset asset) {
                 this.id = asset.id;
                 this.displayName = asset.name;
 

@@ -2,7 +2,8 @@
     "name": "_GUIAsm",
     "references": [
         "_UtilAsm",
-        "_ReflectionAsmDef"
+        "_ReflectionAsmDef",
+        "_AttributeAsm"
     ],
     "includePlatforms": [],
     "excludePlatforms": []

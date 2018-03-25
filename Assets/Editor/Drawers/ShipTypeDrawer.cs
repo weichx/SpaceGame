@@ -7,12 +7,12 @@ using Weichx.EditorReflection;
 
 namespace Editor.Drawers {
 
-    [PropertyDrawerFor(typeof(ShipDefinition))]
-    public class ShipDefinitionDrawer : ReflectedPropertyDrawer {
+    [PropertyDrawerFor(typeof(ShipType))]
+    public class ShipTypeDrawer : ReflectedPropertyDrawer {
 
         private static GUIRect guiRect = new GUIRect();
 
-        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
+        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label) {
             guiRect.SetRect(position);
             EditorGUIX.PropertyField(guiRect.GetFieldRect(), property["name"]);
             EditorGUIX.DrawProperties(guiRect.GetFieldRect(8), property, new [] {"name"});

@@ -8,7 +8,7 @@ using Weichx.Util;
 
 namespace SpaceGame {
 
-    public class FactionDefinition : AssetDefinition {
+    public class FactionDefinition : MissionAsset {
 
         public AssetPointer<Texture2D> iconPointer;
         
@@ -19,21 +19,19 @@ namespace SpaceGame {
         public readonly List<Goal> goals;
         
         private Texture2D iconTexture;
-        
-        [HideInInspector]
-        public readonly MissionDefinition mission;
-        
+                
         [UsedImplicitly]
         public FactionDefinition() { }
 
-        public FactionDefinition(int id, MissionDefinition mission) : base(id) {
+        public FactionDefinition(int id) : base(id) {
             this.name = $"Faction {id}";
-            this.mission = mission;
+            this.goals = new List<Goal>();
             this.flightGroups = new List<FlightGroupDefinition>();
         }
 
         public FactionDefinition(int id, string name) : base(id, name) {
             this.iconPointer = new AssetPointer<Texture2D>();
+            this.goals = new List<Goal>();
             this.flightGroups = new List<FlightGroupDefinition>();
         }
 

@@ -15,7 +15,7 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         [PublicAPI]
-        public void UpdateDisplayName(AssetDefinition asset) {
+        public void UpdateDisplayName(MissionAsset asset) {
             TreeViewItem item = FindItem(asset.id, rootItem);
             if (item != null) item.displayName = asset.name;
         }

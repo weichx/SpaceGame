@@ -4,6 +4,7 @@ using SpaceGame.Events;
 using SpaceGame.AI;
 using UnityEngine;
 using Util;
+using Weichx.Util;
 
 namespace SpaceGame.Missions {
 
@@ -47,23 +48,93 @@ namespace SpaceGame.Missions {
      *     foreach preference => preference.scoreTargetForDestruction(target);
      *     foreach preference => preference.scoreTargetForApproach(target);
      *     foreach goal => scoreTargetForEvasion(target)
-     *     mindset = DecideMindset();        => Attack, Preserve, Neutral
-     *     action = mindset.DecideAction();  => Attack, Defend, Go To, Follow Goal
-     *         what are my threats?
-     *         what are my allies doing?
-     *         what ae my goals?
      *
-     *     decideHighLevelAction() =>
-     *         Engage With Guns
-     *         Engage Mixed
-     *         Formup And Engage
+     *     AIBehaviorState UpdateState() {
+     *         agent.PrioritizeGoals();
+     *         <Goal, Score, AIBehaviorState>
+     *         <AIPreference, Score, AIBehaviorState>
+     *
+     *     foreach action compatible with behaviorstate
+     *         collect contexts
+     *         score action per context
+     *         weight score by action weight
+     *         weight score by preference weight
+     *         weight score by goal weight
+     *
+     *     highlevel action = highest()
+     *     highlevel <Context, AIBehaviorState>
+     *
+     *     TickHighLevel(List<Goal> goals) - occasionally, every couple seconds maybe
+     *         DecideBehaviorState()
+     *         BuildPreferredTargetList()
      *         
-     *     decideLowLevelAction()
-     *     decideLocamotion();
-     *     action.DecideTarget();    => Use WeaponX on Target Y
+     *         Output = AIBehaviorState<GoalType>; - Describes what we are trying to do
      *
-     *
-     *    what am i doing? - driven by goals and personality.
+     *     //Builds and Executes plans that result in achieving what we decided to do
+     *     TickMidLevel(HighLevelContext context, AIBehaviorState state) - every few frames =>
+     *         pick target 'thing'
+     *         SelectTarget using input from high level preferences
+     *         manage weapons / "make a plan" for low level to execute
+     *         Output = LowLevelAction;
+     *         
+     *     TickLowLevel(MidLevelContext context, AIBehaviorState state) - every frame => 
+     *         Move To
+     *         Aim At
+     *         Perform maneuver
+     *         Don't hit things
+     *         Fire weapon
+     *         Output => WorldStateChange (Move, Rotate, Fire, Inspect, Whatever)
+     */
+    
+    class AIBehaviorState { }
+
+    class AIBehaviorState_Attack { }
+
+    class AIPilot {
+
+        private List<Goal> goals;
+        private AIBehaviorState behaviorState;
+        private float lastHighLevelDecisionTime;
+        private float lastMidLevelDecisionTime;
+        
+        public void Tick() {
+            if (GameTimer.Instance.FrameTimeElapsed(5f, lastHighLevelDecisionTime)) {
+                GatherHighLevelContexts();
+            }    
+        }
+
+        private void GatherHighLevelContexts() {
+            foreach (Goal goal in goals) {
+                //goal.BuildContexts() -> List<BehaviorStateType, Context, desire>
+                /*
+                 *
+                 * 
+                 * 
+                 * DestroyShipGoal => [AIBehaviorStateType.Attack, EntityContext(goal.ship), 0-1f]
+                 * DestroyFlightGroupGoal =>
+                 * [
+                 *    stateType = StateType.Attack, 
+                 *    overallDesire = 0.8f
+                 *    //maybe don't build contexts until we know this goal won
+                 *    //run goal considerations and then merge with preference considerations
+                 *    [0] = [EntityContext(flightGroupShip0), 0.4f]
+                 *    [1] = [EntityContext(flightGroupShip1), 0.2f]
+                 *    [2] = [EntityContext(flightGroupShip2), 1.2f]
+                 * ]
+                 *
+                 * EscortGoal =>
+                 * [
+                 *     stateType = StateType.Escort
+                 *     EntityGroupContext(ship0, ship1), 0.7f
+                 * ]
+                 * 
+                 */
+            }    
+        }
+
+    }
+    
+    /*    what am i doing? - driven by goals and personality.
      *    refresh this decision periodically or on important
      *    scenario events such as entity arrive / leave / destroy
      *         - Attack Something

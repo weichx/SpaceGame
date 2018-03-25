@@ -20,18 +20,6 @@ namespace SpaceGame.AI {
             this.decisions = null;
         }
 
-        // todo make this not suck
-        // todo make Decisions a template that can be cloned
-        // todo give Decisions a counter so multiple behavior sets can add and remove 
-        // todo give Decisions a unique id so multiple behavior sets can add and remove 
-        public void AddBehaviors(BehaviorSet behaviorSet) {
-            decisions = new List<Decision>(behaviorSet.decisions.Count);
-
-            for (int i = 0; i < behaviorSet.decisions.Count; i++) {
-                decisions.Add(behaviorSet.decisions[i]);
-            }
-        }
-
         // todo use this for decision debugging 
         public class LoggedAction {
 
