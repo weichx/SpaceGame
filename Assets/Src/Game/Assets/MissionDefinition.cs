@@ -26,7 +26,7 @@ namespace SpaceGame.Assets {
 
         public int NextAssetId => ++assetIdGenerator;
 
-        public EntityDefinition CreateEntity(FlightGroupDefinition flightGroup) {
+        public EntityDefinition CreateEntityDefinition(FlightGroupDefinition flightGroup) {
             if (HasFlightGroup(flightGroup)) {
                 EntityDefinition entity = new EntityDefinition(NextAssetId);
                 flightGroup.AddEntity(entity);
@@ -38,6 +38,15 @@ namespace SpaceGame.Assets {
             }
         }
 
+        public EntityDefinition CreateEntityDefinition() {
+            EntityDefinition entity = new EntityDefinition(NextAssetId);
+            if (factions.Count == 0) {
+                CreateFaction();
+            }
+            factions[0].GetDefaultFlightGroup().AddEntity(entity);
+            return entity;
+        }
+        
         public FlightGroupDefinition CreateFlightGroup(FactionDefinition faction) {
             if (faction == null || !factions.Contains(faction)) {
                 throw new ArgumentException("Faction not part of this mission!");
@@ -162,6 +171,9 @@ namespace SpaceGame.Assets {
             return factions;
         }
 
+        public int AllocateEntityId() {
+            return MathUtil.SetHighLow16Bits(id, NextAssetId);
+        }
     }
 
 }

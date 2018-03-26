@@ -32,7 +32,7 @@ namespace SpaceGame.Editor.MissionWindow {
             
             public MissionTreeItem(MissionAsset asset) {
                 this.id = asset.id;
-                this.displayName = asset.name;
+                this.displayName = asset.DisplayName;
 
                 this.asset = asset;
                 if (asset is FactionDefinition) {
@@ -65,10 +65,7 @@ namespace SpaceGame.Editor.MissionWindow {
             public bool IsFlightGroup => itemType == ItemType.FlightGroup;
             public bool IsRoot => itemType == ItemType.Root;
 
-            public FactionDefinition GetFaction() {
-                if (itemType == ItemType.Faction) return asset as FactionDefinition;
-                return ParentAsMissionTreeItem?.GetFaction();
-            }
+          
 
             public bool CanDropOn(MissionTreeItem droppedOn) {
                 switch (itemType) {
@@ -82,20 +79,24 @@ namespace SpaceGame.Editor.MissionWindow {
                 return false;
             }
             
+            public FactionDefinition GetFaction() {
+                return itemType == ItemType.Faction ? asset as FactionDefinition : ParentAsMissionTreeItem?.GetFaction();
+            }
+            
             public FlightGroupDefinition GetFlightGroup() {
                 switch (itemType) {
                     case ItemType.Faction:
                         return ((FactionDefinition) asset).GetDefaultFlightGroup();
                     case ItemType.FlightGroup:
                         return asset as FlightGroupDefinition;
+                    case ItemType.Entity:
+                        return ParentAsMissionTreeItem.GetFlightGroup();
                 }
-                if (itemType != ItemType.Entity) return null;
-                return ParentAsMissionTreeItem?.GetFlightGroup();
+                return null;
             }
 
             public EntityDefinition GetEntity() {
-                if (itemType != ItemType.Entity) return null;
-                return asset as EntityDefinition;
+                return itemType != ItemType.Entity ? null : asset as EntityDefinition;
             }
 
         }

@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Weichx.Util {
 
@@ -75,7 +76,7 @@ namespace Weichx.Util {
                 action(transform.GetChild(i), i);
             }
         }
-        
+
         public static T[] MapChildren<T>(this Transform transform, Func<Transform, T> action) {
             int count = transform.childCount;
             T[] retn = new T[count];
@@ -85,7 +86,7 @@ namespace Weichx.Util {
 
             return retn;
         }
-        
+
         public static T[] MapChildrenIndexed<T>(this Transform transform, Func<Transform, int, T> action) {
             int count = transform.childCount;
             T[] retn = new T[count];
@@ -94,6 +95,18 @@ namespace Weichx.Util {
             }
 
             return retn;
+        }
+
+        public static void ClearChildren(this Transform transform) {
+            while (transform.childCount != 0) {
+                Object.Destroy(transform.GetChild(0).gameObject);
+            }
+        }
+
+        public static void ClearChildrenImmediate(this Transform transform) {
+            while (transform.childCount != 0) {
+                Object.DestroyImmediate(transform.GetChild(0).gameObject);
+            }
         }
 
     }

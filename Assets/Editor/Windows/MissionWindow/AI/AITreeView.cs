@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using SpaceGame.Assets;
-using Src.Game.Assets;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
+using Weichx.Util;
 
 namespace SpaceGame.Editor.MissionWindow {
 
@@ -37,7 +37,12 @@ namespace SpaceGame.Editor.MissionWindow {
         public event CreateBehaviorSetCallback createBehaviorSet;
         public event CreateBehaviorDefinitionCallback createBehaviorDefintion;
         public event DeleteAssetCallback deleteAsset;
-        public AITreeView(TreeViewState state) : base(state) { }
+
+        private GameDatabase db;
+
+        public AITreeView(GameDatabase db, TreeViewState state) : base(state) {
+            this.db = db;
+        }
 
         public void SetDataRebuildAndSelect(List<BehaviorSet> behaviorSets, int selectionId = -1) {
             this.behaviorSets = behaviorSets;
@@ -80,6 +85,77 @@ namespace SpaceGame.Editor.MissionWindow {
             selectionChanged?.Invoke(item.asset);
         }
 
+        protected override void SetupDragAndDrop(SetupDragAndDropArgs args) {
+            DragAndDrop.PrepareStartDrag();
+            DragAndDrop.SetGenericData("AITree_Data", args.draggedItemIDs[0]);
+            DragAndDrop.StartDrag("AITree_Drag");
+        }
+
+        private void OnActionDrop(ActionDefinition action, GameAsset droppedOn, int index) {
+
+            if (droppedOn is BehaviorSet) {
+                BehaviorSet behaviorSet = (BehaviorSet) droppedOn;
+                behaviorSet.GetDefaultBehavior().AddActionDefinition(action, index);
+            }
+            else if (droppedOn is BehaviorDefinition) {
+                ((BehaviorDefinition) droppedOn).AddActionDefinition(action, index);
+            }
+            else if (droppedOn is ActionDefinition) {
+                ActionDefinition droppedOnAction = (ActionDefinition) droppedOn;
+                droppedOnAction.GetBehaviorDefinition().AddActionDefinition(action, index);
+            }
+            SetDataRebuildAndSelect(db.behaviorSets, action.id);
+        }
+
+        private void OnBehaviorDefintionDrop(BehaviorDefinition behaviorDefinition, GameAsset droppedOn, int index) {
+            if (droppedOn is BehaviorSet) {
+                (droppedOn as BehaviorSet).AddBehaviorDefinition(behaviorDefinition, index);
+            }
+            else if (droppedOn is BehaviorDefinition) {
+                BehaviorDefinition bh = droppedOn as BehaviorDefinition;
+                bh.GetBehaviorSet().AddBehaviorDefinition(behaviorDefinition);
+            }
+            SetDataRebuildAndSelect(db.behaviorSets, behaviorDefinition.id);
+        }
+
+        private void OnBehaviorSetDrop(BehaviorSet behaviorSet, int index) {
+            db.behaviorSets.MoveToIndex(behaviorSet, index);
+            SetDataRebuildAndSelect(db.behaviorSets, behaviorSet.id);
+        }
+        
+        protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
+            if (args.dragAndDropPosition == DragAndDropPosition.OutsideItems) {
+                return DragAndDropVisualMode.Rejected;
+            }
+
+            if (!args.performDrop) return DragAndDropVisualMode.Move;
+            AITreeItem droppedItem = (AITreeItem) FindItem((int) DragAndDrop.GetGenericData("AITree_Data"), rootItem);
+
+            if (args.parentItem == rootItem && !droppedItem.IsBehaviorSet) {
+                return DragAndDropVisualMode.Rejected;
+            }
+
+            AITreeItem droppedOn = (AITreeItem) args.parentItem;
+
+            if (!droppedItem.CanDropOn(droppedOn)) {
+                return DragAndDropVisualMode.Rejected;
+            }
+
+            if (droppedItem.IsActionDefintion) {
+                OnActionDrop(droppedItem.GetActionDefinition(), droppedOn.asset, args.insertAtIndex);
+            }
+            else if (droppedItem.IsBehaviorDefinition) {
+                OnBehaviorDefintionDrop(droppedItem.GetBehaviorDefinition(), droppedOn.asset, args.insertAtIndex);
+            }
+            else if (droppedItem.IsBehaviorSet) {
+                OnBehaviorSetDrop(droppedItem.GetBehaviorSet(), args.insertAtIndex);
+            }
+
+            return DragAndDropVisualMode.Move;
+        }
+
+      
+
         protected override bool CanStartDrag(CanStartDragArgs args) {
             return args.draggedItemIDs.Count == 1;
         }
@@ -88,7 +164,8 @@ namespace SpaceGame.Editor.MissionWindow {
             GenericMenu menu = new GenericMenu();
 
             menu.AddItem(new GUIContent("Create Behavior Set"), false, () => {
-                createBehaviorSet?.Invoke();
+                BehaviorSet behaviorSet = db.CreateAsset<BehaviorSet>();
+                SetDataRebuildAndSelect(db.behaviorSets, behaviorSet.id);
             });
 
             Event.current.Use();
@@ -100,18 +177,25 @@ namespace SpaceGame.Editor.MissionWindow {
             AITreeItem item = (AITreeItem) FindItem(id, rootItem);
 
             menu.AddItem(new GUIContent("Create Behavior Set"), false, () => {
-                createBehaviorSet?.Invoke();
+                BehaviorSet behaviorSet = db.CreateAsset<BehaviorSet>();
+                SetDataRebuildAndSelect(db.behaviorSets, behaviorSet.id);
             });
             menu.AddItem(new GUIContent("Create Behavior Definition"), false, () => {
-                createBehaviorDefintion?.Invoke(item.GetBehaviorSet());
+                BehaviorDefinition behaviorDefinition = db.CreateAsset<BehaviorDefinition>();
+                item.GetBehaviorSet().AddBehaviorDefinition(behaviorDefinition);
+                SetDataRebuildAndSelect(db.behaviorSets, behaviorDefinition.id);
             });
             menu.AddItem(new GUIContent("Create Action Definition"), false, () => {
-                createActionDefintion?.Invoke(item.GetBehaviorDefinition());
+                BehaviorDefinition behaviorDefinition = item.GetBehaviorDefinition();
+                ActionDefinition action = db.CreateAsset<ActionDefinition>();
+                behaviorDefinition.AddActionDefinition(action);
+                SetDataRebuildAndSelect(db.behaviorSets, action.id);
             });
 
             menu.AddSeparator(string.Empty);
             menu.AddItem(new GUIContent($"Delete {item.displayName}"), false, () => {
-                deleteAsset?.Invoke(item.asset);
+                db.DestroyAsset(item.asset);
+                SetDataRebuildAndSelect(db.behaviorSets);
             });
             Event.current.Use();
             menu.ShowAsContext();
@@ -176,8 +260,7 @@ namespace SpaceGame.Editor.MissionWindow {
             }
 
             public BehaviorSet GetBehaviorSet() {
-                if (IsBehaviorSet) return asset as BehaviorSet;
-                return ParentAsAITreeItem?.GetBehaviorSet();
+                return IsBehaviorSet ? asset as BehaviorSet : ParentAsAITreeItem?.GetBehaviorSet();
             }
 
             public BehaviorDefinition GetBehaviorDefinition() {
@@ -186,14 +269,14 @@ namespace SpaceGame.Editor.MissionWindow {
                         return ((BehaviorSet) asset).GetDefaultBehavior();
                     case ItemType.BehaviorDefinition:
                         return asset as BehaviorDefinition;
+                    case ItemType.ActionDefinition:
+                        return ParentAsAITreeItem.GetBehaviorDefinition();
                 }
-                if (itemType != ItemType.ActionDefinition) return null;
-                return ParentAsAITreeItem?.GetBehaviorDefinition();
+                return null;
             }
 
-            public ActionDefinition ActionDefinition() {
-                if (itemType != ItemType.ActionDefinition) return null;
-                return asset as ActionDefinition;
+            public ActionDefinition GetActionDefinition() {
+                return itemType == ItemType.ActionDefinition ? asset as ActionDefinition : null;
             }
 
         }

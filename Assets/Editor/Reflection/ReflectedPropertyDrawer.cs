@@ -82,6 +82,7 @@ namespace Weichx.EditorReflection {
         }
 
         public virtual float GetPropertyHeight(ReflectedProperty property) {
+            Initialize();
             if (property.Value == null) return EditorGUIUtility.singleLineHeight;
             return property.IsExpanded ? EditorGUIUtility.singleLineHeight + GetChildHeights(property) : EditorGUIUtility.singleLineHeight;
         }

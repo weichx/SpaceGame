@@ -1,12 +1,15 @@
 ﻿using JetBrains.Annotations;
-using SpaceGame.Assets;
+using SpaceGame.AI;
+using Weichx.ReflectionAttributes;
 
-namespace Src.Game.Assets {
+namespace SpaceGame.Assets {
 
     public class ActionDefinition : GameAsset {
 
         public int behaviorId;
 
+        [DefaultExpanded] [CreateOnReflect] public Consideration[] considerations;
+        
         [UsedImplicitly]
         private ActionDefinition() { }
 
@@ -15,6 +18,9 @@ namespace Src.Game.Assets {
             behaviorId = -1;
         }
 
+        public BehaviorDefinition GetBehaviorDefinition() {
+            return GameDatabase.ActiveInstance.FindAsset<BehaviorDefinition>(behaviorId);
+        }
     }
 
 }

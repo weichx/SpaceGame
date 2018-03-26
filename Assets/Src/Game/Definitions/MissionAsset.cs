@@ -23,6 +23,10 @@ namespace SpaceGame {
             this.id = id;
         }
 
+        public virtual string DisplayName {
+            get { return name; }
+        }
+
     }
 
 }

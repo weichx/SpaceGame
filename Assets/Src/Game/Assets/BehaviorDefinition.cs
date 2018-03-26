@@ -1,14 +1,18 @@
 ﻿using JetBrains.Annotations;
 using Lib.Util;
-using SpaceGame.Assets;
+using SpaceGame.AI;
+using Weichx.ReflectionAttributes;
 
-namespace Src.Game.Assets {
+namespace SpaceGame.Assets {
 
     public class BehaviorDefinition : GameAsset {
 
         public int behaviorSetId;
         public ListX<ActionDefinition> actions;
 
+        [DefaultExpanded][CreateOnReflect]
+        public Consideration[] considerations;
+        
         [UsedImplicitly]
         private BehaviorDefinition() { }
 
@@ -20,16 +24,21 @@ namespace Src.Game.Assets {
 
         [PublicAPI]
         public ActionDefinition AddActionDefinition(ActionDefinition actionDefinition, int index = -1) {
-            if (index == -1) {
-                this.actions.Add(actionDefinition);
+            if (actionDefinition.behaviorId != id) {
+                actionDefinition.GetBehaviorDefinition()?.actions.Remove(actionDefinition);
+                this.actions.AddOrInsert(actionDefinition, index);
             }
             else {
-                this.actions.Insert(index, actionDefinition);
+                this.actions.MoveToIndex(actionDefinition, index);
             }
             actionDefinition.behaviorId = id;
             return actionDefinition;
         }
 
+        public BehaviorSet GetBehaviorSet() {
+            return GameDatabase.ActiveInstance.FindAsset<BehaviorSet>(behaviorSetId);
+        }
+        
     }
 
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using JetBrains.Annotations;
+using SpaceGame.Assets;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 
@@ -17,7 +18,13 @@ namespace SpaceGame.Editor.MissionWindow {
         [PublicAPI]
         public void UpdateDisplayName(MissionAsset asset) {
             TreeViewItem item = FindItem(asset.id, rootItem);
-            if (item != null) item.displayName = asset.name;
+            if (item != null) item.displayName = asset.DisplayName;
+        }
+        
+        [PublicAPI]
+        public void UpdateDisplayName(GameAsset asset) {
+            TreeViewItem item = FindItem(asset.id, rootItem);
+            if (item != null) item.displayName = asset.DisplayName;
         }
 
         [PublicAPI]

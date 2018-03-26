@@ -19,6 +19,10 @@ namespace SpaceGame.Assets {
 
         }
 
+        public virtual string DisplayName {
+            get { return name; }
+        }
+
     }
 
 }

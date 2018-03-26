@@ -33,11 +33,11 @@ namespace SpaceGame {
      */
     [SelectionBase]
     [DisallowMultipleComponent]
-    [DebuggerDisplay("Id = {" + nameof(index) + "}")]
+    [DebuggerDisplay("name = {" + nameof(name) + "} Id = {" + nameof(id) + "}")]
     public class Entity : MonoBehaviour {
 
-        public int index = 0;
-        public string guid = "--default--"; // todo remove in favor of id
+        [ReadOnly] public int id;
+        [ReadOnly] public int index;
         
         [NonSerialized] public Faction faction;
         [UsePropertyDrawer(typeof(Faction))] [SerializeField] 
@@ -47,14 +47,6 @@ namespace SpaceGame {
         private FlightController flightSystem;
         private WeaponSystemComponent weaponSystem;
         
-        private void Awake() {
-//            flightSystem = GetComponent<FlightController>();
-//            weaponSystem = GetComponent<WeaponSystemComponent>();
-//            health = this.GetOrCreateComponent<HealthComponent>();
-//            faction = Faction.GetFaction(factionId);
-//            gameObject.layer = LayerMask.NameToLayer("Entity");
-//            GameData.Instance.RegisterEntity(this);
-        }
 
         public FlightController FlightSystem => flightSystem;
         public AIInfo aiInfo => GameData.Instance.aiInfoMap[index];

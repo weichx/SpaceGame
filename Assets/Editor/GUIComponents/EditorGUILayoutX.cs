@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using Weichx.EditorReflection;
+using Weichx.ReflectionAttributes;
 
 namespace SpaceGame.EditorComponents {
 
@@ -30,25 +31,31 @@ namespace SpaceGame.EditorComponents {
         public static void PropertyField(ReflectedProperty property) {
             Internal_PropertyField(property, property.GUIContent, false);
         }
-        
+
         public static void PropertyField(ReflectedObject obj) {
-            Rect rect = EditorGUILayout.GetControlRect(true, obj.Root.Drawer.GetPropertyHeight(obj.Root), (GUILayoutOption[])null);
+            obj.Root.Drawer.Initialize();
+            Rect rect = EditorGUILayout.GetControlRect(true, obj.Root.Drawer.GetPropertyHeight(obj.Root), (GUILayoutOption[]) null);
             EditorGUIX.PropertyField(rect, obj.Root);
         }
 
         private static void Internal_PropertyField(ReflectedProperty property, GUIContent label, bool isHidden) {
             if (isHidden) return;
-            
+
             if (label == null) label = property.GUIContent;
 
             Debug.Assert(property.Drawer != null, "property.Drawer != null");
-            
+
+            if (!property.Drawer.IsInitialized) {
+                property.Drawer.Initialize();
+            }
+            GUI.enabled = !property.HasAttribute<ReadOnlyAttribute>();
             property.Drawer.OnGUILayout(property, label);
+            GUI.enabled = true;
 
         }
 
         public static void BeginVertical() {
-            EditorGUILayout.BeginVertical((GUILayoutOption[])null);
+            EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
         }
 
         public static void EndVertical() {

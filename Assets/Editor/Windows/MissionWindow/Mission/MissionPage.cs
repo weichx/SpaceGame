@@ -42,7 +42,7 @@ namespace SpaceGame.Editor.MissionWindow {
             mission = db.GetCurrentMission();
             treeView = new MissionTreeView(state.missionPageTreeViewState);
             treeView.SetDataRebuildAndSelect(mission);
-            treeView.createEntity += mission.CreateEntity;
+            treeView.createEntity += mission.CreateEntityDefinition;
             treeView.createFlightGroup += mission.CreateFlightGroup;
             treeView.createFaction += mission.CreateFaction;
             treeView.setEntityFlightGroup += mission.SetEntityFlightGroup;

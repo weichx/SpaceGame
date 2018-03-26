@@ -202,6 +202,15 @@ namespace Weichx.Util {
             list.Insert(startIndex, value);
         }
 
+        public static void AddOrInsert<T>(this List<T> list, T item, int index) {
+            if (index == -1) {
+                list.Add(item);
+            }
+            else {
+                list.Insert(index, item);
+            }
+        }
+        
         /// <summary>
         /// Insert a value into an IList that is presumed to be already sorted such that sort ordering is preserved
         /// </summary>

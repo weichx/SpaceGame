@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Lib.Util;
 using SpaceGame.FileTypes;
 using UnityEditor;
 using UnityEngine;
-using UnityEditor.SceneManagement;
-using UnityEngine.SceneManagement;
 using Weichx.Persistence;
 
 namespace SpaceGame.Editor.MissionWindow {
@@ -14,8 +12,8 @@ namespace SpaceGame.Editor.MissionWindow {
         private MissionWindowState state;
         private GameDataFile gameData;
         private MissionWindowPage[] pages;
-        private List<Entity> sceneEntities;
-        private Dictionary<Entity, string> entityToId;
+        private ListX<Entity> sceneEntities;
+        private Dictionary<Entity, int> entityToId;
         private GameDatabase db;
 
         private readonly string[] tabs = {
@@ -31,19 +29,7 @@ namespace SpaceGame.Editor.MissionWindow {
                 AssetDatabase.CreateAsset(gameData, "Assets/Resources/Data/GameDatabase.asset");
                 EditorUtility.SetDirty(gameData);
                 AssetDatabase.SaveAssets();
-            }
-
-            LoadSceneEntities();
-            entityToId = new Dictionary<Entity, string>();
-            foreach (Entity entity in sceneEntities) {
-                if (string.IsNullOrEmpty(entity.guid)) {
-                    entity.guid = Guid.NewGuid().ToString();
-                }
-                entityToId.Add(entity, entity.guid);
-                EditorUtility.SetDirty(entity);
-            }
-
-            EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
+            }          
 
             state = MissionWindowState.Restore();
 
@@ -53,7 +39,9 @@ namespace SpaceGame.Editor.MissionWindow {
             else {
                 db = Snapshot<GameDatabase>.Deserialize(gameData.database);
             }
+            
             GameDatabase.ActiveInstance = db;
+            db.UpdateSceneEntities();
 
             pages = new MissionWindowPage[] {
                 new MissionPage(Save, state, db),
@@ -75,54 +63,13 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         private void OnHierarchyChange() {
-            LoadSceneEntities();
-            bool didChange = false;
-            for (int i = 0; i < sceneEntities.Count; i++) {
-                Entity entity = sceneEntities[i];
-                string id = entity.guid;
-                string storedId;
-                if (entityToId.TryGetValue(entity, out storedId)) {
-                    if (id != storedId) {
-                        Debug.Assert(false, $"Should never hit this. Expected {id} to be {storedId}");
-                    }
-                }
-                else {
-                    string newGuid = Guid.NewGuid().ToString();
-                    if (entity.guid != "--default--") {
-                        Debug.Log("Duplicated");
-                        // gameData.GetMission(state.activeMissionGuid).CloneEntityDefinition(entity.guid, newGuid);
-                    }
-                    else {
-                        Debug.Log("Created");
-                        //gameData.GetMission(state.activeMissionGuid).CreateEntityDefinition(newGuid);
-                    }
-                    entity.guid = newGuid;
-                    entityToId.Add(entity, entity.guid);
-                    EditorUtility.SetDirty(entity);
-                    didChange = true;
-                }
-            }
-            if (didChange) {
-                EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
-            }
+            db.UpdateSceneEntities();
         }
 
-        private void OnBeforeAssemblyReload() { }
-
-        private void LoadSceneEntities() {
-            if (sceneEntities == null) sceneEntities = new List<Entity>();
-            sceneEntities.Clear();
-
-            Entity[] entities = Resources.FindObjectsOfTypeAll<Entity>();
-
-            for (int i = 0; i < entities.Length; i++) {
-                if (!EditorUtility.IsPersistent(entities[i])) {
-                    sceneEntities.Add(entities[i]);
-                }
-            }
-
+        private void OnBeforeAssemblyReload() {
+            db.ClearSceneEntities();
         }
-
+       
         private void OnAfterAssemblyReload() { }
 
         private void OnDisable() {
@@ -130,7 +77,6 @@ namespace SpaceGame.Editor.MissionWindow {
             Save();
             AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
             AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
-
         }
 
         private void OnInspectorUpdate() {

@@ -11,7 +11,7 @@ namespace Lib.Util {
 
     public interface IReadonlyListX<T> {
 
-        T this[int index] {  get; }
+        T this[int index] { get; }
         int Count { get; }
         int BinarySearch(int index, int count, T item, IComparer<T> comparer);
         int BinarySearch(T item);
@@ -56,6 +56,7 @@ namespace Lib.Util {
         T[] RawArray { get; }
         T First { get; }
         T Last { get; }
+
     }
 
     [DebuggerDisplay("Count = {Count}")]
@@ -212,18 +213,18 @@ namespace Lib.Util {
         public bool ContainsReference<U>(U item) where U : class, T {
             if (item == null) {
                 for (int index = 0; index < this._size; ++index) {
-                    if ((U)this._items[index] == null)
+                    if ((U) this._items[index] == null)
                         return true;
                 }
                 return false;
             }
             for (int index = 0; index < this._size; ++index) {
-                if ((U)_items[index] ==  item)
+                if ((U) _items[index] == item)
                     return true;
             }
             return false;
         }
-        
+
         public bool Contains(T item) {
             if (item == null) {
                 for (int index = 0; index < this._size; ++index) {
@@ -658,7 +659,6 @@ namespace Lib.Util {
         /// <summary>
         /// Moves an item within this list to another index, shifting other items as needed.
         /// </summary>
-        [DebuggerStepThrough]
         public bool MoveToIndex(int oldIndex, int insertIndex) {
             if (insertIndex == -1) {
                 insertIndex = _size - 1;
@@ -676,7 +676,6 @@ namespace Lib.Util {
         /// Moves an item within this list to another index, shifting other items as needed.
         /// </summary>
         /// <returns></returns>
-        [DebuggerStepThrough]
         public bool MoveToIndex(T item, int insertIndex) {
             return MoveToIndex(IndexOf(item), insertIndex);
         }
@@ -748,6 +747,15 @@ namespace Lib.Util {
                 this.current = default(T);
             }
 
+        }
+
+        public void AddOrInsert(T item, int index) {
+            if ((uint)index >= (uint)_size) {
+                Add(item);
+            }
+            else {
+                Insert(index, item);
+            }
         }
 
     }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace Weichx.Util {
 
@@ -35,6 +36,18 @@ namespace Weichx.Util {
             int times = 10;
             while (times <= b) times *= 10;
             return a * times + b;
+        }
+
+        public static int SetHighLow16Bits(int high, int low) {
+            return (high << 16) | (low & 0xffff);
+        }
+
+        public static int GetLow16Bits(int input) {
+            return input & 0xffff;
+        }
+
+        public static int GetHigh16Bits(int input) {
+            return (input >> 16) & (1 << 16) - 1;
         }
 
     }

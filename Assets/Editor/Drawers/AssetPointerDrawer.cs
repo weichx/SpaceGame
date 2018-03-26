@@ -13,7 +13,7 @@ namespace SpaceGameEditor.Drawers {
 
         private Type assetType;
 
-        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
+        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label) {
             AssetPointer<Chassis> pointer = (AssetPointer<Chassis>) property.Value;
             GameObject asset = pointer.GetAsset()?.gameObject;
             GameObject lastAsset = asset;

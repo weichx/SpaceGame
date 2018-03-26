@@ -1,29 +1,23 @@
-﻿using System.Collections.Generic;
-using SpaceGame.AI;
+﻿using SpaceGame.AI;
 using SpaceGame.Assets;
 using SpaceGame.EditorComponents;
-using SpaceGame.FileTypes;
-using Src.Game.Assets;
 using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;
-using BehaviorSet = Src.Game.Assets.BehaviorSet;
 
 namespace SpaceGame.Editor.MissionWindow {
 
     public class AIPage : MissionWindowPage {
 
-        private const string NameField = nameof(Decision.name);
-
         private AITreeView treeView;
-        private ReflectedObject reflectedSelection;
-        private GameAsset selectedAsset;
         private Vector2 scrollVec;
+        private GameAsset selectedAsset;
+        private ReflectedObject reflectedSelection;
 
         public AIPage(MissionWindowState state, GameDatabase db) : base(state, db) { }
 
         public override void OnEnable() {
-            treeView = new AITreeView(state.aiPageTreeViewState);
+            treeView = new AITreeView(db, state.aiPageTreeViewState);
             treeView.createBehaviorSet += OnCreateBehaviorSet;
             treeView.createBehaviorDefintion += OnCreateBehaviorDefinition;
             treeView.createActionDefintion += OnCreateActionDefinition;
@@ -62,6 +56,9 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public override void OnGUI() {
             InfamyGUI.HorizontalSplitPane(state.aiPageSplitterState, RenderList, RenderDetails);
+            if (treeView != null && selectedAsset != null) {
+                treeView.UpdateDisplayName(selectedAsset);
+            }
         }
 
         private void RenderList() {
@@ -75,14 +72,13 @@ namespace SpaceGame.Editor.MissionWindow {
             scrollVec = EditorGUILayout.BeginScrollView(scrollVec);
             {
 
-                treeView.UpdateDisplayName(selectedAsset.id, selectedAsset.name);
-
                 EditorGUILayout.BeginVertical((GUILayoutOption[]) null);
                 EditorGUILayoutX.PropertyField(reflectedSelection);
                 EditorGUILayout.EndHorizontal();
 
             }
             EditorGUILayout.EndScrollView();
+            reflectedSelection?.ApplyModifiedProperties();
 
         }
 

@@ -336,6 +336,7 @@ namespace Weichx.EditorReflection {
         }
 
         public float GetPropertyHeight() {
+            drawer.Initialize();
             return drawer.GetPropertyHeight(this);
         }
 
