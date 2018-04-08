@@ -83,8 +83,7 @@ namespace Weichx.Util {
         public bool FrameTimeElapsed(float duration, float from) {
             return GetFrameTimestamp() - from >= duration;
         }
-
-
+        
         public static int GetUnixSeconds() {
             return (int) (DateTime.UtcNow.Subtract(Epoch)).TotalSeconds;
         }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace Weichx.Util {
@@ -50,6 +51,21 @@ namespace Weichx.Util {
             return (input >> 16) & (1 << 16) - 1;
         }
 
+        [StructLayout(LayoutKind.Explicit)]
+        public struct BitTwiddle {
+
+            [FieldOffset(0)] public uint fullValue;
+
+            [FieldOffset(0)] public ushort lowShort;
+            [FieldOffset(1)] public ushort midShort;
+            [FieldOffset(2)] public ushort highShort;
+        
+            [FieldOffset(0)] public byte byte0;
+            [FieldOffset(1)] public byte byte1;
+            [FieldOffset(2)] public byte byte2;
+            [FieldOffset(3)] public byte byte3;
+
+        }
     }
 
 }

@@ -6,22 +6,22 @@ using Weichx.ReflectionAttributes;
 
 namespace SpaceGame {
 
-    public class FlightGroupDefinition : MissionAsset {
+    public class FlightGroupDefinition : MissionAsset, IParentAsset, INestedAsset<FactionDefinition> {
 
         [HideInInspector] public int factionId;
 
         [DefaultExpanded, CreateOnReflect] public readonly List<Goal> goals;
         [DefaultExpanded, CreateOnReflect] public readonly List<EntityDefinition> entities;
 
-        [UsedImplicitly] public FlightGroupDefinition() { }
+        [UsedImplicitly]
+        public FlightGroupDefinition() { }
 
-        public FlightGroupDefinition(int id) : base(id) {
-            this.name = $"Flight Group {id}";
+        public FlightGroupDefinition(int id, string name) : base(id, name) {
             this.entities = new List<EntityDefinition>();
             this.goals = new List<Goal>();
         }
 
-        public EntityDefinition AddEntity(EntityDefinition entity, int index = -1) {
+        public void AddEntity(EntityDefinition entity, int index = -1) {
             entity.factionId = factionId;
             entity.flightGroupId = id;
             if (index == -1) {
@@ -30,7 +30,6 @@ namespace SpaceGame {
             else {
                 entities.Insert(index, entity);
             }
-            return entity;
         }
 
         public void RemoveEntity(EntityDefinition entity) {
@@ -40,6 +39,16 @@ namespace SpaceGame {
             }
         }
 
+        public void SetParentAsset(FactionDefinition asset, int siblingIndex = -1) {
+            throw new System.NotImplementedException();
+        }
+
+        public void SetSiblingIndex(int index) {
+            throw new System.NotImplementedException();
+        }
+
     }
+
+    
 
 }

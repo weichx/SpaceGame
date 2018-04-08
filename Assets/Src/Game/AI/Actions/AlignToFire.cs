@@ -4,6 +4,9 @@ namespace SpaceGame.AI.Actions {
 
     public class AlignToFire : AIAction {
 
+        public float rangeStart;
+        public float dotThreshold;
+        
         public override bool Tick() {
             throw new NotImplementedException();
         }

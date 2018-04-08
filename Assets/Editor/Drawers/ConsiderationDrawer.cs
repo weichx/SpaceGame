@@ -22,7 +22,7 @@ namespace SpaceGameEditor.Drawers {
             graphTexture = new Texture2D(1, 1);
         }
 
-        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label = null) {
+        public override void OnGUI(Rect position, ReflectedProperty property, GUIContent label) {
 
             //can't run this in initialize because editor styles is null there
             if (style == null) {

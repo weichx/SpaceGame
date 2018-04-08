@@ -24,6 +24,7 @@ namespace SpaceGame.AI {
         public abstract Type GetContextType();
 
         public Consideration[] considerations;
+        public string name;
 
         public float Score(DecisionContext context, float maxScore) {
             return 1f;

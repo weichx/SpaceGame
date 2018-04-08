@@ -20,7 +20,7 @@ namespace SpaceGame.Editor.MissionWindow {
             TreeViewItem item = FindItem(asset.id, rootItem);
             if (item != null) item.displayName = asset.DisplayName;
         }
-        
+
         [PublicAPI]
         public void UpdateDisplayName(GameAsset asset) {
             TreeViewItem item = FindItem(asset.id, rootItem);
@@ -37,7 +37,7 @@ namespace SpaceGame.Editor.MissionWindow {
             Reload();
             SelectFireAndFrame(id);
         }
-        
+
         public void OnGUILayout() {
             OnGUI(GUILayoutUtility.GetRect(0, 10000, 0, 10000));
         }
@@ -62,7 +62,9 @@ namespace SpaceGame.Editor.MissionWindow {
         protected void SelectFireAndFrame(int id) {
             Reload();
             utilList.Clear();
-            utilList.Add(id);
+            if (id != -1) {
+                utilList.Add(id);
+            }
             SetSelection(utilList, TreeViewSelectionOptions.RevealAndFrame | TreeViewSelectionOptions.FireSelectionChanged);
         }
 

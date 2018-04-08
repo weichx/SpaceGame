@@ -1,5 +1,4 @@
-﻿using SpaceGame.AI;
-using SpaceGame.Assets;
+﻿using SpaceGame.Assets;
 using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEngine;
@@ -18,28 +17,8 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public override void OnEnable() {
             treeView = new AITreeView(db, state.aiPageTreeViewState);
-            treeView.createBehaviorSet += OnCreateBehaviorSet;
-            treeView.createBehaviorDefintion += OnCreateBehaviorDefinition;
-            treeView.createActionDefintion += OnCreateActionDefinition;
             treeView.selectionChanged += OnSelectionChanged;
-            treeView.SetDataRebuildAndSelect(db.behaviorSets);
-        }
-
-        private void OnCreateActionDefinition(BehaviorDefinition behaviorDefinition) {
-            ActionDefinition actionDefinition = db.CreateAsset<ActionDefinition>();
-            behaviorDefinition.AddActionDefinition(actionDefinition);
-            treeView.SetDataRebuildAndSelect(db.behaviorSets, actionDefinition.id);
-        }
-
-        private void OnCreateBehaviorSet() {
-            BehaviorSet behaviorSet = db.CreateAsset<BehaviorSet>();
-            treeView.SetDataRebuildAndSelect(db.behaviorSets, behaviorSet.id);
-        }
-
-        private void OnCreateBehaviorDefinition(BehaviorSet behaviorset) {
-            BehaviorDefinition behaviorDefinition = db.CreateAsset<BehaviorDefinition>();
-            behaviorset.AddBehaviorDefinition(behaviorDefinition);
-            treeView.SetDataRebuildAndSelect(db.behaviorSets, behaviorDefinition.id);
+            treeView.SetDataRebuildAndSelect();
         }
 
         private void OnSelectionChanged(GameAsset selection) {

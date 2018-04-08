@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using JetBrains.Annotations;
-using Lib.Util;
+using Weichx.Util;
 
 namespace SpaceGame.AI {
 

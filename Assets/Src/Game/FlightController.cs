@@ -1,10 +1,7 @@
-﻿using System.Diagnostics;
-using SpaceGame;
+﻿using SpaceGame;
 using UnityEngine;
-using Weichx.Util;
-using Debug = UnityEngine.Debug;
 
-public class FlightController : MonoBehaviour {
+public class FlightController {
     
     public float currentSpeed;
     public float currentThrottle;

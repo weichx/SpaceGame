@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using JetBrains.Annotations;
 using UnityEngine;
+using Weichx.Persistence;
 using Weichx.Util;
 
 namespace SpaceGame.Assets {
@@ -28,7 +29,7 @@ namespace SpaceGame.Assets {
 
         public EntityDefinition CreateEntityDefinition(FlightGroupDefinition flightGroup) {
             if (HasFlightGroup(flightGroup)) {
-                EntityDefinition entity = new EntityDefinition(NextAssetId);
+                EntityDefinition entity = GameDatabase.ActiveInstance.CreateAsset<EntityDefinition>();
                 flightGroup.AddEntity(entity);
                 onChange?.Invoke(entity.id);
                 return entity;
@@ -39,7 +40,7 @@ namespace SpaceGame.Assets {
         }
 
         public EntityDefinition CreateEntityDefinition() {
-            EntityDefinition entity = new EntityDefinition(NextAssetId);
+            EntityDefinition entity = GameDatabase.ActiveInstance.CreateAsset<EntityDefinition>();
             if (factions.Count == 0) {
                 CreateFaction();
             }
@@ -52,15 +53,15 @@ namespace SpaceGame.Assets {
                 throw new ArgumentException("Faction not part of this mission!");
             }
 
-            FlightGroupDefinition flightGroup = new FlightGroupDefinition(NextAssetId);
+            FlightGroupDefinition flightGroup = GameDatabase.ActiveInstance.CreateAsset<FlightGroupDefinition>();
             faction.AddFlightGroup(flightGroup);
             onChange?.Invoke(flightGroup.id);
             return flightGroup;
         }
 
         public FactionDefinition CreateFaction() {
-            FactionDefinition faction = new FactionDefinition(NextAssetId);
-            faction.AddFlightGroup(new FlightGroupDefinition(NextAssetId));
+            FactionDefinition faction = GameDatabase.ActiveInstance.CreateAsset<FactionDefinition>();
+            faction.AddFlightGroup(GameDatabase.ActiveInstance.CreateAsset<FlightGroupDefinition>());
             factions.Add(faction);
             onChange?.Invoke(faction.id);
             return faction;
@@ -136,6 +137,7 @@ namespace SpaceGame.Assets {
             else {
                 throw new ArgumentException($"Can\'t delete: {asset.GetType().Name}");
             }
+            onChange?.Invoke(asset.id);
         }
 
         private FactionDefinition GetFaction(int id) {
@@ -174,6 +176,21 @@ namespace SpaceGame.Assets {
         public int AllocateEntityId() {
             return MathUtil.SetHighLow16Bits(id, NextAssetId);
         }
+
+        public EntityDefinition CloneEntityDefinition(EntityDefinition toClone) {
+            EntityDefinition clone = Snapshot<EntityDefinition>.Clone(toClone);
+            GetFlightGroup(clone.flightGroupId).AddEntity(clone);
+            return clone;
+        }
+
+        public void Change(int id = -1) {
+            onChange?.Invoke(id);
+        }
+
+        public EntityDefinition[] GetLinkedEntities() {
+            return GetEntities().Where((entity) => entity.IsLinked).ToArray();
+        }
+
     }
 
 }

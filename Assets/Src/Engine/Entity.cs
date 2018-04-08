@@ -43,14 +43,11 @@ namespace SpaceGame {
         [UsePropertyDrawer(typeof(Faction))] [SerializeField] 
         public int factionId;
         
-        public HealthComponent health;
-        private FlightController flightSystem;
-        private WeaponSystemComponent weaponSystem;
-        
+        public HealthComponent health;       
 
-        public FlightController FlightSystem => flightSystem;
+        public FlightController FlightSystem => GameData.Instance.flightControllers[index];
         public AIInfo aiInfo => GameData.Instance.aiInfoMap[index];
-        public WeaponSystemComponent WeaponSystem => weaponSystem;
+        public WeaponSystemComponent WeaponSystem => null;
         public TransformInfo transformInfo => GameData.Instance.transformInfoMap[index];
 
     }

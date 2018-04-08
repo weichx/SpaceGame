@@ -7,7 +7,7 @@ using System.Linq;
 using System.Threading;
 using JetBrains.Annotations;
 
-namespace Lib.Util {
+namespace Weichx.Util {
 
     public interface IReadonlyListX<T> {
 

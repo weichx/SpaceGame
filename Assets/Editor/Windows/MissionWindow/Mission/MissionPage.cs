@@ -24,7 +24,6 @@ namespace SpaceGame.Editor.MissionWindow {
 
         private TreeViewState treeState;
         private MissionTreeView treeView;
-        private MissionDefinition mission;
         private ReflectedObject reflectedSelection;
         private SelectionType selectionType;
         private MissionAsset selectedAsset;
@@ -39,23 +38,9 @@ namespace SpaceGame.Editor.MissionWindow {
         private bool IsMultiSelect => (selectionType & SelectionType.Multiple) != 0;
 
         public override void OnEnable() {
-            mission = db.GetCurrentMission();
-            treeView = new MissionTreeView(state.missionPageTreeViewState);
-            treeView.SetDataRebuildAndSelect(mission);
-            treeView.createEntity += mission.CreateEntityDefinition;
-            treeView.createFlightGroup += mission.CreateFlightGroup;
-            treeView.createFaction += mission.CreateFaction;
-            treeView.setEntityFlightGroup += mission.SetEntityFlightGroup;
-            treeView.setFactionIndex += mission.SetFactionIndex;
-            treeView.setEntityFaction += mission.SetEntityFaction;
-            treeView.setFlightGroupFaction += mission.SetFlightGroupFaction;
-            treeView.deleteAsset += mission.DeleteAsset;
+            treeView = new MissionTreeView(db, state.missionPageTreeViewState);
             treeView.selectionChanged += OnSelectionChanged;
-            
-            mission.onChange += (changedId) => {
-                reflectedSelection?.Update();
-                treeView.SetDataRebuildAndSelect(mission, changedId);
-            };
+            treeView.SetDataRebuildAndSelect();
             treeView.PingSelection();
         }
 

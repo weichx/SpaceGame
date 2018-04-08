@@ -1,11 +1,12 @@
 ﻿using System;
 using UnityEngine;
+using Weichx.ReflectionAttributes;
 
 namespace SpaceGame.AI {
 
     public abstract class Consideration : IContextAware {
 
-        [SerializeField] public ResponseCurve curve;
+        [SerializeField][CreateOnReflect] public ResponseCurve curve;
 
         protected Consideration() {
             this.curve = new ResponseCurve();

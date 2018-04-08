@@ -1,4 +1,5 @@
-﻿using SpaceGame;
+﻿using System;
+using SpaceGame;
 using SpaceGameEditor.Drawers;
 using UnityEditor;
 using UnityEngine;
@@ -15,12 +16,12 @@ namespace Drawers {
 
             int entityId = property.intValue;
             GameDatabase db = GameDatabase.ActiveInstance;
-            
+
             Entity sceneEntity = db.FindSceneEntityById(entityId);
             GameObject current = sceneEntity?.gameObject;
 
             GameObject newValue = EditorGUI.ObjectField(position, "Scene Entity", current, typeof(GameObject), true) as GameObject;
-            
+
             if (newValue != current) {
                 if (newValue != null) {
                     if (EditorUtility.IsPersistent(newValue)) {
@@ -32,21 +33,21 @@ namespace Drawers {
                         Debug.Log("Need to set a gameobject with an entity component");
                         return;
                     }
-                    
+
                     EntityDefinition entityDefintion = db.GetEntityDefinitionForSceneEntity(newComponent.id);
                     if (entityDefintion != null) {
                         entityDefintion.sceneEntityId = -1;
                         Debug.Log($"Unassigned Scene Entity for {entityDefintion.name}");
                     }
-                    
+
                     property.Value = newComponent.id;
-                    
+
                 }
                 else {
                     property.Value = -1;
                 }
             }
-            
+
         }
 
     }

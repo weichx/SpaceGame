@@ -37,8 +37,8 @@ namespace SpaceGame.Engine {
             TickArrivals();
             TickDepartures();
             TickActives();
-            List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
-            List<Transform> transforms = GameData.Instance.transformMap;
+            ListX<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
+            ListX<Transform> transforms = GameData.Instance.transformMap;
 
             int count = transformInfos.Count;
             for (int i = 0; i < count; i++) {
@@ -47,30 +47,45 @@ namespace SpaceGame.Engine {
             }
         }
 
+        // input TransformInfo[], FlightControls[]
+        // output => updated transform
+        // assumes index of flight controller == index of transform info
+        // assumes no nulls
+        // todo better data orient this
+        
         private void TickActives() {
-            List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
-            int count = actives.Count;
             float deltaTime = GameTimer.Instance.deltaTime;
+            
+            ListX<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
+            ListX<FlightController> flightControllers = GameData.Instance.flightControllers;
+            
+            int count = transformInfos.Count;
+            
+            TransformInfo[] rawTransformInfos = transformInfos.RawArray;
+            FlightController[] rawFlightControllers = flightControllers.RawArray;
+            
             for (int i = 0; i < count; i++) {
-                int entityId = actives[i];
-                TransformInfo entityTransform = transformInfos[entityId];
-                AIInfo agent = GameData.Instance.aiInfoMap[entityId];
+                TransformInfo entityTransform = rawTransformInfos[i];
+                FlightController flightController = rawFlightControllers[i];
+                
+                //debug assert transformInfo.entityId == flightController.entityId
+                
                 Quaternion rotation = PropulsionUtil.RotateTowardsDirection(
                     entityTransform.rotation,
-                    entityTransform.DirectionTo(agent.Entity.FlightSystem.targetPosition),
-                    agent.Entity.FlightSystem.turnRate,
+                    entityTransform.DirectionTo(flightController.targetPosition),
+                    flightController.turnRate,
                     deltaTime
                 );
 
-                float speed = 100 * deltaTime;
+                float speed = flightController.currentSpeed * deltaTime;
                 Vector3 position = entityTransform.position + (rotation.GetForward() * speed);
 
-                transformInfos[entityId] = new TransformInfo(entityId, position, rotation);
+                transformInfos[i] = new TransformInfo(entityTransform.entityId, position, rotation);
             }
         }
 
         private void TickArrivals() {
-            List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
+            ListX<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
             float startDistanceSquared = arrivalHyperspaceDistance * arrivalHyperspaceDistance;
             float arrivalThresholdSquared = arrivedThreshold * arrivedThreshold;
 
@@ -93,7 +108,7 @@ namespace SpaceGame.Engine {
         }
 
         private void TickDepartures() {
-            List<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
+            ListX<TransformInfo> transformInfos = GameData.Instance.transformInfoMap;
             float endDistanceSquared = departureHyperspaceDistance * departureHyperspaceDistance;
 
             float deltaTime = GameTimer.Instance.deltaTime;

@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using JetBrains.Annotations;
 using SpaceGame.AI;
+using SpaceGame.AI.Behaviors;
+using SpaceGame.Assets;
 using UnityEngine;
 using Weichx.ReflectionAttributes;
 using Weichx.ReflectionAttributes.Markers;
+using Weichx.Util;
 
 namespace SpaceGame {
 
@@ -20,8 +23,12 @@ namespace SpaceGame {
     }
 
     [Serializable]
-    public class EntityDefinition : MissionAsset {
+    public class EntityDefinition : MissionAsset, INestedAsset<FlightGroupDefinition> {
 
+        public bool prependFactionName;
+        public bool prependFlightGroupName;
+        public bool inheritFlightGroupNameGenerator;
+        
         [UsePropertyDrawer(typeof(SceneEntitySelector))]
         public int sceneEntityId;
 
@@ -32,25 +39,41 @@ namespace SpaceGame {
         [UsedImplicitly]
         public bool isTemplate; // don't show errors about missing sceneEntityId
 
-        [UsedImplicitly]
-        [UsePropertyDrawer(typeof(ShipTypeSelector))]
-        public int shipTypeId;
+        [UsedImplicitly] [UsePropertyDrawer(typeof(ShipTypeSelector))]
+        public string chassisGuid;
 
+        [DefaultExpanded, CreateOnReflect]
+        public ListX<BehaviorSet> behaviorSets;
+
+        [DefaultExpanded, CreateOnReflect] public ListX<AIBehavior> standaloneBehaviors;
+        
         [UsedImplicitly]
         private EntityDefinition() { }
 
-        public EntityDefinition(int id) : base(id) {
-            this.name = $"Entity {id}";
+        private EntityDefinition(int id, string name) : base(id, name) {
             this.goals = new List<Goal>(4);
+            behaviorSets = new ListX<BehaviorSet>();
+            standaloneBehaviors = new ListX<AIBehavior>();
         }
 
+        public bool IsLinked => sceneEntityId > 0;
+        
         public override string DisplayName {
             get {
                 if (!isTemplate && sceneEntityId <= 0) {
-                    return $"[Not In Scene] {name}";
+                    return $"[Unlinked] {name}";
                 }
                 return name;
             }
+        }
+
+        public void SetParentAsset(FlightGroupDefinition asset, int index = -1) {
+            asset.AddEntity(this, index);
+        }
+
+        public void SetSiblingIndex(int index) {
+            FlightGroupDefinition parent = GameDatabase.ActiveInstance.FindAsset<FlightGroupDefinition>(flightGroupId);
+            parent.entities.MoveToIndex(this, index);
         }
 
     }

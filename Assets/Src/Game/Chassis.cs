@@ -2,6 +2,10 @@
 
 namespace SpaceGame {
 
-    public class Chassis : MonoBehaviour { }
+    public class Chassis : MonoBehaviour {
+
+        public int id;
+
+    }
 
 }

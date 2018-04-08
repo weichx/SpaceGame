@@ -250,7 +250,7 @@ namespace Weichx.Persistence {
             if (type.IsValueType) {
                 return Activator.CreateInstance(type, true);
             }
-            UnityEngine.Debug.Log("Unitialized " + type.Name);
+            UnityEngine.Debug.Log($"Unitialized {type.Name}");
             return FormatterServices.GetUninitializedObject(type);
         }
 
@@ -262,8 +262,12 @@ namespace Weichx.Persistence {
             if (type.IsValueType) {
                 return (TType) Activator.CreateInstance(type, true);
             }
-            UnityEngine.Debug.Log("Unitialized " + type.Name);
+            UnityEngine.Debug.Log($"Unitialized {type.Name}");
             return (TType) FormatterServices.GetUninitializedObject(type);
+        }
+
+        public static T Clone(T toClone) {
+            return new Snapshot<T>(toClone).Deserialize();
         }
 
     }

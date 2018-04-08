@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Weichx.Util;
 using SpaceGame.Engine;
 using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace SpaceGame.AI {
         public float floatVal;
         
         public override void CreateContexts(Entity agent, List<WaypointContext> outputList) {
-            List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
+            ListX<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
 
             for (int i = 0; i < waypointPaths.Count; i++) {
                 WaypointContext context = new WaypointContext(agent, waypointPaths[i]);
@@ -24,7 +25,7 @@ namespace SpaceGame.AI {
         public string strVal;
         
         public override void CreateContexts(Entity agent, List<WaypointContext> outputList) {
-            List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
+            ListX<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
 
             for (int i = 0; i < waypointPaths.Count; i++) {
                 WaypointContext context = new WaypointContext(agent, waypointPaths[i]);
@@ -38,7 +39,7 @@ namespace SpaceGame.AI {
 
         public override void CreateContexts(Entity agent, List<WaypointContext> outputList) {
             Debug.Log("GENERIC CREATE CONTEXTS");
-            List<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
+            ListX<WaypointPath> waypointPaths = GameData.Instance.waypointPaths;
 
             for (int i = 0; i < waypointPaths.Count; i++) {
                 WaypointContext context = new WaypointContext(agent, waypointPaths[i]);

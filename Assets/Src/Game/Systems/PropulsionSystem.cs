@@ -37,7 +37,6 @@ namespace SpaceGame.Systems {
 
     }
 
-    [RequireComponent(typeof(Rigidbody))]
     public class PropulsionSystem : SpaceGame.Systems.System {
 
         public PhysicsData physicsData;
@@ -53,6 +52,10 @@ namespace SpaceGame.Systems {
             
         }
 
+        public void Orient(FlightController[] flightControllers, TransformInfo[] transforms) {
+                
+        }
+        
         public void OrientToDirectionWithoutPhysics(Vector3 direction) {
             Vector3 localTarget = transform.InverseTransformDirection(direction);
             float radiansToTargetYaw = Mathf.Atan2(localTarget.x, localTarget.z);
@@ -62,7 +65,7 @@ namespace SpaceGame.Systems {
             float pitch = Mathf.Clamp(radiansToTargetPitch, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
             float yaw = Mathf.Clamp(radiansToTargetYaw, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
             float roll = Mathf.Clamp(radiansToTargetRoll, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
-            Quaternion.LookRotation(transform.forward, transform.up);
+            //Quaternion.LookRotation(transform.forward, transform.up);
             Vector3 eulerAngles = new Vector3(pitch, yaw, roll) * Time.fixedDeltaTime;
             Quaternion quaternion = Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z);
             rigidbody.rotation = rigidbody.rotation * quaternion;

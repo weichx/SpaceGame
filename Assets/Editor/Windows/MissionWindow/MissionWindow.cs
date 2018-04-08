@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using Lib.Util;
+using Weichx.Util;
+using SpaceGame.Editor.Windows;
 using SpaceGame.FileTypes;
 using UnityEditor;
 using UnityEngine;
@@ -14,7 +15,6 @@ namespace SpaceGame.Editor.MissionWindow {
         private MissionWindowPage[] pages;
         private ListX<Entity> sceneEntities;
         private Dictionary<Entity, int> entityToId;
-        private GameDatabase db;
 
         private readonly string[] tabs = {
             "Missions",
@@ -23,33 +23,22 @@ namespace SpaceGame.Editor.MissionWindow {
         };
 
         private void OnEnable() {
-            gameData = Resources.Load<GameDataFile>("Data/GameDatabase");
-            if (gameData == null) {
-                gameData = CreateInstance<GameDataFile>();
-                AssetDatabase.CreateAsset(gameData, "Assets/Resources/Data/GameDatabase.asset");
-                EditorUtility.SetDirty(gameData);
-                AssetDatabase.SaveAssets();
-            }          
 
             state = MissionWindowState.Restore();
-
-            if (gameData.debugReset) {
-                db = Snapshot<GameDatabase>.DeserializeDefault();
-            }
-            else {
-                db = Snapshot<GameDatabase>.Deserialize(gameData.database);
+            
+            if (GameDatabase.ActiveInstance != null) {
+                GameDatabase.ActiveInstance.ClearSceneEntities();
             }
             
-            GameDatabase.ActiveInstance = db;
-            db.UpdateSceneEntities();
-
+            DatabaseEditorContainer.EnsureDatabase();
+            GameDatabase.ActiveInstance?.UpdateSceneEntities();
+            GameDatabase.ActiveInstance?.UpdateProjectAssets();
+            
             pages = new MissionWindowPage[] {
-                new MissionPage(Save, state, db),
-                new ShipPage(state, db),
-                new AIPage(state, db)
+                new MissionPage(Save, state, GameDatabase.ActiveInstance),
+                new ShipPage(state, GameDatabase.ActiveInstance),
+                new AIPage(state, GameDatabase.ActiveInstance)
             };
-            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
-            AssemblyReloadEvents.afterAssemblyReload += OnAfterAssemblyReload;
 
             state.currentPageIndex = Mathf.Clamp(state.currentPageIndex, 0, pages.Length - 1);
             pages[state.currentPageIndex].OnEnable();
@@ -57,26 +46,16 @@ namespace SpaceGame.Editor.MissionWindow {
         }
 
         private void Save() {
-            gameData.database = Snapshot<GameDatabase>.Serialize(db);
+            gameData = Resources.Load<GameDataFile>("Data/GameDatabase");
+            gameData.database = Snapshot<GameDatabase>.Serialize(GameDatabase.ActiveInstance);
             EditorUtility.SetDirty(gameData);
             state.Save();
         }
 
-        private void OnHierarchyChange() {
-            db.UpdateSceneEntities();
-        }
-
-        private void OnBeforeAssemblyReload() {
-            db.ClearSceneEntities();
-        }
-       
-        private void OnAfterAssemblyReload() { }
-
         private void OnDisable() {
             pages[state.currentPageIndex].OnDisable();
             Save();
-            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
-            AssemblyReloadEvents.afterAssemblyReload -= OnAfterAssemblyReload;
+            GameDatabase.ActiveInstance.ClearSceneEntities();
         }
 
         private void OnInspectorUpdate() {

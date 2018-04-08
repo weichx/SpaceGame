@@ -1,10 +1,8 @@
-﻿using SpaceGame.Assets;
-using SpaceGame.EditorComponents;
+﻿using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using Weichx.EditorReflection;
-using Weichx.Util;
 
 namespace SpaceGame.Editor.MissionWindow {
 
@@ -24,45 +22,11 @@ namespace SpaceGame.Editor.MissionWindow {
             state.shipPageTreeViewState = state.shipPageTreeViewState ?? new TreeViewState();
             treeView = new ShipTreeView(state.shipPageTreeViewState);
             treeView.selectionChanged += OnSelectionChanged;
-            treeView.createShipType += OnCreateShipDefinition;
-            treeView.createShipTypeGroup += OnCreateShipGroup;
-            treeView.deleteShipType += OnDeleteAsset;
-            treeView.deleteShipTypeGroup += OnDeleteAsset;
-            treeView.setShipTypeShipGroup += OnSetShipTypeShipGroup;
-            treeView.setShipTypeGroupIndex += OnSetShipTypeGroupIndex;
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups);
+            treeView.SetDataRebuildAndSelect();
         }
 
-        private void OnSetShipTypeGroupIndex(ShipTypeGroup shipTypeGroup, int index) {
-            db.shipTypeGroups.MoveToIndex(shipTypeGroup, index);
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups);
-        }
-
-        private void OnSetShipTypeShipGroup(ShipType shiptype, int shipGroupId, int index) {
-            db.SetShipTypeShipGroup(shiptype, shipGroupId, index);
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups);
-        }
-
-        private void OnCreateShipGroup(int index) {
-            ShipTypeGroup group = db.CreateAsset<ShipTypeGroup>();
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups, group.id);
-        }
-
-        private void OnCreateShipDefinition(int groupId) {
-            ShipType shipType = db.CreateAsset<ShipType>();
-            db.FindAsset<ShipTypeGroup>(groupId).AddShipDefinition(shipType);
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups, shipType.id);
-        }
-
-        private void OnDeleteAsset(int id) {
-            db.DestroyAsset<ShipType>(id);
-            treeView.SetDataRebuildAndSelect(db.shipTypeGroups);
-        }
-        
         public override void OnDisable() {
             treeView.selectionChanged -= OnSelectionChanged;
-            treeView.createShipType -= OnCreateShipDefinition;
-            treeView.createShipTypeGroup -= OnCreateShipGroup;
         }
 
         public override void OnGUI() {
@@ -91,24 +55,13 @@ namespace SpaceGame.Editor.MissionWindow {
 
                     if (selection.HasModifiedProperties) {
                         selection.ApplyModifiedProperties();
-                        treeView.SetDataRebuildAndSelect(db.shipTypeGroups);
+                        treeView.SetDataRebuildAndSelect();
                     }
                 }
                 EditorGUILayout.EndVertical();
             }
             GUILayout.EndScrollView();
         }
-
-        private void DeleteShipDefinition() {
-            if (selection == null) return;
-            string name = selection[NameField].stringValue;
-            if (EditorUtility.DisplayDialog("Are you sure?", $"Really delete {name}?", "Yup", "Nope")) {
-                db.DestroyAsset<ShipType>(selection[IdField].intValue);
-                treeView.ClearSelection();
-                treeView.Reload();
-            }
-        }
-
  
         private void OnSelectionChanged(ShipTreeView.ShipTreeViewSelection newSelection) {
             selection?.ApplyModifiedProperties();

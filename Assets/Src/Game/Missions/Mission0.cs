@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using SpaceGame.Events;
 using SpaceGame.AI;
+using SpaceGame.Engine;
 using UnityEngine;
 using Util;
 using Weichx.Util;
@@ -85,7 +87,7 @@ namespace SpaceGame.Missions {
      *         Fire weapon
      *         Output => WorldStateChange (Move, Rotate, Fire, Inspect, Whatever)
      */
-    
+
     class AIBehaviorState { }
 
     class AIBehaviorState_Attack { }
@@ -96,11 +98,11 @@ namespace SpaceGame.Missions {
         private AIBehaviorState behaviorState;
         private float lastHighLevelDecisionTime;
         private float lastMidLevelDecisionTime;
-        
+
         public void Tick() {
             if (GameTimer.Instance.FrameTimeElapsed(5f, lastHighLevelDecisionTime)) {
                 GatherHighLevelContexts();
-            }    
+            }
         }
 
         private void GatherHighLevelContexts() {
@@ -129,11 +131,11 @@ namespace SpaceGame.Missions {
                  * ]
                  * 
                  */
-            }    
+            }
         }
 
     }
-    
+
     /*    what am i doing? - driven by goals and personality.
      *    refresh this decision periodically or on important
      *    scenario events such as entity arrive / leave / destroy
@@ -218,6 +220,8 @@ namespace SpaceGame.Missions {
             stateChart.Tick();
         }
 
+        protected void AddEntity(EntityDefinition definition) { }
+
         protected override void BuildStateChart(StateChart.StateChartBuilder builder) {
             Action<string, Action> State = builder.State;
             Action<Action> Init = builder.Init;
@@ -237,12 +241,17 @@ namespace SpaceGame.Missions {
 
 //            db.GetFaction("Empire").GetFlightGroup("Alpha").AddGoal(goal);
 //            
-//            State("Mission Init", () => {
-//                Init(() => {
-//                    db.GetFlightGroup("Alpha").Spawn();
-//                    
-//                });
-//            });
+
+            GameDatabase db = GameDatabase.ActiveInstance;
+            
+            //eventually want to nuke the scene + rebuild from scratch
+            //Resources.FindObjectsOfTypeAll<Entity>().Where((e) => { });
+            
+            State("Mission Init", () => {
+                Init(() => {
+                   
+                });
+            });
 
             State("Mission In Progress", () => { });
 

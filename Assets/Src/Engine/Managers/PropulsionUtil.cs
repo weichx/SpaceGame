@@ -14,7 +14,7 @@ namespace Src.Engine {
             float pitch = Mathf.Clamp(radiansToTargetPitch, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
             float yaw = Mathf.Clamp(radiansToTargetYaw, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
             float roll = Mathf.Clamp(radiansToTargetRoll, -turnRateRadians, turnRateRadians) * Mathf.Rad2Deg;
-            Quaternion.LookRotation(rotation.GetForward(), rotation.GetUp());
+            //Quaternion.LookRotation(rotation.GetForward(), rotation.GetUp());
             Vector3 eulerAngles = new Vector3(pitch * timestep, yaw * timestep, roll * timestep);
             return rotation * Quaternion.Euler(eulerAngles.x, eulerAngles.y, eulerAngles.z);
             //rigidbody.rotation = rigidbody.rotation * quaternion;

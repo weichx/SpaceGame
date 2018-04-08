@@ -54,7 +54,6 @@ namespace Weichx.EditorReflection {
                 }
             }
             FindPointableMethods();
-            genericTypes = allTypes.FindAll((type) => type.IsGenericType);
             nonGenericTypes = allTypes.FindAll((type) => !type.IsGenericType);
         }
 

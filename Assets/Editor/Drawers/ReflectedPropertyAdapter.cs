@@ -1,4 +1,5 @@
-﻿using SpaceGame.EditorComponents;
+﻿using System;
+using SpaceGame.EditorComponents;
 using UnityEditor;
 using UnityEngine;
 using Weichx.EditorReflection;
@@ -10,6 +11,8 @@ namespace Rotorz.ReorderableList {
         private ReflectedListProperty _arrayProperty;
 
         public float FixedItemHeight;
+
+        public Action onCreateElement;
 
         public ReflectedProperty this[int index] {
             get { return _arrayProperty[index]; }
@@ -43,7 +46,12 @@ namespace Rotorz.ReorderableList {
 
         /// <inheritdoc/>
         public void Add() {
-            _arrayProperty.ElementCount++;
+            if (onCreateElement != null) {
+                onCreateElement.Invoke();
+            }
+            else {
+                _arrayProperty.ElementCount++;
+            }
         }
 
         /// <inheritdoc/>

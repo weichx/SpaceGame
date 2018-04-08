@@ -1,5 +1,4 @@
-﻿using Lib.Util;
-using Weichx.Util;
+﻿using Weichx.Util;
 
 namespace SpaceGame.AI {
 

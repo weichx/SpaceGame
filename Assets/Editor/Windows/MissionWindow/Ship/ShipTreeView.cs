@@ -14,32 +14,11 @@ namespace SpaceGame.Editor.MissionWindow {
 
         public delegate void SelectionChangedCallback(ShipTreeViewSelection selection);
 
-        public delegate void CreateShipTypeGroupCallback(int index);
-
-        public delegate void CreateShipTypeCallback(int groupId);
-
-        public delegate void DeleteShipTypeCallback(int id);
-
-        public delegate void DeleteShipTypeGroupCallback(int id);
-
-        public delegate void SetShipTypeShipGroupCallback(ShipType shipType, int shipGroupId, int index);
-
-        public delegate void SetShipTypeGroupIndex(ShipTypeGroup shipTypeGroup, int index);
-        
-        private List<ShipTypeGroup> shipTypes;
-
-        public event CreateShipTypeGroupCallback createShipTypeGroup;
-        public event CreateShipTypeCallback createShipType;
-        public event DeleteShipTypeCallback deleteShipType;
-        public event DeleteShipTypeGroupCallback deleteShipTypeGroup;
-        public event SetShipTypeGroupIndex setShipTypeGroupIndex;
-        public event SetShipTypeShipGroupCallback setShipTypeShipGroup;
         public event SelectionChangedCallback selectionChanged;
 
         public ShipTreeView(TreeViewState state) : base(state) { }
 
-        public void SetDataRebuildAndSelect(List<ShipTypeGroup> shipGroups, int selectionId = -1) {
-            this.shipTypes = shipGroups;
+        public void SetDataRebuildAndSelect(int selectionId = -1) {
             Reload();
             if (selectionId != -1) {
                 SelectFireAndFrame(selectionId);
@@ -48,7 +27,7 @@ namespace SpaceGame.Editor.MissionWindow {
 
         protected override TreeViewItem BuildRoot() {
             TreeViewItem root = new TreeViewItem(-9999, -1);
-
+            IReadonlyListX<ShipTypeGroup> shipTypes = GameDatabase.ActiveInstance.GetAssetList<ShipTypeGroup>();
             for (int i = 0; i < shipTypes.Count; i++) {
                 ShipTypeGroupItem item = new ShipTypeGroupItem(i, shipTypes[i]);
                 root.AddChild(item);
@@ -69,7 +48,9 @@ namespace SpaceGame.Editor.MissionWindow {
 
         protected override void ContextClicked() {
             GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Create Ship Group"), false, OnCreateShipTypeGroup, -1);
+            menu.AddItem(new GUIContent("Create Ship Group"), false, () => {
+                SetDataRebuildAndSelect(GameDatabase.ActiveInstance.CreateAsset<ShipTypeGroup>().id);
+            });
             menu.ShowAsContext();
             Event.current.Use();
         }
@@ -81,38 +62,35 @@ namespace SpaceGame.Editor.MissionWindow {
 
             ShipTypeGroupItem typeGroupItem = item as ShipTypeGroupItem;
             if (typeGroupItem != null) {
-                menu.AddItem(new GUIContent("Create Ship Group"), false, OnCreateShipTypeGroup, typeGroupItem.index);
-                menu.AddItem(new GUIContent("Create Ship Type"), false, OnCreateShipType, typeGroupItem.id);
+                menu.AddItem(new GUIContent("Create Ship Group"), false, () => {
+                    SetDataRebuildAndSelect(GameDatabase.ActiveInstance.CreateAsset<ShipTypeGroup>().id);
+                });
+                menu.AddItem(new GUIContent("Create Ship Type"), false, () => {
+                    ShipType shipType = GameDatabase.ActiveInstance.CreateAsset<ShipType>();
+                    GameDatabase.ActiveInstance.FindAsset<ShipTypeGroup>(typeGroupItem.shipTypeGroup.id).ships.Add(shipType);
+                    SetDataRebuildAndSelect(shipType.id);
+
+                });
                 menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent($"Delete Ship Group {typeGroupItem.displayName}"), false, OnDeleteShipTypeGroup, item.id);
+                menu.AddItem(new GUIContent($"Delete Ship Group {typeGroupItem.displayName}"), false, () => {
+                    GameDatabase.ActiveInstance.DestroyAsset(typeGroupItem.shipTypeGroup);
+                    SetDataRebuildAndSelect();
+                });
             }
             else if (item is ShipTypeItem) {
-                menu.AddItem(
-                    new GUIContent("Create Ship Type"), false,
-                    OnCreateShipType, ((ShipTypeItem) item).shipType.shipGroupId
-                );
+                menu.AddItem(new GUIContent("Create Ship Type"), false, () => {
+                    ShipType shipType = GameDatabase.ActiveInstance.CreateAsset<ShipType>();
+                    GameDatabase.ActiveInstance.FindAsset<ShipTypeGroup>(((ShipTypeItem) item).shipType.id).ships.Add(shipType);
+                    SetDataRebuildAndSelect(shipType.id);
+                });
                 menu.AddSeparator(string.Empty);
-                menu.AddItem(new GUIContent($"Delete Ship Type {item.displayName}"), false, OnDeleteShipType, item.id);
+                menu.AddItem(new GUIContent($"Delete Ship Type {item.displayName}"), false, () => {
+                    GameDatabase.ActiveInstance.DestroyAsset(((ShipTypeItem) item).shipType);
+                    SetDataRebuildAndSelect();
+                });
             }
             menu.ShowAsContext();
             Event.current.Use();
-        }
-
-        protected void OnDeleteShipType(object data) {
-            deleteShipType?.Invoke((int) data);
-        }
-
-        protected void OnDeleteShipTypeGroup(object data) {
-            deleteShipTypeGroup?.Invoke((int) data);
-
-        }
-
-        protected void OnCreateShipTypeGroup(object data) {
-            createShipTypeGroup?.Invoke((int) data);
-        }
-
-        protected void OnCreateShipType(object data) {
-            createShipType?.Invoke((int) data);
         }
 
         protected override void SetupDragAndDrop(SetupDragAndDropArgs args) {
@@ -124,16 +102,13 @@ namespace SpaceGame.Editor.MissionWindow {
         private void OnShipTypeDrop(ShipType shipType, TreeViewItem droppedOn, int index) {
             if (droppedOn is ShipTypeItem) {
                 ShipTypeItem dropShipItem = (ShipTypeItem) droppedOn;
-                setShipTypeShipGroup?.Invoke(shipType, dropShipItem.shipType.shipGroupId, index);
+                //setShipTypeShipGroup?.Invoke(shipType, dropShipItem.shipType.shipGroupId, index);
             }
             else if (droppedOn is ShipTypeGroupItem) {
-                setShipTypeShipGroup?.Invoke(shipType, ((ShipTypeGroupItem)droppedOn).shipTypeGroup.id, index);
+                //setShipTypeShipGroup?.Invoke(shipType, ((ShipTypeGroupItem)droppedOn).shipTypeGroup.id, index);
             }
         }
 
-        private void OnShipTypeGroupDrop(ShipTypeGroup shipTypeGroup, int index) {
-        }
-        
         protected override DragAndDropVisualMode HandleDragAndDrop(DragAndDropArgs args) {
             if (args.performDrop) {
                 TreeViewItem droppedOn = args.parentItem;
@@ -144,7 +119,7 @@ namespace SpaceGame.Editor.MissionWindow {
                     OnShipTypeDrop(item.shipType, droppedOn, args.insertAtIndex);
                 }
                 else if (droppedItem is ShipTypeGroupItem) {
-                    setShipTypeGroupIndex?.Invoke(((ShipTypeGroupItem) droppedItem).shipTypeGroup, args.insertAtIndex);
+                    GameDatabase.ActiveInstance.SetAssetIndex(((ShipTypeGroupItem) droppedItem).shipTypeGroup, args.insertAtIndex);
                 }
 
             }
